@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "boulanger:item/ww_flour_small"
+  }
+}
