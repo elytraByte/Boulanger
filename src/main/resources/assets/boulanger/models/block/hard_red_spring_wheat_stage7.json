@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/crop",
+  "textures": {
+    "crop": "boulanger:block/hard_red_spring_wheat_stage7"
+  }
+}

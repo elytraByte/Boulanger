@@ -24,7 +24,7 @@ public class ModBlocks {
         return toReturn;
     }
 
-    public static final RegistryObject<Block> HARD_RED_SPRING_WHEAT = BLOCKS.register("hard_red_spring_wheat",
+    public static final RegistryObject<Block> HARD_RED_SPRING_WHEAT_CROP = BLOCKS.register("hard_red_spring_wheat_crop",
             () -> new HardRedSpringWheat(BlockBehaviour.Properties.copy(Blocks.WHEAT)));
 
 

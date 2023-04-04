@@ -6,5 +6,8 @@
   "item.boulanger.lr_flour_small": "Light Rye Flour, Small",
   "item.boulanger.p_flour_small": "Pumpernickel Flour, Small",
   "item.boulanger.ww_flour_small": "Whole Wheat Flour, Small",
-  "item.boulanger.saf_red": "Saf Instant: Red"
+  "item.boulanger.saf_red": "Saf Instant: Red",
+  "item.boulanger.hard_red_spring_wheat_item": "Hard Red Spring Wheat",
+  "item.boulanger.hard_red_spring_wheat_seeds": "Hard Red Spring Wheat Seeds",
+  "block.boulanger.hard_red_spring_wheat_crop": "Hard Red Spring Wheat"
 }

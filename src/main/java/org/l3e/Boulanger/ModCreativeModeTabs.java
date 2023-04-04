@@ -1,4 +1,4 @@
-package org.l3e.Boulanger.item;
+package org.l3e.Boulanger;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -8,6 +8,7 @@ import net.minecraftforge.event.CreativeModeTabEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.l3e.Boulanger.Boulanger;
+import org.l3e.Boulanger.item.ModItems;
 
 @Mod.EventBusSubscriber(modid = Boulanger.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModCreativeModeTabs {

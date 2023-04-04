@@ -37,7 +37,9 @@ public class ModItems {
     public static final RegistryObject<Item> SAF_RED = ITEMS.register("saf_red",
             () -> new SafRedItem(new Item.Properties()));
     public static final RegistryObject<Item> HARD_RED_SPRING_WHEAT_SEEDS = ITEMS.register("hard_red_spring_wheat_seeds",
-            () -> new ItemNameBlockItem(ModBlocks.HARD_RED_SPRING_WHEAT.get(), new Item.Properties()));
+            () -> new ItemNameBlockItem(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), new Item.Properties()));
+    public static final RegistryObject<Item> HARD_RED_SPRING_WHEAT_ITEM = ITEMS.register("hard_red_spring_wheat_item",
+            () -> new Item(new Item.Properties()));
 
 
     public static void register(IEventBus eventBus) {

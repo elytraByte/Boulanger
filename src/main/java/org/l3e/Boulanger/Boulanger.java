@@ -4,8 +4,6 @@ package org.l3e.Boulanger;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CreativeModeTabEvent;
@@ -16,7 +14,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.l3e.Boulanger.block.ModBlocks;
-import org.l3e.Boulanger.item.ModCreativeModeTabs;
 import org.l3e.Boulanger.item.ModItems;
 import org.slf4j.Logger;
 
@@ -33,6 +30,7 @@ public class Boulanger {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         ModItems.register(modEventBus);
+        ModBlocks.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -54,6 +52,8 @@ public class Boulanger {
             event.accept(ModItems.P_FLOUR_SMALL);
             event.accept(ModItems.WW_FLOUR_SMALL);
             event.accept(ModItems.SAF_RED);
+            event.accept(ModItems.HARD_RED_SPRING_WHEAT_ITEM);
+            event.accept(ModItems.HARD_RED_SPRING_WHEAT_SEEDS);
         }
     }
 
@@ -62,7 +62,7 @@ public class Boulanger {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            ItemBlockRenderTypes.setRenderLayer(ModBlocks.HARD_RED_SPRING_WHEAT.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), RenderType.cutout());
         }
     }
 }
