@@ -2,6 +2,7 @@ package org.l3e.Boulanger;
 
 ;
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraftforge.api.distmarker.Dist;
@@ -14,7 +15,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.l3e.Boulanger.block.ModBlocks;
+import org.l3e.Boulanger.block.entity.ModBlockEntities;
 import org.l3e.Boulanger.item.ModItems;
+import org.l3e.Boulanger.screen.ModMenuTypes;
+import org.l3e.Boulanger.screen.StoneMillScreen;
 import org.slf4j.Logger;
 
 
@@ -31,6 +35,8 @@ public class Boulanger {
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -45,13 +51,27 @@ public class Boulanger {
 
     private void addCreative(CreativeModeTabEvent.BuildContents event) {
         if(event.getTab() == ModCreativeModeTabs.BOULANGER_TAB) {
+            event.accept(ModItems.BREAK_FLOUR);
+            event.accept(ModItems.BRAN);
+            event.accept(ModItems.WHEAT_CHAFF);
+            event.accept(ModItems.MIDDLINGS_FLOUR);
+            event.accept(ModItems.STRAIGHT_FLOUR);
+            event.accept(ModItems.PATENT_FLOUR);
+            event.accept(ModItems.FIRST_CLEAR_FLOUR);
+            event.accept(ModItems.SECOND_CLEAR_FLOUR);
+            event.accept(ModItems.WHOLE_WHEAT_FLOUR);
+            event.accept(ModItems.PAPER_BAG);
             event.accept(ModItems.AP_FLOUR_SMALL);
             event.accept(ModItems.B_FLOUR_SMALL);
             event.accept(ModItems.HG_FLOUR_SMALL);
             event.accept(ModItems.LR_FLOUR_SMALL);
             event.accept(ModItems.P_FLOUR_SMALL);
             event.accept(ModItems.WW_FLOUR_SMALL);
+            event.accept(ModItems.WILD_YEAST);
+            event.accept(ModItems.BREWERS_YEAST);
+            event.accept(ModItems.FLEISCHEMANNS_YEAST);
             event.accept(ModItems.SAF_RED);
+            event.accept(ModItems.SAF_GOLD);
             event.accept(ModItems.HARD_RED_SPRING_WHEAT_ITEM);
             event.accept(ModItems.HARD_RED_SPRING_WHEAT_SEEDS);
         }
@@ -63,6 +83,8 @@ public class Boulanger {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), RenderType.cutout());
+
+            MenuScreens.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         }
     }
 }
