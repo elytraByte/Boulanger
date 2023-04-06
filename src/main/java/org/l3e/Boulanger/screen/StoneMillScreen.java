@@ -38,7 +38,8 @@ public class StoneMillScreen extends AbstractContainerScreen<StoneMillMenu> {
 
     private void renderProgressArrow(PoseStack pPoseStack, int x, int y) {
         if(menu.isCrafting()) {
-            blit(pPoseStack, x + 105, y + 33, 176, 0, 8, menu.getScaledProgress());
+            blit(pPoseStack, x + 79, y + 35, 176, 0, menu.getScaledProgress(), 23);
+
         }
     }
 

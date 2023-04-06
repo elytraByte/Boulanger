@@ -146,8 +146,8 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
 
         if(hasRecipe(e)) {
             e.itemHandler.extractItem(1,1,false);
-            e.itemHandler.setStackInSlot(2, new ItemStack(ModItems.WHOLE_WHEAT_FLOUR.get(),
-                    e.itemHandler.getStackInSlot(2).getCount() + 1));
+            e.itemHandler.setStackInSlot(0, new ItemStack(ModItems.WHOLE_WHEAT_FLOUR.get(),
+                    e.itemHandler.getStackInSlot(0).getCount() + 1));
             e.resetProgress();
         }
     }

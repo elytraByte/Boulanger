@@ -33,8 +33,8 @@ public class StoneMillMenu extends AbstractContainerMenu {
         addPlayerHotbar(inv);
 
         this.blockEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
-            this.addSlot(new SlotItemHandler(handler, 0, 12,15));
-            this.addSlot(new SlotItemHandler(handler, 1, 86, 15));
+            this.addSlot(new SlotItemHandler(handler, 0, 116,35));
+            this.addSlot(new SlotItemHandler(handler, 1, 56, 34));
         });
 
         addDataSlots(data);
@@ -52,9 +52,9 @@ public class StoneMillMenu extends AbstractContainerMenu {
         return maxProgress != 0 && progress != 0 ? progress * progressArrowSize / maxProgress : 0;
     }
 
-    protected StoneMillMenu(@Nullable MenuType<?> p_38851_, int p_38852_) {
-        super(p_38851_, p_38852_);
-    }
+    /*protected StoneMillMenu(@Nullable MenuType<?> menuType, int i) {
+        super(menuType, i);
+    }*/
 
     // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
     // must assign a slot number to each of the slots used by the GUI.
@@ -116,14 +116,14 @@ public class StoneMillMenu extends AbstractContainerMenu {
     private void addPlayerInventory(Inventory playerInventory) {
         for (int i = 0; i < 2; ++i) {
             for (int l = 0; l < 9; ++l) {
-                this.addSlot(new Slot(playerInventory, l + i * 9 + 9, 8 + l * 18, 86 + i * 18));
+                this.addSlot(new Slot(playerInventory, l + i * 9 + 9, 8 + l * 18, 84 + i * 18));
             }
         }
     }
 
     private void addPlayerHotbar(Inventory playerInventory) {
         for (int i = 0; i < 9; ++i) {
-            this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 144));
+            this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
         }
     }
 }
