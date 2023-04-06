@@ -9,7 +9,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
-import org.jetbrains.annotations.Nullable;
 import org.l3e.Boulanger.block.ModBlocks;
 import org.l3e.Boulanger.block.entity.StoneMillBlockEntity;
 
@@ -52,9 +51,7 @@ public class StoneMillMenu extends AbstractContainerMenu {
         return maxProgress != 0 && progress != 0 ? progress * progressArrowSize / maxProgress : 0;
     }
 
-    /*protected StoneMillMenu(@Nullable MenuType<?> menuType, int i) {
-        super(menuType, i);
-    }*/
+    // this crashes the game lol
 
     // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
     // must assign a slot number to each of the slots used by the GUI.

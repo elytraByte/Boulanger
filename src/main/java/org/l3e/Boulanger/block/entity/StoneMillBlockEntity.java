@@ -2,6 +2,8 @@ package org.l3e.Boulanger.block.entity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
@@ -14,7 +16,6 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
@@ -24,7 +25,10 @@ import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.l3e.Boulanger.item.ModItems;
+import org.l3e.Boulanger.recipe.StoneMillRecipe;
 import org.l3e.Boulanger.screen.StoneMillMenu;
+
+import java.util.Optional;
 
 public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
@@ -70,7 +74,8 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("stone_mill");
+        //can this be localized?
+        return Component.literal("Stone Mill");
     }
 
     @Nullable
@@ -143,29 +148,39 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private static void craftItem(StoneMillBlockEntity e) {
+        Level level = e.level;
+        SimpleContainer inventory = new SimpleContainer(e.itemHandler.getSlots());
+        for (int i = 0; i < e.itemHandler.getSlots(); i ++) {
+            inventory.setItem(i, e.itemHandler.getStackInSlot(i));
+        }
+
+        Optional<StoneMillRecipe> recipe = level.getRecipeManager()
+                .getRecipeFor(StoneMillRecipe.Type.INSTANCE, inventory, level);
 
         if(hasRecipe(e)) {
             e.itemHandler.extractItem(1,1,false);
-            e.itemHandler.setStackInSlot(0, new ItemStack(ModItems.WHOLE_WHEAT_FLOUR.get(),
+            e.itemHandler.setStackInSlot(0, new ItemStack(recipe.get().getResultItem(RegistryAccess.EMPTY).getItem(),
                     e.itemHandler.getStackInSlot(0).getCount() + 1));
             e.resetProgress();
         }
     }
 
     private static boolean hasRecipe(StoneMillBlockEntity e) {
+        Level level = e.level;
         SimpleContainer inventory = new SimpleContainer(e.itemHandler.getSlots());
         for (int i = 0; i < e.itemHandler.getSlots(); i ++) {
             inventory.setItem(i, e.itemHandler.getStackInSlot(i));
         }
 
-        boolean hasWheatInSlot = e.itemHandler.getStackInSlot(1).getItem() == ModItems.HARD_RED_SPRING_WHEAT_ITEM.get();
+        Optional<StoneMillRecipe> recipe = level.getRecipeManager()
+                .getRecipeFor(StoneMillRecipe.Type.INSTANCE, inventory, level);
 
-        return hasWheatInSlot && canInsertAmountIntoOutputSlot(inventory) &&
-                canInsertItemIntoOutputSlot(inventory, new ItemStack(ModItems.WHOLE_WHEAT_FLOUR.get()), 1);
+        return recipe.isPresent() && canInsertAmountIntoOutputSlot(inventory) &&
+                canInsertItemIntoOutputSlot(inventory, recipe.get().getResultItem(RegistryAccess.EMPTY));
 
     }
 
-    private static boolean canInsertItemIntoOutputSlot(SimpleContainer inventory, ItemStack itemStack, int i) {
+    private static boolean canInsertItemIntoOutputSlot(SimpleContainer inventory, ItemStack itemStack) {
         return inventory.getItem(2).getItem() == itemStack.getItem() || inventory.getItem(2).isEmpty();
     }
 

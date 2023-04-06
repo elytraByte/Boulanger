@@ -17,6 +17,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.l3e.Boulanger.block.ModBlocks;
 import org.l3e.Boulanger.block.entity.ModBlockEntities;
 import org.l3e.Boulanger.item.ModItems;
+import org.l3e.Boulanger.recipe.ModRecipes;
 import org.l3e.Boulanger.screen.ModMenuTypes;
 import org.l3e.Boulanger.screen.StoneMillScreen;
 import org.slf4j.Logger;
@@ -37,6 +38,7 @@ public class Boulanger {
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
+        ModRecipes.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);

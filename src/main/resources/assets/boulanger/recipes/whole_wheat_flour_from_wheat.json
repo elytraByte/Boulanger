@@ -1,0 +1,11 @@
+{
+  "type": "boulanger.stone_milling",
+  "ingredients": [
+    {
+      "item": "minecraft:wheat"
+    }
+  ],
+  "output": {
+    "item": "boulanger.whole_wheat_flour"
+  }
+}
