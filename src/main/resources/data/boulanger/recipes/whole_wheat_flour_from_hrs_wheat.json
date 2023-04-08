@@ -2,7 +2,7 @@
   "type": "boulanger:stone_milling",
   "ingredients": [
     {
-      "item": "boulanger:hard_red_spring_wheat"
+      "item": "boulanger:hard_red_spring_wheat_item"
     }
   ],
   "output": {
