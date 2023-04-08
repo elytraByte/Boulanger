@@ -19,7 +19,7 @@ public class StoneMillRecipe implements Recipe<SimpleContainer> {
     private final ResourceLocation id;
     private final ItemStack output;
     private final NonNullList<Ingredient> recipeItems;
-    private static Level level;
+    private static final Level level = null;
 
 
 
@@ -58,7 +58,7 @@ public class StoneMillRecipe implements Recipe<SimpleContainer> {
 
     @Override
     public ItemStack getResultItem(RegistryAccess access) {
-        return output.copy();
+        return output;
     }
 
 
@@ -122,6 +122,7 @@ public class StoneMillRecipe implements Recipe<SimpleContainer> {
         @Override
         public void toNetwork(FriendlyByteBuf buf, StoneMillRecipe recipe) {
             buf.writeInt(recipe.getIngredients().size());
+
 
             for (Ingredient ing : recipe.getIngredients()) {
                 ing.toNetwork(buf);
