@@ -3,7 +3,6 @@ package org.l3e.Boulanger.recipe;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -15,10 +14,15 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import org.l3e.Boulanger.Boulanger;
 
+
 public class StoneMillRecipe implements Recipe<SimpleContainer> {
     private final ResourceLocation id;
     private final ItemStack output;
     private final NonNullList<Ingredient> recipeItems;
+    private static Level level;
+
+
+
 
     public StoneMillRecipe(ResourceLocation id, ItemStack output,
                                     NonNullList<Ingredient> recipeItems) {
@@ -73,6 +77,10 @@ public class StoneMillRecipe implements Recipe<SimpleContainer> {
         return Type.INSTANCE;
     }
 
+    /*public ItemStack getResultItem() {
+        return output.copy();
+    }*/
+
     public static class Type implements RecipeType<StoneMillRecipe> {
         private Type() { }
         public static final Type INSTANCE = new Type();
@@ -118,7 +126,7 @@ public class StoneMillRecipe implements Recipe<SimpleContainer> {
             for (Ingredient ing : recipe.getIngredients()) {
                 ing.toNetwork(buf);
             }
-            buf.writeItemStack(recipe.getResultItem(), false);
+            buf.writeItem(recipe.getResultItem(level.registryAccess()));
         }
     }
 }
