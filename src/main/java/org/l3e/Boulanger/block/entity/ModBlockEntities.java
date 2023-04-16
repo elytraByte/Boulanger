@@ -16,6 +16,14 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("stone_mill", () ->
                     BlockEntityType.Builder.of(StoneMillBlockEntity::new,
                             ModBlocks.STONE_MILL.get()).build(null));
+    public static final RegistryObject<BlockEntityType<ThreshingMachineBlockEntity>> THRESHING_MACHINE =
+            BLOCK_ENTITIES.register("threshing_machine", () ->
+                    BlockEntityType.Builder.of(ThreshingMachineBlockEntity::new,
+                            ModBlocks.THRESHING_MACHINE.get()).build(null));
+    public static final RegistryObject<BlockEntityType<SeparatorBlockEntity>> SEPARATOR =
+            BLOCK_ENTITIES.register("separator", () ->
+                    BlockEntityType.Builder.of(SeparatorBlockEntity::new,
+                            ModBlocks.SEPARATOR.get()).build(null));
 
 
     public static void register(IEventBus eventBus) {

@@ -64,10 +64,21 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> PAPER_BAG = ITEMS.register("paper_bag",
             () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> WHEAT_BERRIES = ITEMS.register("wheat_berries",
+            () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> HARD_RED_SPRING_WHEAT_SEEDS = ITEMS.register("hard_red_spring_wheat_seeds",
             () -> new ItemNameBlockItem(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), new Item.Properties()));
     public static final RegistryObject<Item> HARD_RED_SPRING_WHEAT_ITEM = ITEMS.register("hard_red_spring_wheat_item",
             () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> HARD_RED_WINTER_WHEAT_SEEDS = ITEMS.register("hard_red_winter_wheat_seeds",
+            () -> new ItemNameBlockItem(ModBlocks.HARD_RED_WINTER_WHEAT_CROP.get(), new Item.Properties()));
+    public static final RegistryObject<Item> HARD_RED_WINTER_WHEAT_ITEM = ITEMS.register("hard_red_winter_wheat_item",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> GRINDING_STONE = ITEMS.register("grinding_stone",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> GRINDING_STONE_ASSEMBLY = ITEMS.register("grinding_stone_assembly",
+            () -> new Item(new Item.Properties()));
+
 
 
     public static void register(IEventBus eventBus) {

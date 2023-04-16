@@ -13,7 +13,10 @@ public class ModRecipes {
 
     public static final RegistryObject<RecipeSerializer<StoneMillRecipe>> STONE_MILL_SERIALIZER =
         SERIALIZERS.register("stone_milling", () -> StoneMillRecipe.Serializer.INSTANCE);
-
+    public static final RegistryObject<RecipeSerializer<ThreshingMachineRecipe>> THRESHING_MACHINE_SERIALIZER =
+            SERIALIZERS.register("threshing", () -> ThreshingMachineRecipe.Serializer.INSTANCE);
+    public static final RegistryObject<RecipeSerializer<SeparatorRecipe>> SEPARATOR_SERIALIZER =
+            SERIALIZERS.register("separating", () -> SeparatorRecipe.Serializer.INSTANCE);
     public static void register(IEventBus eventBus) {
         SERIALIZERS.register(eventBus);
     }

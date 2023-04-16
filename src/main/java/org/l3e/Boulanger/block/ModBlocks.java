@@ -2,6 +2,7 @@ package org.l3e.Boulanger.block;
 
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -27,9 +28,17 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> HARD_RED_SPRING_WHEAT_CROP = BLOCKS.register("hard_red_spring_wheat_crop",
             () -> new HardRedSpringWheat(BlockBehaviour.Properties.copy(Blocks.WHEAT)));
+    public static final RegistryObject<Block> HARD_RED_WINTER_WHEAT_CROP = BLOCKS.register("hard_red_winter_wheat_crop",
+            () -> new HardRedWinterWheat(BlockBehaviour.Properties.copy(Blocks.WHEAT)));
     public static final RegistryObject<Block> STONE_MILL = registerBlock("stone_mill",
             () -> new StoneMillBlock(BlockBehaviour.Properties.of(Material.STONE)
-                    .strength(6f).requiresCorrectToolForDrops().noOcclusion()));
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+    public static final RegistryObject<Block> THRESHING_MACHINE = registerBlock("threshing_machine",
+            () -> new ThreshingMachineBlock(BlockBehaviour.Properties.of(Material.STONE)
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+    public static final RegistryObject<Block> SEPARATOR = registerBlock("separator",
+            () -> new SeparatorBlock(BlockBehaviour.Properties.of(Material.STONE)
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
 
 
     private static <T extends Block> RegistryObject<Item> registerBlockItem(String name, RegistryObject<T> block) {

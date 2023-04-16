@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "   ",
+    "sAs",
+    "SSS"
+  ],
+  "key": {
+    "A": {
+      "item": "boulanger:grinding_stone_assembly"
+    },
+    "s": {
+      "item": "minecraft:stone_slab"
+    },
+    "S": {
+      "item": "minecraft:stone"
+    }
+  },
+  "result": {
+    "item": "boulanger:stone_mill"
+  }
+}

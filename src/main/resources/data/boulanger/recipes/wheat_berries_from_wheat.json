@@ -1,0 +1,11 @@
+{
+  "type": "boulanger:threshing",
+  "ingredients": [
+    {
+      "item": "minecraft:wheat"
+    }
+  ],
+  "output": {
+    "item": "boulanger:wheat_berries"
+  }
+}

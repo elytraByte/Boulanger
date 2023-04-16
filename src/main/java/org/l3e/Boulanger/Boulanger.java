@@ -20,6 +20,9 @@ import org.l3e.Boulanger.item.ModItems;
 import org.l3e.Boulanger.recipe.ModRecipes;
 import org.l3e.Boulanger.screen.ModMenuTypes;
 import org.l3e.Boulanger.screen.StoneMillScreen;
+import org.l3e.Boulanger.screen.ThreshingMachineScreen;
+import org.l3e.Boulanger.screen.SeparatorScreen;
+import org.l3e.Boulanger.sound.ModSounds;
 import org.slf4j.Logger;
 
 
@@ -39,6 +42,7 @@ public class Boulanger {
         ModBlockEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModRecipes.register(modEventBus);
+        //ModSounds.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -76,6 +80,14 @@ public class Boulanger {
             event.accept(ModItems.SAF_GOLD);
             event.accept(ModItems.HARD_RED_SPRING_WHEAT_ITEM);
             event.accept(ModItems.HARD_RED_SPRING_WHEAT_SEEDS);
+            event.accept(ModItems.HARD_RED_WINTER_WHEAT_ITEM);
+            event.accept(ModItems.HARD_RED_WINTER_WHEAT_SEEDS);
+            event.accept(ModItems.WHEAT_BERRIES);
+            event.accept(ModBlocks.STONE_MILL);
+            event.accept(ModBlocks.THRESHING_MACHINE);
+            event.accept(ModBlocks.SEPARATOR);
+            event.accept(ModItems.GRINDING_STONE);
+            event.accept(ModItems.GRINDING_STONE_ASSEMBLY);
         }
     }
 
@@ -85,8 +97,11 @@ public class Boulanger {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.HARD_RED_WINTER_WHEAT_CROP.get(), RenderType.cutout());
 
             MenuScreens.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
+            MenuScreens.register(ModMenuTypes.THRESHING_MACHINE_MENU.get(), ThreshingMachineScreen::new);
+            MenuScreens.register(ModMenuTypes.SEPARATOR_MENU.get(), SeparatorScreen::new);
         }
     }
 }

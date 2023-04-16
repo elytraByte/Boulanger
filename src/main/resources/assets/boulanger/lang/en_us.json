@@ -11,6 +11,9 @@
   "item.boulanger.hard_red_spring_wheat_item": "Hard Red Spring Wheat",
   "item.boulanger.hard_red_spring_wheat_seeds": "Hard Red Spring Wheat Seeds",
   "block.boulanger.hard_red_spring_wheat_crop": "Hard Red Spring Wheat",
+  "item.boulanger.hard_red_winter_wheat_item": "Hard Red Winter Wheat",
+  "item.boulanger.hard_red_winter_wheat_seeds": "Hard Red Winter Wheat Seeds",
+  "block.boulanger.hard_red_winter_wheat_crop": "Hard Red Winter Wheat",
   "item.boulanger.break_flour": "Break Flour",
   "item.boulanger.bran": "Bran",
   "item.boulanger.wheat_chaff": "Wheat Chaff",
@@ -24,6 +27,12 @@
   "item.boulanger.wild_yeast": "Wild Yeast",
   "item.boulanger.brewers_yeast": "Brewer's Yeast",
   "item.boulanger.fleischemanns_yeast": "Fleischemann's Yeast",
-  "block.boulanger.stone_mill": "Stone Mill"
+  "block.boulanger.stone_mill": "Stone Mill",
+  "block.boulanger.threshing_machine": "Threshing Machine",
+  "item.boulanger.wheat_berries": "Wheat Berries",
+  "item.boulanger.grinding_stone": "Grinding Stone",
+  "item.boulanger.grinding_stone_assembly": "Grinding Stone Assembly",
+  "block.boulanger.separator": "Separator"
+
 
 }

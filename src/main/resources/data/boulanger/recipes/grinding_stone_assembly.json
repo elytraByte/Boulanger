@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " G ",
+    " W ",
+    " G "
+  ],
+  "key": {
+      "G": {
+        "item": "boulanger:grinding_stone"
+      },
+      "W": {
+        "item": "minecraft:oak_log"
+      }
+    },
+    "result": {
+      "item": "boulanger:grinding_stone_assembly"
+    }
+}

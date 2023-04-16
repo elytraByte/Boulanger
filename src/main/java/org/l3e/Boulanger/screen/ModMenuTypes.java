@@ -10,12 +10,18 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.l3e.Boulanger.Boulanger;
 
+import javax.swing.*;
+
 public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(ForgeRegistries.MENU_TYPES, Boulanger.MOD_ID);
 
     public static final RegistryObject<MenuType<StoneMillMenu>> STONE_MILL_MENU =
             registerMenuType(StoneMillMenu::new, "stone_mill_menu");
+    public static final RegistryObject<MenuType<ThreshingMachineMenu>> THRESHING_MACHINE_MENU =
+            registerMenuType(ThreshingMachineMenu::new, "threshing_machine_menu");
+    public static final RegistryObject<MenuType<SeparatorMenu>> SEPARATOR_MENU =
+            registerMenuType(SeparatorMenu::new, "separator_menu");
 
     private static <T extends AbstractContainerMenu>RegistryObject<MenuType<T>> registerMenuType(IContainerFactory<T> factory, String name) {
         return MENUS.register(name, () -> IForgeMenuType.create(factory));

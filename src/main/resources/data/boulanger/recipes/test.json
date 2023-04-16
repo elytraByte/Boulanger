@@ -1,0 +1,19 @@
+{
+  "type": "boulanger:separating",
+  "ingredients": [
+    {
+      "item": "boulanger:hard_red_spring_wheat_item"
+
+    }
+  ],
+  "output": [
+    {
+      "item": "boulanger:wheat_berries",
+      "chance": 1.0
+    },
+    {
+      "item": "minecraft:iron_nugget",
+      "chance": 0.1
+    }
+    ]
+}

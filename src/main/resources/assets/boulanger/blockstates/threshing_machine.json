@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "boulanger:block/threshing_machine"
+    },
+    "facing=south": {
+      "model": "boulanger:block/threshing_machine",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "boulanger:block/threshing_machine",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "boulanger:block/threshing_machine",
+      "y": 90
+    }
+  }
+}
