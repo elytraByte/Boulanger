@@ -1,8 +1,10 @@
 package org.l3e.Boulanger.block.entity;
 
+import com.mojang.datafixers.types.templates.Tag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
@@ -163,14 +165,25 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
 
         if(hasRecipe(pEntity)) {
 
-            pEntity.itemHandler.extractItem(0, 1, false);
-            pEntity.itemHandler.setStackInSlot(1, new ItemStack(recipe.get().getResultItem(level.registryAccess()).getItem(),
-                    pEntity.itemHandler.getStackInSlot(1).getCount() + 3));
-            System.out.println(chance);
-            //pEntity.itemHandler.setStackInSlot(2, new ItemStack(recipe.get().getExtraResultItem().getItem(),
-                    //pEntity.itemHandler.getStackInSlot(2).getCount() + 1));
+            if(pEntity.itemHandler.getStackInSlot(0).hasTag()) {
 
-            pEntity.resetProgress();
+            }else {
+
+                pEntity.itemHandler.extractItem(0, 1, false);
+
+                ItemStack output1 = new ItemStack((recipe.get().getResultItem(level.registryAccess()).getItem()),pEntity.itemHandler.getStackInSlot(1).getCount() + 3);
+                CompoundTag nbtData = new CompoundTag();
+                nbtData.putString("boulanger:test", "separated wheat berries");
+                output1.setTag(nbtData);
+
+
+                pEntity.itemHandler.setStackInSlot(1, output1);
+                System.out.println(chance);
+
+
+                pEntity.resetProgress();
+            }
+
         }
     }
 
@@ -185,7 +198,9 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
                 .getRecipeFor(SeparatorRecipe.Type.INSTANCE, inventory, level);
 
 
-        return recipe.isPresent() && canInsertAmountIntoOutputSlot(inventory) && canInsertItemIntoOutputSlot(inventory,  recipe.get().getResultItem(level.registryAccess()));
+        return recipe.isPresent() && canInsertAmountIntoOutputSlot(inventory) &&
+                canInsertItemIntoOutputSlot(inventory, recipe.get().getResultItem(level.registryAccess()))
+                && hasItemStackBeenSeparated(inventory);
 
     }
 
@@ -195,5 +210,9 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
 
     private static boolean canInsertAmountIntoOutputSlot(SimpleContainer inventory) {
         return inventory.getItem(1).getMaxStackSize() > inventory.getItem(1).getCount();
+    }
+
+    private static boolean hasItemStackBeenSeparated(SimpleContainer inventory) {
+        return !inventory.getItem(0).hasTag();
     }
 }

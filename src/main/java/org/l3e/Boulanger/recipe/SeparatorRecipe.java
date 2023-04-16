@@ -20,8 +20,6 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
     private final ResourceLocation id;
     private static ItemStack outputs;
     private final NonNullList<Ingredient> recipeItems;
-    public static final String CHANCE = "chance";
-
     private static float chance;
 
 
@@ -56,11 +54,6 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
     public static float chance() {
         return chance;
     }
-
-    /*public ItemStack getExtraResultItem() {
-        return extra;
-    }*/
-
 
     @Override
     public boolean canCraftInDimensions(int pWidth, int pHeight) {
