@@ -23,12 +23,12 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
     private static ItemStack tertiaryOutput;
     private static ItemStack fourthOutput;
     private final NonNullList<Ingredient> recipeItems;
-    private static float chance;
+    private static float[] chance;
 
 
 
     public SeparatorRecipe(ResourceLocation id, ItemStack primaryOutput, ItemStack secondaryOutput,
-                           ItemStack tertiaryOutput, ItemStack fourthOutput, NonNullList<Ingredient> recipeItems, float chance) {
+                           ItemStack tertiaryOutput, ItemStack fourthOutput, NonNullList<Ingredient> recipeItems, float[] chance) {
         this.id = id;
         this.primaryOutput = primaryOutput;
         this.secondaryOutput = secondaryOutput;
@@ -57,7 +57,7 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
         return recipeItems;
     }
 
-    public static float chance() {
+    public static float[] chance() {
         return chance;
     }
 
@@ -87,10 +87,6 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
         return SeparatorRecipe.Type.INSTANCE;
     }
 
-    /*public ItemStack getResultItem() {
-        return output.copy();
-    }*/
-
     public static class Type implements RecipeType<SeparatorRecipe> {
         private Type() { }
         public static final SeparatorRecipe.Type INSTANCE = new SeparatorRecipe.Type();
@@ -104,22 +100,32 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
                 new ResourceLocation(Boulanger.MOD_ID, "separating");
 
 
-        public float getChance(JsonObject obj) {
+        public float[] getChances(JsonObject obj) {
 
-            JsonElement outputs = obj.getAsJsonArray("output").get(0);
+            float[] arrayChances = new float[4];
 
-            return  outputs.getAsJsonObject().get("chance").getAsFloat();
+            JsonElement o1 = obj.getAsJsonArray("output").get(0);
+            arrayChances[0] = o1.getAsJsonObject().get("chance").getAsFloat();
 
+            JsonElement o2 = obj.getAsJsonArray("output").get(1);
+            arrayChances[1] = o2.getAsJsonObject().get("chance").getAsFloat();
 
+            JsonElement o3 = obj.getAsJsonArray("output").get(2);
+            arrayChances[2] = o3.getAsJsonObject().get("chance").getAsFloat();
+
+            JsonElement o4 = obj.getAsJsonArray("output").get(3);
+            arrayChances[3] = o4.getAsJsonObject().get("chance").getAsFloat();
+
+            return arrayChances;
         }
 
         public ItemStack getOutputs(JsonObject json) {
 
             JsonElement element = json.getAsJsonArray("output").get(0);
-            System.out.println(element);
+//            System.out.println(element);
 
             Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(element.getAsJsonObject().get("item").getAsString()));
-            System.out.println(item);
+//            System.out.println(item);
 
             return new ItemStack(item, 1);
 
@@ -173,7 +179,8 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
         @Override
         public SeparatorRecipe fromJson(ResourceLocation pRecipeId, JsonObject pSerializedRecipe) {
 
-            float chance = getChance(pSerializedRecipe);
+            //float chance = getChances(pSerializedRecipe);
+            float[] chance = getChances(pSerializedRecipe);
             ItemStack output0 = getOutputs(pSerializedRecipe);
             ItemStack output1 = getSecondaryOutput(pSerializedRecipe);
             ItemStack output2 = getTertiaryOutput(pSerializedRecipe);
@@ -202,7 +209,11 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
             ItemStack output1 = buf.readItem();
             ItemStack output2 = buf.readItem();
             ItemStack output3 = buf.readItem();
-            float chance = buf.readFloat();
+            chance[0] = buf.readFloat();
+            chance[1] = buf.readFloat();
+            chance[2] = buf.readFloat();
+            chance[3] = buf.readFloat();
+
             return new SeparatorRecipe(id, output, output1, output2, output3, inputs, chance);
         }
 
@@ -218,7 +229,10 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
             buf.writeItem(recipe.secondaryOutput);
             buf.writeItem(recipe.tertiaryOutput);
             buf.writeItem(recipe.fourthOutput);
-            buf.writeFloat(chance);
+            buf.writeFloat(chance[0]);
+            buf.writeFloat(chance[1]);
+            buf.writeFloat(chance[2]);
+            buf.writeFloat(chance[3]);
         }
     }
 }

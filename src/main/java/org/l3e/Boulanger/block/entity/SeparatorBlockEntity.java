@@ -159,7 +159,6 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
 
         Optional<SeparatorRecipe> recipe = level.getRecipeManager()
                 .getRecipeFor(SeparatorRecipe.Type.INSTANCE, inventory, level);
-        float chance = SeparatorRecipe.chance();
 
 
 
@@ -177,12 +176,27 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
                 output1.setTag(nbtData);
                 pEntity.itemHandler.setStackInSlot(1, output1);
 
-                ItemStack output2 = new ItemStack(SeparatorRecipe.Serializer.getSecondaryResult().getItem(),pEntity.itemHandler.getStackInSlot(2).getCount() + 1);
-                pEntity.itemHandler.setStackInSlot(2, output2);
-                ItemStack output3 = new ItemStack(SeparatorRecipe.Serializer.getTertiaryResult().getItem(),pEntity.itemHandler.getStackInSlot(3).getCount() + 1);
-                pEntity.itemHandler.setStackInSlot(3, output3);
-                ItemStack output4 = new ItemStack(SeparatorRecipe.Serializer.getFourthResult().getItem(),pEntity.itemHandler.getStackInSlot(4).getCount() + 1);
-                pEntity.itemHandler.setStackInSlot(4, output4);
+                float[] chance = SeparatorRecipe.chance();
+                double randomChance = Math.random() * chance[1];
+//                System.out.println(randomChance);
+
+                if (randomChance >= 0.09) {
+                    ItemStack output2 = new ItemStack(SeparatorRecipe.Serializer.getSecondaryResult().getItem(),pEntity.itemHandler.getStackInSlot(2).getCount() + 1);
+                    pEntity.itemHandler.setStackInSlot(2, output2);
+                }
+
+                double randomChance1 = Math.random() * chance[2];
+//                System.out.println(randomChance1);
+                if (randomChance1 >= 0.05) {
+                    ItemStack output3 = new ItemStack(SeparatorRecipe.Serializer.getTertiaryResult().getItem(),pEntity.itemHandler.getStackInSlot(3).getCount() + 1);
+                    pEntity.itemHandler.setStackInSlot(3, output3);
+                }
+                double randomChance2 = Math.random() * chance[3];
+//                System.out.println(randomChance2);
+                if (randomChance2 >= 0.05) {
+                    ItemStack output4 = new ItemStack(SeparatorRecipe.Serializer.getFourthResult().getItem(),pEntity.itemHandler.getStackInSlot(4).getCount() + 1);
+                    pEntity.itemHandler.setStackInSlot(4, output4);
+                }
 //                System.out.println(chance);
 
 
