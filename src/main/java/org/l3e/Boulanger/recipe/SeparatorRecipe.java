@@ -18,16 +18,22 @@ import org.l3e.Boulanger.Boulanger;
 
 public class SeparatorRecipe implements Recipe<SimpleContainer> {
     private final ResourceLocation id;
-    private static ItemStack outputs;
+    private static ItemStack primaryOutput;
+    private static ItemStack secondaryOutput;
+    private static ItemStack tertiaryOutput;
+    private static ItemStack fourthOutput;
     private final NonNullList<Ingredient> recipeItems;
     private static float chance;
 
 
 
-    public SeparatorRecipe(ResourceLocation id, ItemStack outputs,
-                           NonNullList<Ingredient> recipeItems, float chance) {
+    public SeparatorRecipe(ResourceLocation id, ItemStack primaryOutput, ItemStack secondaryOutput,
+                           ItemStack tertiaryOutput, ItemStack fourthOutput, NonNullList<Ingredient> recipeItems, float chance) {
         this.id = id;
-        this.outputs = outputs;
+        this.primaryOutput = primaryOutput;
+        this.secondaryOutput = secondaryOutput;
+        this.tertiaryOutput = tertiaryOutput;
+        this.fourthOutput = fourthOutput;
         this.recipeItems = recipeItems;
         this.chance = chance;
     }
@@ -43,7 +49,7 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
 
     @Override
     public ItemStack assemble(SimpleContainer p_44001_, RegistryAccess p_267165_) {
-        return outputs;
+        return primaryOutput;
     }
 
     @Override
@@ -62,7 +68,7 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
 
     @Override
     public ItemStack getResultItem(RegistryAccess access) {
-        return outputs;
+        return primaryOutput;
     }
 
 
@@ -119,23 +125,68 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
 
         }
 
+        public ItemStack getSecondaryOutput(JsonObject json) {
+            JsonElement element = json.getAsJsonArray("output").get(1);
+            System.out.println(element);
+
+            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(element.getAsJsonObject().get("item").getAsString()));
+            System.out.println(item);
+
+            return new ItemStack(item, 1);
+        }
+
+        public static ItemStack getSecondaryResult() {
+            return secondaryOutput;
+        }
+
+        public ItemStack getTertiaryOutput(JsonObject json) {
+            JsonElement element = json.getAsJsonArray("output").get(2);
+            System.out.println(element);
+
+            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(element.getAsJsonObject().get("item").getAsString()));
+            System.out.println(item);
+
+            return new ItemStack(item, 1);
+        }
+
+        public static ItemStack getTertiaryResult() {
+            return tertiaryOutput;
+        }
+
+        public ItemStack getFourthOutput(JsonObject json) {
+            JsonElement element = json.getAsJsonArray("output").get(3);
+            System.out.println(element);
+
+            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(element.getAsJsonObject().get("item").getAsString()));
+            System.out.println(item);
+
+            return new ItemStack(item, 1);
+        }
+
+        public static ItemStack getFourthResult() {
+            return fourthOutput;
+        }
+
 
 
 
         @Override
         public SeparatorRecipe fromJson(ResourceLocation pRecipeId, JsonObject pSerializedRecipe) {
 
-                float chance = getChance(pSerializedRecipe);
-                ItemStack output = getOutputs(pSerializedRecipe);
+            float chance = getChance(pSerializedRecipe);
+            ItemStack output0 = getOutputs(pSerializedRecipe);
+            ItemStack output1 = getSecondaryOutput(pSerializedRecipe);
+            ItemStack output2 = getTertiaryOutput(pSerializedRecipe);
+            ItemStack output3 = getFourthOutput(pSerializedRecipe);
 
-                JsonArray ingredients = GsonHelper.getAsJsonArray(pSerializedRecipe, "ingredients");
-                NonNullList<Ingredient> inputs = NonNullList.withSize(1, Ingredient.EMPTY);
+            JsonArray ingredients = GsonHelper.getAsJsonArray(pSerializedRecipe, "ingredients");
+            NonNullList<Ingredient> inputs = NonNullList.withSize(1, Ingredient.EMPTY);
 
-                for (int i = 0; i < inputs.size(); i++) {
-                    inputs.set(i, Ingredient.fromJson(ingredients.get(i)));
-                }
+            for (int i = 0; i < inputs.size(); i++) {
+                inputs.set(i, Ingredient.fromJson(ingredients.get(i)));
+            }
 
-                return new SeparatorRecipe(pRecipeId, output, inputs, chance);
+            return new SeparatorRecipe(pRecipeId, output0, output1, output2, output3, inputs, chance);
 
         }
 
@@ -148,8 +199,11 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
             }
 
             ItemStack output = buf.readItem();
+            ItemStack output1 = buf.readItem();
+            ItemStack output2 = buf.readItem();
+            ItemStack output3 = buf.readItem();
             float chance = buf.readFloat();
-            return new SeparatorRecipe(id, output, inputs, chance);
+            return new SeparatorRecipe(id, output, output1, output2, output3, inputs, chance);
         }
 
         @Override
@@ -160,7 +214,10 @@ public class SeparatorRecipe implements Recipe<SimpleContainer> {
             for (Ingredient ing : recipe.getIngredients()) {
                 ing.toNetwork(buf);
             }
-            buf.writeItem(recipe.outputs);
+            buf.writeItem(recipe.primaryOutput);
+            buf.writeItem(recipe.secondaryOutput);
+            buf.writeItem(recipe.tertiaryOutput);
+            buf.writeItem(recipe.fourthOutput);
             buf.writeFloat(chance);
         }
     }

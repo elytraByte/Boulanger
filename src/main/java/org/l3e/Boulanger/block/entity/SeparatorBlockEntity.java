@@ -175,10 +175,15 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
                 CompoundTag nbtData = new CompoundTag();
                 nbtData.putString("boulanger:test", "separated wheat berries");
                 output1.setTag(nbtData);
-
-
                 pEntity.itemHandler.setStackInSlot(1, output1);
-                System.out.println(chance);
+
+                ItemStack output2 = new ItemStack(SeparatorRecipe.Serializer.getSecondaryResult().getItem(),pEntity.itemHandler.getStackInSlot(2).getCount() + 1);
+                pEntity.itemHandler.setStackInSlot(2, output2);
+                ItemStack output3 = new ItemStack(SeparatorRecipe.Serializer.getTertiaryResult().getItem(),pEntity.itemHandler.getStackInSlot(3).getCount() + 1);
+                pEntity.itemHandler.setStackInSlot(3, output3);
+                ItemStack output4 = new ItemStack(SeparatorRecipe.Serializer.getFourthResult().getItem(),pEntity.itemHandler.getStackInSlot(4).getCount() + 1);
+                pEntity.itemHandler.setStackInSlot(4, output4);
+//                System.out.println(chance);
 
 
                 pEntity.resetProgress();
