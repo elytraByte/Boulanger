@@ -18,7 +18,6 @@ public class ThreshingMachineRecipe  implements Recipe<SimpleContainer> {
     private final ResourceLocation id;
     private final ItemStack output;
     private final NonNullList<Ingredient> recipeItems;
-    //private static ItemStack extra;
 
 
 
@@ -27,7 +26,6 @@ public class ThreshingMachineRecipe  implements Recipe<SimpleContainer> {
         this.id = id;
         this.output = output;
         this.recipeItems = recipeItems;
-        //this.extra = extra;
     }
 
     @Override

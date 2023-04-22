@@ -1,0 +1,19 @@
+{
+  "type": "boulanger:aspirating",
+  "ingredients": [
+    {
+      "item": "boulanger:wheat_berries"
+
+    }
+  ],
+  "output": [
+    {
+      "item": "boulanger:wheat_berries",
+      "chance": 1.0
+    },
+    {
+      "item": "minecraft:dirt",
+      "chance": 0.2
+    }
+  ]
+}

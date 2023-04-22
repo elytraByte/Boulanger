@@ -32,7 +32,11 @@
   "item.boulanger.wheat_berries": "Wheat Berries",
   "item.boulanger.grinding_stone": "Grinding Stone",
   "item.boulanger.grinding_stone_assembly": "Grinding Stone Assembly",
-  "block.boulanger.separator": "Separator"
+  "block.boulanger.separator": "Separator",
+  "block.boulanger.aspirator": "Aspirator",
+  "block.boulanger.white_bakery_tile": "White Bakery Tile",
+  "block.boulanger.blue_bakery_tile": "Blue Bakery Tile",
+  "block.boulanger.checkered_bakery_tile": "Checkered Bakery Tile"
 
 
 }

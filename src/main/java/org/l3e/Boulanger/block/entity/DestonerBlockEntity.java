@@ -1,10 +1,8 @@
 package org.l3e.Boulanger.block.entity;
 
-import com.mojang.datafixers.types.templates.Tag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
@@ -24,16 +22,14 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.l3e.Boulanger.recipe.SeparatorRecipe;
-import org.l3e.Boulanger.screen.SeparatorMenu;
-
+import org.l3e.Boulanger.recipe.DestonerRecipe;
+import org.l3e.Boulanger.screen.DestonerMenu;
 
 import java.util.Optional;
 
+public class DestonerBlockEntity  extends BlockEntity implements MenuProvider {
 
-public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
-
-    private final ItemStackHandler itemHandler = new ItemStackHandler(5) {
+    private final ItemStackHandler itemHandler = new ItemStackHandler(4) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
@@ -47,14 +43,14 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
     private int maxProgress = 78;
 
 
-    public SeparatorBlockEntity(BlockPos blockPos, BlockState blockState) {
-        super(ModBlockEntities.SEPARATOR.get(), blockPos, blockState);
+    public DestonerBlockEntity(BlockPos blockPos, BlockState blockState) {
+        super(ModBlockEntities.DESTONER.get(), blockPos, blockState);
         this.data = new ContainerData() {
             @Override
             public int get(int index) {
                 return switch (index) {
-                    case 0 -> SeparatorBlockEntity.this.progress;
-                    case 1 -> SeparatorBlockEntity.this.maxProgress;
+                    case 0 -> DestonerBlockEntity.this.progress;
+                    case 1 -> DestonerBlockEntity.this.maxProgress;
                     default -> 0;
                 };
             }
@@ -62,8 +58,8 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
             @Override
             public void set(int index, int value) {
                 switch (index) {
-                    case 0 -> SeparatorBlockEntity.this.progress = value;
-                    case 1 -> SeparatorBlockEntity.this.maxProgress = value;
+                    case 0 -> DestonerBlockEntity.this.progress = value;
+                    case 1 -> DestonerBlockEntity.this.maxProgress = value;
                 }
 
             }
@@ -78,18 +74,18 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public Component getDisplayName() {
         //can this be localized?
-        return Component.literal("Separator");
+        return Component.literal("Destoner");
     }
 
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int i, Inventory inventory, Player player) {
-        return new SeparatorMenu(i, inventory, this, this.data);
+        return new DestonerMenu(i, inventory, this, this.data);
     }
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, Direction side) {
-        if(cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+        if (cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return lazyItemHandler.cast();
         }
 
@@ -128,16 +124,16 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
         Containers.dropContents(this.level, this.worldPosition, inventory);
     }
 
-    public static void tick(Level level, BlockPos blockPos, BlockState state, SeparatorBlockEntity e) {
-        if(level.isClientSide()) {
+    public static void tick(Level level, BlockPos blockPos, BlockState state, DestonerBlockEntity e) {
+        if (level.isClientSide()) {
             return;
         }
 
-        if(hasRecipe(e)) {
+        if (hasRecipe(e)) {
             e.progress++;
             setChanged(level, blockPos, state);
 
-            if(e.progress >= e.maxProgress) {
+            if (e.progress >= e.maxProgress) {
                 craftItem(e);
             }
         } else {
@@ -151,7 +147,7 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
         this.progress = 0;
     }
 
-    private static void craftItem(SeparatorBlockEntity pEntity) {
+    private static void craftItem(DestonerBlockEntity pEntity) {
         Level level = pEntity.level;
         SimpleContainer inventory = new SimpleContainer(pEntity.itemHandler.getSlots());
 
@@ -159,88 +155,77 @@ public class SeparatorBlockEntity extends BlockEntity implements MenuProvider {
             inventory.setItem(i, pEntity.itemHandler.getStackInSlot(i));
         }
 
-        Optional<SeparatorRecipe> recipe = level.getRecipeManager()
-                .getRecipeFor(SeparatorRecipe.Type.INSTANCE, inventory, level);
+        Optional<DestonerRecipe> recipe = level.getRecipeManager()
+                .getRecipeFor(DestonerRecipe.Type.INSTANCE, inventory, level);
 
 
+        if (hasRecipe(pEntity)) {
 
-        if(hasRecipe(pEntity)) {
+            if (pEntity.itemHandler.getStackInSlot(0).hasTag()) {
 
-            if(pEntity.itemHandler.getStackInSlot(0).hasTag()) {
-
-            }else {
 
                 pEntity.itemHandler.extractItem(0, 1, false);
 
-                ItemStack output1 = new ItemStack((recipe.get().getResultItem(level.registryAccess()).getItem()),pEntity.itemHandler.getStackInSlot(1).getCount() + 3);
+                ItemStack output1 = new ItemStack((recipe.get().getResultItem(level.registryAccess()).getItem()), pEntity.itemHandler.getStackInSlot(1).getCount() + 1);
                 CompoundTag nbtData = new CompoundTag();
-                nbtData.putString("boulanger:test", "separated wheat berries");
+                nbtData.putString("boulanger:test", "destoned wheat berries");
                 output1.setTag(nbtData);
                 pEntity.itemHandler.setStackInSlot(1, output1);
 
-                float[] chance = SeparatorRecipe.chance();
+                float[] chance = DestonerRecipe.chance();
                 double randomChance = Math.random() * chance[1];
-//                System.out.println(randomChance);
+                System.out.println(randomChance + "r0");
 
-                if (randomChance >= 0.09) {
-                    ItemStack output2 = new ItemStack(SeparatorRecipe.Serializer.getSecondaryResult().getItem(),pEntity.itemHandler.getStackInSlot(2).getCount() + 1);
+                if (randomChance >= 0.06) {
+                    ItemStack output2 = new ItemStack(DestonerRecipe.Serializer.getSecondaryResult().getItem(), pEntity.itemHandler.getStackInSlot(2).getCount() + 1);
                     pEntity.itemHandler.setStackInSlot(2, output2);
                 }
 
                 double randomChance1 = Math.random() * chance[2];
-//                System.out.println(randomChance1);
-                if (randomChance1 >= 0.05) {
-                    ItemStack output3 = new ItemStack(SeparatorRecipe.Serializer.getTertiaryResult().getItem(),pEntity.itemHandler.getStackInSlot(3).getCount() + 1);
+                System.out.println(randomChance1 + "r1");
+                if (randomChance1 >= 0.06) {
+                    ItemStack output3 = new ItemStack(DestonerRecipe.Serializer.getTertiaryResult().getItem(), pEntity.itemHandler.getStackInSlot(3).getCount() + 1);
                     pEntity.itemHandler.setStackInSlot(3, output3);
                 }
-                double randomChance2 = Math.random() * chance[3];
-//                System.out.println(randomChance2);
-                if (randomChance2 >= 0.05) {
-                    ItemStack output4 = new ItemStack(SeparatorRecipe.Serializer.getFourthResult().getItem(),pEntity.itemHandler.getStackInSlot(4).getCount() + 1);
-                    pEntity.itemHandler.setStackInSlot(4, output4);
-                }
-//                System.out.println(chance);
 
 
                 pEntity.resetProgress();
-            }
 
+            }
         }
     }
 
-    private static boolean hasRecipe(SeparatorBlockEntity e) {
+    private static boolean hasRecipe(DestonerBlockEntity e) {
         Level level = e.level;
         SimpleContainer inventory = new SimpleContainer(e.itemHandler.getSlots());
-        for (int i = 0; i < e.itemHandler.getSlots(); i ++) {
+        for (int i = 0; i < e.itemHandler.getSlots(); i++) {
             inventory.setItem(i, e.itemHandler.getStackInSlot(i));
         }
 
-        Optional<SeparatorRecipe> recipe = level.getRecipeManager()
-                .getRecipeFor(SeparatorRecipe.Type.INSTANCE, inventory, level);
+        Optional<DestonerRecipe> recipe = level.getRecipeManager()
+                .getRecipeFor(DestonerRecipe.Type.INSTANCE, inventory, level);
 
+        ItemStack is = e.itemHandler.getStackInSlot(0);
+        CompoundTag nbt = is.getOrCreateTag();
 
         return recipe.isPresent() && canInsertAmountIntoOutputSlot(inventory) &&
                 canInsertItemIntoOutputSlot(inventory, recipe.get().getResultItem(level.registryAccess()))
-                && hasItemStackBeenSeparated(inventory);
+                && nbt.getString("boulanger:test").equals("aspirated wheat berries");
 
     }
 
     private static boolean canInsertItemIntoOutputSlot(SimpleContainer inventory, ItemStack itemStack) {
         return inventory.getItem(1).getItem() == itemStack.getItem() || inventory.getItem(1).isEmpty()
                 && inventory.getItem(2).getItem() == itemStack.getItem() || inventory.getItem(2).isEmpty()
-                && inventory.getItem(3).getItem() == itemStack.getItem() || inventory.getItem(3).isEmpty()
-                && inventory.getItem(4).getItem() == itemStack.getItem() || inventory.getItem(4).isEmpty();
+                && inventory.getItem(3).getItem() == itemStack.getItem() || inventory.getItem(3).isEmpty();
     }
 
     private static boolean canInsertAmountIntoOutputSlot(SimpleContainer inventory) {
         return inventory.getItem(1).getMaxStackSize() > inventory.getItem(1).getCount()
                 && inventory.getItem(2).getMaxStackSize() > inventory.getItem(2).getCount()
-                && inventory.getItem(3).getMaxStackSize() > inventory.getItem(3).getCount()
-                && inventory.getItem(4).getMaxStackSize() > inventory.getItem(4).getCount();
+                && inventory.getItem(3).getMaxStackSize() > inventory.getItem(3).getCount();
 
-    }
-
-    private static boolean hasItemStackBeenSeparated(SimpleContainer inventory) {
-        return !inventory.getItem(0).hasTag();
     }
 }
+
+

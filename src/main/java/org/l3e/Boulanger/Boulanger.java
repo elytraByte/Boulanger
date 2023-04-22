@@ -18,11 +18,7 @@ import org.l3e.Boulanger.block.ModBlocks;
 import org.l3e.Boulanger.block.entity.ModBlockEntities;
 import org.l3e.Boulanger.item.ModItems;
 import org.l3e.Boulanger.recipe.ModRecipes;
-import org.l3e.Boulanger.screen.ModMenuTypes;
-import org.l3e.Boulanger.screen.StoneMillScreen;
-import org.l3e.Boulanger.screen.ThreshingMachineScreen;
-import org.l3e.Boulanger.screen.SeparatorScreen;
-import org.l3e.Boulanger.sound.ModSounds;
+import org.l3e.Boulanger.screen.*;
 import org.slf4j.Logger;
 
 
@@ -42,7 +38,6 @@ public class Boulanger {
         ModBlockEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModRecipes.register(modEventBus);
-        //ModSounds.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -86,8 +81,13 @@ public class Boulanger {
             event.accept(ModBlocks.STONE_MILL);
             event.accept(ModBlocks.THRESHING_MACHINE);
             event.accept(ModBlocks.SEPARATOR);
+            event.accept(ModBlocks.ASPIRATOR);
+            event.accept(ModBlocks.DESTONER);
             event.accept(ModItems.GRINDING_STONE);
             event.accept(ModItems.GRINDING_STONE_ASSEMBLY);
+            event.accept(ModBlocks.CHECKERED_BAKERY_TILE);
+            event.accept(ModBlocks.BLUE_BAKERY_TILE);
+            event.accept(ModBlocks.WHITE_BAKERY_TILE);
         }
     }
 
@@ -102,6 +102,8 @@ public class Boulanger {
             MenuScreens.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
             MenuScreens.register(ModMenuTypes.THRESHING_MACHINE_MENU.get(), ThreshingMachineScreen::new);
             MenuScreens.register(ModMenuTypes.SEPARATOR_MENU.get(), SeparatorScreen::new);
+            MenuScreens.register(ModMenuTypes.ASPIRATOR_MENU.get(), AspiratorScreen::new);
+            MenuScreens.register(ModMenuTypes.DESTONER_MENU.get(), DestonerScreen::new);
         }
     }
 }

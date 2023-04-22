@@ -1,0 +1,22 @@
+{
+  "type": "boulanger:destoning",
+  "ingredients": [
+    {
+      "item": "boulanger:wheat_berries"
+    }
+  ],
+  "output": [
+    {
+      "item": "boulanger:wheat_berries",
+      "chance": 1.0
+    },
+    {
+      "item": "minecraft:cobblestone",
+      "chance": 0.4
+    },
+    {
+      "item": "minecraft:gravel",
+      "chance": 0.4
+    }
+  ]
+}

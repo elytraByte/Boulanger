@@ -39,6 +39,22 @@ public class ModBlocks {
     public static final RegistryObject<Block> SEPARATOR = registerBlock("separator",
             () -> new SeparatorBlock(BlockBehaviour.Properties.of(Material.STONE)
                     .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+    public static final RegistryObject<Block> ASPIRATOR = registerBlock("aspirator",
+            () -> new AspiratorBlock(BlockBehaviour.Properties.of(Material.STONE)
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+    public static final RegistryObject<Block> DESTONER = registerBlock("destoner",
+            () -> new DestonerBlock(BlockBehaviour.Properties.of(Material.STONE)
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+    public static final RegistryObject<Block> CHECKERED_BAKERY_TILE = registerBlock("checkered_bakery_tile",
+            () -> new Block(BlockBehaviour.Properties.of(Material.STONE)
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+    public static final RegistryObject<Block> BLUE_BAKERY_TILE = registerBlock("blue_bakery_tile",
+            () -> new Block(BlockBehaviour.Properties.of(Material.STONE)
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+    public static final RegistryObject<Block> WHITE_BAKERY_TILE = registerBlock("white_bakery_tile",
+            () -> new Block(BlockBehaviour.Properties.of(Material.STONE)
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+
 
 
     private static <T extends Block> RegistryObject<Item> registerBlockItem(String name, RegistryObject<T> block) {

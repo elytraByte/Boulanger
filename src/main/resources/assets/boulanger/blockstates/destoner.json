@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "boulanger:block/destoner"
+    },
+    "facing=south": {
+      "model": "boulanger:block/destoner",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "boulanger:block/destoner",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "boulanger:block/destoner",
+      "y": 90
+    }
+  }
+}

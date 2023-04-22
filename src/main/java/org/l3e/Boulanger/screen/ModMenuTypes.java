@@ -22,6 +22,10 @@ public class ModMenuTypes {
             registerMenuType(ThreshingMachineMenu::new, "threshing_machine_menu");
     public static final RegistryObject<MenuType<SeparatorMenu>> SEPARATOR_MENU =
             registerMenuType(SeparatorMenu::new, "separator_menu");
+    public static final RegistryObject<MenuType<AspiratorMenu>> ASPIRATOR_MENU =
+            registerMenuType(AspiratorMenu::new, "aspirator_menu");
+    public static final RegistryObject<MenuType<DestonerMenu>> DESTONER_MENU =
+            registerMenuType(DestonerMenu::new, "destoner_menu");
 
     private static <T extends AbstractContainerMenu>RegistryObject<MenuType<T>> registerMenuType(IContainerFactory<T> factory, String name) {
         return MENUS.register(name, () -> IForgeMenuType.create(factory));

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "boulanger:block/aspirator"
+    },
+    "facing=south": {
+      "model": "boulanger:block/aspirator",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "boulanger:block/aspirator",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "boulanger:block/aspirator",
+      "y": 90
+    }
+  }
+}

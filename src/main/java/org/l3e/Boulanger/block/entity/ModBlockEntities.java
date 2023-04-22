@@ -24,6 +24,14 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("separator", () ->
                     BlockEntityType.Builder.of(SeparatorBlockEntity::new,
                             ModBlocks.SEPARATOR.get()).build(null));
+    public static final RegistryObject<BlockEntityType<AspiratorBlockEntity>> ASPIRATOR =
+            BLOCK_ENTITIES.register("aspirator", () ->
+                    BlockEntityType.Builder.of(AspiratorBlockEntity::new,
+                            ModBlocks.ASPIRATOR.get()).build(null));
+    public static final RegistryObject<BlockEntityType<DestonerBlockEntity>> DESTONER =
+            BLOCK_ENTITIES.register("destoner", () ->
+                    BlockEntityType.Builder.of(DestonerBlockEntity::new,
+                            ModBlocks.DESTONER.get()).build(null));
 
 
     public static void register(IEventBus eventBus) {
