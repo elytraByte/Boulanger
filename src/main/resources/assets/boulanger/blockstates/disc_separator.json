@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "boulanger:block/disc_separator"
+    },
+    "facing=south": {
+      "model": "boulanger:block/disc_separator",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "boulanger:block/disc_separator",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "boulanger:block/disc_separator",
+      "y": 90
+    }
+  }
+}

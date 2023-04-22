@@ -22,11 +22,12 @@ public class SafRedItem extends Item {
     public void appendHoverText(ItemStack itemStack, @Nullable Level level, List<Component> components, TooltipFlag tooltipFlag) {
         super.appendHoverText(itemStack, level, components, tooltipFlag);
 
-        components.add(Component.translatable( "Saf Instant: Red").withStyle(ChatFormatting.RED,ChatFormatting.ITALIC));
-        components.add(Component.translatable(ChatFormatting.ITALIC + "reliable and consistent"));
-        components.add(Component.translatable(ChatFormatting.ITALIC + "results from batch to batch"));
-    }
+        itemStack.setHoverName(Component.translatable("tooltip.boulanger.safreditem.name").withStyle(style -> style.withColor(ChatFormatting.LIGHT_PURPLE).withItalic(false)));
 
+//        components.add(Component.translatable("Saf Instant: Red").withStyle(ChatFormatting.RED, ChatFormatting.ITALIC));
+        //components.add(Component.translatable(ChatFormatting.ITALIC + "reliable and consistent"));
+       // components.add(Component.translatable(ChatFormatting.ITALIC + "results from batch to batch"));
+    }
 
 
 }

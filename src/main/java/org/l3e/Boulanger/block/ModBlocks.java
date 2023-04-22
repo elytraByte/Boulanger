@@ -45,6 +45,9 @@ public class ModBlocks {
     public static final RegistryObject<Block> DESTONER = registerBlock("destoner",
             () -> new DestonerBlock(BlockBehaviour.Properties.of(Material.STONE)
                     .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
+    public static final RegistryObject<Block> DISC_SEPARATOR = registerBlock("disc_separator",
+            () -> new DiscSeparatorBlock(BlockBehaviour.Properties.of(Material.STONE)
+                    .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));
     public static final RegistryObject<Block> CHECKERED_BAKERY_TILE = registerBlock("checkered_bakery_tile",
             () -> new Block(BlockBehaviour.Properties.of(Material.STONE)
                     .strength(1.5f).requiresCorrectToolForDrops().noOcclusion()));

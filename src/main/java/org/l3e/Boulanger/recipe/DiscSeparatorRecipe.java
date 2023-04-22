@@ -1,6 +1,7 @@
 package org.l3e.Boulanger.recipe;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
@@ -8,20 +9,22 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.Nullable;
 import org.l3e.Boulanger.Boulanger;
 
-public class ThreshingMachineRecipe implements Recipe<SimpleContainer> {
+public class DiscSeparatorRecipe implements Recipe<SimpleContainer> {
     private final ResourceLocation id;
     private final ItemStack output;
     private final NonNullList<Ingredient> recipeItems;
 
 
 
-    public ThreshingMachineRecipe(ResourceLocation id, ItemStack output,
+    public DiscSeparatorRecipe(ResourceLocation id, ItemStack output,
                                   NonNullList<Ingredient> recipeItems) {
         this.id = id;
         this.output = output;
@@ -34,7 +37,7 @@ public class ThreshingMachineRecipe implements Recipe<SimpleContainer> {
             return false;
         }
 
-        return recipeItems.get(0).test(pContainer.getItem(1));
+        return recipeItems.get(0).test(pContainer.getItem(0));
     }
 
     @Override
@@ -65,30 +68,41 @@ public class ThreshingMachineRecipe implements Recipe<SimpleContainer> {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return ThreshingMachineRecipe.Serializer.INSTANCE;
+        return DiscSeparatorRecipe.Serializer.INSTANCE;
     }
 
     @Override
     public RecipeType<?> getType() {
-        return ThreshingMachineRecipe.Type.INSTANCE;
+        return DiscSeparatorRecipe.Type.INSTANCE;
     }
 
-    public static class Type implements RecipeType<ThreshingMachineRecipe> {
+    public static ItemStack getOutputs(JsonObject json) {
+
+        JsonElement element = json.getAsJsonArray("output").get(0);
+//            System.out.println(element);
+
+        Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(element.getAsJsonObject().get("item").getAsString()));
+//            System.out.println(item);
+
+        return new ItemStack(item, 1);
+
+    }
+
+    public static class Type implements RecipeType<DiscSeparatorRecipe> {
         private Type() { }
-        public static final ThreshingMachineRecipe.Type INSTANCE = new ThreshingMachineRecipe.Type();
-        public static final String ID = "threshing";
+        public static final DiscSeparatorRecipe.Type INSTANCE = new DiscSeparatorRecipe.Type();
+        public static final String ID = "disc_separating";
     }
 
 
-    public static class Serializer implements RecipeSerializer<ThreshingMachineRecipe> {
-        public static final ThreshingMachineRecipe.Serializer INSTANCE = new ThreshingMachineRecipe.Serializer();
+    public static class Serializer implements RecipeSerializer<DiscSeparatorRecipe> {
+        public static final DiscSeparatorRecipe.Serializer INSTANCE = new DiscSeparatorRecipe.Serializer();
         public static final ResourceLocation ID =
-                new ResourceLocation(Boulanger.MOD_ID, "threshing");
+                new ResourceLocation(Boulanger.MOD_ID, "disc_separating");
 
         @Override
-        public ThreshingMachineRecipe fromJson(ResourceLocation pRecipeId, JsonObject pSerializedRecipe) {
-            ItemStack output = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(pSerializedRecipe, "output"));
-            //ItemStack extra = ShapedRecipe.itemStackFromJson(GsonHelper.getAsJsonObject(pSerializedRecipe, "extra"));
+        public DiscSeparatorRecipe fromJson(ResourceLocation pRecipeId, JsonObject pSerializedRecipe) {
+            ItemStack output = getOutputs(pSerializedRecipe);
             JsonArray ingredients = GsonHelper.getAsJsonArray(pSerializedRecipe, "ingredients");
             NonNullList<Ingredient> inputs = NonNullList.withSize(1, Ingredient.EMPTY);
 
@@ -96,11 +110,11 @@ public class ThreshingMachineRecipe implements Recipe<SimpleContainer> {
                 inputs.set(i, Ingredient.fromJson(ingredients.get(i)));
             }
 
-            return new ThreshingMachineRecipe(pRecipeId, output, inputs);
+            return new DiscSeparatorRecipe(pRecipeId, output, inputs);
         }
 
         @Override
-        public @Nullable ThreshingMachineRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buf) {
+        public @Nullable DiscSeparatorRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buf) {
             NonNullList<Ingredient> inputs = NonNullList.withSize(buf.readInt(), Ingredient.EMPTY);
 
             for (int i = 0; i < inputs.size(); i++) {
@@ -108,12 +122,11 @@ public class ThreshingMachineRecipe implements Recipe<SimpleContainer> {
             }
 
             ItemStack output = buf.readItem();
-            //ItemStack extra = buf.readItem();
-            return new ThreshingMachineRecipe(id, output, inputs);
+            return new DiscSeparatorRecipe(id, output, inputs);
         }
 
         @Override
-        public void toNetwork(FriendlyByteBuf buf, ThreshingMachineRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buf, DiscSeparatorRecipe recipe) {
             buf.writeInt(recipe.getIngredients().size());
 
 
@@ -121,7 +134,6 @@ public class ThreshingMachineRecipe implements Recipe<SimpleContainer> {
                 ing.toNetwork(buf);
             }
             buf.writeItem(recipe.output);
-            //buf.writeItem(recipe.extra);
         }
     }
 }

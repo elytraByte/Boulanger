@@ -9,6 +9,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.l3e.Boulanger.Boulanger;
+import org.l3e.Boulanger.recipe.DiscSeparatorRecipe;
 
 import javax.swing.*;
 
@@ -26,6 +27,8 @@ public class ModMenuTypes {
             registerMenuType(AspiratorMenu::new, "aspirator_menu");
     public static final RegistryObject<MenuType<DestonerMenu>> DESTONER_MENU =
             registerMenuType(DestonerMenu::new, "destoner_menu");
+    public static final RegistryObject<MenuType<DiscSeparatorMenu>> DISC_SEPARATOR_MENU =
+            registerMenuType(DiscSeparatorMenu::new, "disc_separator_menu");
 
     private static <T extends AbstractContainerMenu>RegistryObject<MenuType<T>> registerMenuType(IContainerFactory<T> factory, String name) {
         return MENUS.register(name, () -> IForgeMenuType.create(factory));

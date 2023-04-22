@@ -21,6 +21,8 @@ public class ModRecipes {
             SERIALIZERS.register("aspirating", () -> AspiratorRecipe.Serializer.INSTANCE);
     public static final RegistryObject<RecipeSerializer<DestonerRecipe>> DESTONER_SERIALIZER =
             SERIALIZERS.register("destoning", () -> DestonerRecipe.Serializer.INSTANCE);
+    public static final RegistryObject<RecipeSerializer<DiscSeparatorRecipe>> DISC_SEPARATOR_SERIALIZER =
+            SERIALIZERS.register("disc_separating", () -> DiscSeparatorRecipe.Serializer.INSTANCE);
     public static void register(IEventBus eventBus) {
         SERIALIZERS.register(eventBus);
     }

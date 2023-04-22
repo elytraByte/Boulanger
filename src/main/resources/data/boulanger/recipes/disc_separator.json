@@ -1,0 +1,14 @@
+{
+  "type": "boulanger:disc_separating",
+  "ingredients": [
+    {
+      "item": "boulanger:wheat_berries"
+
+    }
+  ],
+  "output": [
+    {
+      "item": "boulanger:wheat_berries"
+    }
+  ]
+}

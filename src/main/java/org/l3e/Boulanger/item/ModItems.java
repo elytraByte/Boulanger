@@ -65,7 +65,7 @@ public class ModItems {
     public static final RegistryObject<Item> PAPER_BAG = ITEMS.register("paper_bag",
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> WHEAT_BERRIES = ITEMS.register("wheat_berries",
-            () -> new Item(new Item.Properties()));
+            () -> new WheatBerries(new Item.Properties()));
     public static final RegistryObject<Item> HARD_RED_SPRING_WHEAT_SEEDS = ITEMS.register("hard_red_spring_wheat_seeds",
             () -> new ItemNameBlockItem(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), new Item.Properties()));
     public static final RegistryObject<Item> HARD_RED_SPRING_WHEAT_ITEM = ITEMS.register("hard_red_spring_wheat_item",

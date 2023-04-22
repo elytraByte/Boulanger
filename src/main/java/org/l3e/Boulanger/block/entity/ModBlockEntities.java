@@ -32,6 +32,10 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("destoner", () ->
                     BlockEntityType.Builder.of(DestonerBlockEntity::new,
                             ModBlocks.DESTONER.get()).build(null));
+    public static final RegistryObject<BlockEntityType<DiscSeparatorBlockEntity>> DISC_SEPARATOR =
+            BLOCK_ENTITIES.register("disc_separator", () ->
+                    BlockEntityType.Builder.of(DiscSeparatorBlockEntity::new,
+                            ModBlocks.DISC_SEPARATOR.get()).build(null));
 
 
     public static void register(IEventBus eventBus) {

@@ -34,9 +34,15 @@
   "item.boulanger.grinding_stone_assembly": "Grinding Stone Assembly",
   "block.boulanger.separator": "Separator",
   "block.boulanger.aspirator": "Aspirator",
+  "block.boulanger.destoner": "Destoner",
   "block.boulanger.white_bakery_tile": "White Bakery Tile",
   "block.boulanger.blue_bakery_tile": "Blue Bakery Tile",
-  "block.boulanger.checkered_bakery_tile": "Checkered Bakery Tile"
+  "block.boulanger.checkered_bakery_tile": "Checkered Bakery Tile",
+  "tooltip.boulanger.safreditem.name": "Saf name",
+  "tooltip.boulanger.wheat_berries.separated_wheat_berries": "Separated wheat berries",
+  "tooltip.boulanger.wheat_berries.aspirated_wheat_berries": "Aspirated wheat berries",
+  "tooltip.boulanger.wheat_berries.destoned_wheat_berries": "Destoned wheat berries",
+  "tooltip.boulanger.wheat_berries.disc-separeated_wheat_berries": "Disc-separated wheat berries"
 
 
 }

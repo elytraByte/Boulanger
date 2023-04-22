@@ -83,6 +83,7 @@ public class Boulanger {
             event.accept(ModBlocks.SEPARATOR);
             event.accept(ModBlocks.ASPIRATOR);
             event.accept(ModBlocks.DESTONER);
+            event.accept(ModBlocks.DISC_SEPARATOR);
             event.accept(ModItems.GRINDING_STONE);
             event.accept(ModItems.GRINDING_STONE_ASSEMBLY);
             event.accept(ModBlocks.CHECKERED_BAKERY_TILE);
@@ -104,6 +105,7 @@ public class Boulanger {
             MenuScreens.register(ModMenuTypes.SEPARATOR_MENU.get(), SeparatorScreen::new);
             MenuScreens.register(ModMenuTypes.ASPIRATOR_MENU.get(), AspiratorScreen::new);
             MenuScreens.register(ModMenuTypes.DESTONER_MENU.get(), DestonerScreen::new);
+            MenuScreens.register(ModMenuTypes.DISC_SEPARATOR_MENU.get(), DiscSeparatorScreen::new);
         }
     }
 }
