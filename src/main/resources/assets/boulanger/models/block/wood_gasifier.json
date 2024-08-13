@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:block/cube",
+  "loader": "neoforge:obj",
+  "model": "boulanger:models/block/model.obj",
+  "mtl_override": "boulanger:models/block/untitled.mtl",
+  "textures": {"texture0": "minecraft:block/stone"},
+  "automatic_culling": false,
+  "shade_quads": false,
+  "flip_v": false,
+  "emissive_ambient": false
+}

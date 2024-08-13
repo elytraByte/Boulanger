@@ -1,0 +1,11 @@
+{
+    "item.boulanger.flour": "Flour",
+    "item.boulanger.salt_kosher": "Kosher Salt",
+    "item.boulanger.yeast_brewers": "Brewer's Yeast",
+    "item.boulanger.dough": "Dough",
+    "item.boulanger.flour_ap": "All Purpose Flour",
+    "item.boulanger.salt_kosher.description": "Horton's Kosher Salt",
+    "item.boulanger.salt_kosher.weight": "1,362 g",
+    "item.boulanger.flour_ww": "Whole Wheat Flour",
+    "blockEntity.boulanger.mixer.displayName": "Mixer"
+}

@@ -1,0 +1,18 @@
+To Do
+
+1.) Finish ModBlockEntites
+2.) Finish Mixer
+3.) Finisher MixerBlockEntity
+4.) Create recipe and crafting functionality
+5.) Create item class files and populate with properties
+6.) Simple textures and models
+7.) Villager integration
+
+wood gasifier
+
+woodgas burner/ combustion engine
+
+wood gas pipes
+
+electrical wires/connectors
+

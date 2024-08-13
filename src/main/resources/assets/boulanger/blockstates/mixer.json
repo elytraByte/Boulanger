@@ -1,0 +1,28 @@
+{
+  "multipart": [
+    {
+      "when": { "AND": [{"gear":  "1|0", "on": "false"}]},
+      "apply": {"model":  "boulanger:block/mixer_off"}
+    },
+    {
+      "when": { "AND": [{"gear":  "1", "on": "false"}]},
+      "apply": {"model":  "boulanger:block/mixer_off_neutral"}
+    },
+    {
+      "when": { "AND": [{"gear":  "1", "on": "true"}]},
+      "apply": {"model":  "boulanger:block/mixer_on_neutral"}
+    },
+    {
+      "when": { "AND": [{"gear": "2", "on": "true"}]},
+      "apply": {"model": "boulanger:block/mixer_on_1st"}
+    },
+    {
+      "when": { "AND": [{ "gear": "3", "on": "true"}]},
+      "apply": {"model": "boulanger:block/mixer_on_2nd"}
+    },
+    {
+      "when": { "AND": [{"gear": "4", "on": "true"}]},
+      "apply": {"model": "boulanger:block/mixer_on_3rd"}
+    }
+  ]
+}

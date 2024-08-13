@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "boulanger:block/mixer_front_on_1st",
+    "side": "boulanger:block/mixer_side",
+    "top": "boulanger:block/mixer_top_closed",
+    "bottom": "boulanger:block/mixer_bottom"
+  }
+}
