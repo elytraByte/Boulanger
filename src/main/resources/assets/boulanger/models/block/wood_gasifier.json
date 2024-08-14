@@ -1,9 +1,12 @@
 {
-  "parent": "minecraft:block/cube",
   "loader": "neoforge:obj",
-  "model": "boulanger:models/block/model.obj",
-  "mtl_override": "boulanger:models/block/untitled.mtl",
-  "textures": {"texture0": "minecraft:block/stone"},
+  "model": "boulanger:models/block/tiny-gasifier.obj",
+  "mtl_override": "boulanger:models/block/tiny-gasifier.mtl",
+  "textures":
+  {
+    "texture0": "boulanger:block/burnished_steel",
+    "particle":  "boulanger:block/burnished_steel"
+  },
   "automatic_culling": false,
   "shade_quads": false,
   "flip_v": false,
