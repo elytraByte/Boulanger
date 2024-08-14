@@ -1,5 +1,5 @@
 {
   "variants": {
-    "": {"model": "boulanger:block/wood_gasifier"}
+    "": {"model": "boulanger:block/wood-gasifier/wood_gasifier"}
     }
   }

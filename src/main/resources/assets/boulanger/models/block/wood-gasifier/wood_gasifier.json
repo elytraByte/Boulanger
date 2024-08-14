@@ -1,0 +1,14 @@
+{
+  "loader": "neoforge:obj",
+  "model": "boulanger:models/block/wood-gasifier/wood-gasifier.obj",
+  "mtl_override": "boulanger:models/block/wood-gasifier/wood-gasifier.mtl",
+  "textures":
+  {
+    "wood-gasifier-condenser": "boulanger:block/wood-gasifier/wood-gasifier-condenser",
+    "wood-gasifier-firebox": "boulanger:block/wood-gasifier/wood-gasifier-firebox",
+    "wood-gasifier-gas-filter": "boulanger:block/wood-gasifier/wood-gasifier-gas-filter",
+    "wood-gasifier-piping-all": "boulanger:block/wood-gasifier/wood-gasifier-piping-all",
+    "wood-gasifier-pipe-cover": "boulanger:block/wood-gasifier/wood-gasifier-pipe-cover",
+    "particle":  "boulanger:block/burnished_steel"
+  }
+}
