@@ -28,6 +28,7 @@ public class WoodGasifierBlockEntity extends BlockEntity implements MenuProvider
         super(ModBlockEntities.WOOD_GASIFIER_BE.get(), pos, blockState);
     }
 
+
     @Override
     public int getContainerSize() {
         return  inventory.size();

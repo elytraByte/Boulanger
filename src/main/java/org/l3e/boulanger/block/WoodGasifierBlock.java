@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import org.l3e.boulanger.block.entity.WoodGasifierBlockEntity;
 
 public class WoodGasifierBlock extends BaseEntityBlock {
-    //public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final MapCodec<WoodGasifierBlock> CODEC = simpleCodec(WoodGasifierBlock::new);
 
     protected WoodGasifierBlock(Properties properties) {
@@ -45,20 +45,20 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         return new WoodGasifierBlockEntity(blockPos, blockState);
     }
 
-//    @Override
-//    public BlockState getStateForPlacement(BlockPlaceContext pContext) {
-//        return this.defaultBlockState().setValue(FACING, pContext.getHorizontalDirection().getOpposite());
-//    }
-//
-//    @Override
-//    public BlockState rotate(BlockState pState, Rotation pRotation) {
-//        return pState.setValue(FACING, pRotation.rotate(pState.getValue(FACING)));
-//    }
-//
-//    @Override
-//    public BlockState mirror(BlockState pState, Mirror pMirror) {
-//        return pState.rotate(pMirror.getRotation(pState.getValue(FACING)));
-//    }
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext pContext) {
+        return this.defaultBlockState().setValue(FACING, pContext.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public BlockState rotate(BlockState pState, Rotation pRotation) {
+        return pState.setValue(FACING, pRotation.rotate(pState.getValue(FACING)));
+    }
+
+    @Override
+    public BlockState mirror(BlockState pState, Mirror pMirror) {
+        return pState.rotate(pMirror.getRotation(pState.getValue(FACING)));
+    }
 
     @Override
     protected void onRemove(BlockState pState, Level pLevel, BlockPos pPos,
@@ -99,10 +99,10 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         return InteractionResult.SUCCESS;
     }
 
-//    @Override
-//    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-//        builder.add(FACING);
-//    }
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
+    }
 
 }
 

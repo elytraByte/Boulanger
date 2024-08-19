@@ -19,15 +19,20 @@ public class ModCreativeModeTabs {
     public static final Supplier<CreativeModeTab> BOULANGER_TAB =
             CREATIVE_MODE_TABS.register("boulanger_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.boulanger.boulanger_tab")) //translate !
-                    .icon(() -> new ItemStack(ModItems.FLOUR_AP.get()))
+                    .icon(() -> new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get()))
                     .displayItems((pParameters, pOutput) -> {
                         pOutput.accept(ModItems.FLOUR_AP);
                         pOutput.accept(ModItems.FLOUR_WW);
                         pOutput.accept(ModItems.YEAST_BREWERS);
                         pOutput.accept(ModItems.SALT_KOSHER);
+                        pOutput.accept(ModItems.HARD_RED_SPRING_WHEAT);
+                        pOutput.accept(ModItems.HARD_RED_SPRING_WHEAT_SEEDS);
                         pOutput.accept(ModItems.DOUGH);
                         pOutput.accept(ModBlocks.MIXER);
                         pOutput.accept(ModBlocks.WOOD_GASIFIER);
+                        pOutput.accept(ModItems.WRENCH);
+                        pOutput.accept(ModBlocks.WILD_WHEAT);
+
 
                     }).build());
 

@@ -9,6 +9,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.l3e.boulanger.Boulanger;
+import org.l3e.boulanger.block.crops.HardRedSpringWheatCrop;
 import org.l3e.boulanger.item.ModItems;
 
 import java.util.function.Supplier;
@@ -20,6 +21,12 @@ public class ModBlocks {
             () -> new MixerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
     public static final DeferredBlock<Block> WOOD_GASIFIER = registerBlock("wood_gasifier",
             () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
+    public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",
+            () -> new HardRedSpringWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
+
+    public static final DeferredBlock<Block> WILD_WHEAT = registerBlock("wild_wheat",
+            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS).offsetType(BlockBehaviour.OffsetType.XZ)));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);

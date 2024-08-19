@@ -32,6 +32,7 @@ import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.l3e.boulanger.block.ModBlocks;
 import org.l3e.boulanger.block.entity.ModBlockEntities;
+import org.l3e.boulanger.component.ModDataCompnentTypes;
 import org.l3e.boulanger.item.ModCreativeModeTabs;
 import org.l3e.boulanger.item.ModItems;
 import org.slf4j.Logger;
@@ -57,6 +58,8 @@ public class Boulanger {
         ModBlocks.register(modEventBus);
 
         ModBlockEntities.register(modEventBus);
+
+        ModDataCompnentTypes.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (ExampleMod) to respond directly to events.
