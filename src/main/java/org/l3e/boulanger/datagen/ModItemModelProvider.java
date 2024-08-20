@@ -1,10 +1,14 @@
 package org.l3e.boulanger.datagen;
 
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.registries.DeferredBlock;
 import org.l3e.boulanger.Boulanger;
-import org.l3e.boulanger.item.ModItems;
+import org.l3e.boulanger.block.ModBlocks;
 
 public class ModItemModelProvider extends ItemModelProvider {
     public ModItemModelProvider(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
@@ -21,5 +25,14 @@ public class ModItemModelProvider extends ItemModelProvider {
         //basicItem(ModItems.HARD_RED_SPRING_WHEAT.get());
         //basicItem(ModItems.HARD_RED_SPRING_WHEAT_SEEDS.get());
 
+        saplingItem(ModBlocks.PINE_SAPLING);
+
+    }
+
+    private ItemModelBuilder saplingItem(DeferredBlock<Block> item) {
+        return withExistingParent(item.getId().getPath(),
+                ResourceLocation.parse("item/generated")).texture("layer0",
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
+                        "block/" + item.getId().getPath()));
     }
 }

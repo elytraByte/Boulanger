@@ -32,9 +32,15 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         this.add(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), this.createCropDrops(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(),
                 ModItems.HARD_RED_SPRING_WHEAT_SEEDS.get(),ModItems.HARD_RED_SPRING_WHEAT_SEEDS.asItem(), lootItemConditionBuilder));
 
-        LootTable.Builder createWildWheatDrops(Block pBlock) {
-            return this.
-        }
+        this.dropSelf(ModBlocks.PINE_LOG.get());
+        this.dropSelf(ModBlocks.PINE_WOOD.get());
+        this.dropSelf(ModBlocks.PINE_PLANKS.get());
+        this.dropSelf(ModBlocks.PINE_SAPLING.get());
+        this.dropSelf(ModBlocks.STRIPPED_PINE_LOG.get());
+        this.dropSelf(ModBlocks.STRIPPED_PINE_WOOD.get());
+        this.add(ModBlocks.PINE_SAPLING.get(), block -> createLeavesDrops(block, ModBlocks.PINE_SAPLING.get(), NORMAL_LEAVES_SAPLING_CHANCES));
+        this.dropSelf(ModBlocks.WILD_WHEAT.get());
+        this.dropSelf(ModBlocks.PINE_LEAVES.get());
 
 
     }
