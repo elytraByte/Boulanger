@@ -31,7 +31,14 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModBlocks.MIXER);
                         pOutput.accept(ModBlocks.WOOD_GASIFIER);
                         pOutput.accept(ModItems.WRENCH);
-                        pOutput.accept(ModBlocks.WILD_WHEAT);
+                        pOutput.accept(ModItems.BIG_FLOUR_AP);
+                        pOutput.accept(ModItems.BIG_FLOUR_BR);
+                        pOutput.accept(ModItems.BIG_FLOUR_WW);
+                        pOutput.accept(ModItems.BIG_FLOUR_GW);
+                        pOutput.accept(ModItems.BIG_FLOUR_HG);
+                        pOutput.accept(ModItems.BIG_FLOUR_PK);
+                        pOutput.accept(ModItems.BIG_FLOUR_DU);
+                        pOutput.accept(ModItems.BIG_FLOUR_BLANK);
 
 
                     }).build());

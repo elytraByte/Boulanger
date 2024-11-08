@@ -7,7 +7,8 @@ import java.util.Objects;
 
 public record WheatType(int type) {
 
-    public static final Codec<WheatType> CODEC = RecordCodecBuilder.create(instance -> instance.group(Codec.INT.fieldOf("type").forGetter(WheatType::type)).apply(instance, WheatType::new));
+    public static final Codec<WheatType> CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(Codec.INT.fieldOf("type").forGetter(WheatType::type)).apply(instance, WheatType::new));
 
 
     @Override

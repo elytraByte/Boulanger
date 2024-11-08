@@ -9,6 +9,7 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import org.l3e.boulanger.Boulanger;
 import org.l3e.boulanger.block.ModBlocks;
+import org.l3e.boulanger.item.ModItems;
 
 public class ModItemModelProvider extends ItemModelProvider {
     public ModItemModelProvider(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
@@ -24,6 +25,13 @@ public class ModItemModelProvider extends ItemModelProvider {
         //basicItem(ModItems.YEAST_BREWERS.get());
         //basicItem(ModItems.HARD_RED_SPRING_WHEAT.get());
         //basicItem(ModItems.HARD_RED_SPRING_WHEAT_SEEDS.get());
+        basicItem(ModItems.BIG_FLOUR_AP.get());
+        basicItem(ModItems.BIG_FLOUR_BR.get());
+        basicItem(ModItems.BIG_FLOUR_WW.get());
+        basicItem(ModItems.BIG_FLOUR_GW.get());
+        basicItem(ModItems.BIG_FLOUR_HG.get());
+        basicItem(ModItems.BIG_FLOUR_PK.get());
+        basicItem(ModItems.BIG_FLOUR_BLANK.get());
 
         saplingItem(ModBlocks.PINE_SAPLING);
 

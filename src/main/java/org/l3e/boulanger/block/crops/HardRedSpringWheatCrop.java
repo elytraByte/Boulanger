@@ -16,7 +16,7 @@ public class HardRedSpringWheatCrop extends CropBlock {
         super(properties);
     }
 
-
+//TODO can we pass in a generic WheatSeed ItemStack with the WHEAT_TYPE ModDataComponentTypes?
     @Override
     protected ItemLike getBaseSeedId() {
         return ModItems.HARD_RED_SPRING_WHEAT_SEEDS;

@@ -1,14 +1,22 @@
 package org.l3e.boulanger.item;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.common.SpecialPlantable;
 import org.jetbrains.annotations.Nullable;
+import org.l3e.boulanger.block.ModBlocks;
+import org.l3e.boulanger.component.ModDataCompnentTypes;
+import org.l3e.boulanger.component.WheatType;
+
+import java.util.List;
 
 public class HardRedSpringWheatSeeds extends BlockItem implements SpecialPlantable {
     public HardRedSpringWheatSeeds(Block block, Properties properties) {
