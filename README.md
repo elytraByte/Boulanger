@@ -7,7 +7,7 @@ noun
 ##### a person who makes bread and cakes, especially as a trade.
 
 
-Boulanger completely reinvents bread in Minecraft 1.21. Realistic bakery and milling science as well as a completely re-imagined bread crafting system breath new life into the otherwise unrealistic and unimaginative vanilla bread production. This mod is aimed at anyone with an interest in baking and yearns to apply those same concepts in the world of Minecraft. 
+Boulanger completely reinvents bread in Minecraft 1.21. Realistic bakery and milling science as well as a completely re-imagined bread crafting system breathe new life into the otherwise unrealistic and unimaginative vanilla bread production. This mod is aimed at anyone with an interest in baking and yearns to apply those same concepts in the world of Minecraft. 
 
 Here is a brief overview of the milling process:
 
