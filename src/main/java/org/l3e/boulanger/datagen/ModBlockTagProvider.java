@@ -9,6 +9,7 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import org.jetbrains.annotations.Nullable;
 import org.l3e.boulanger.Boulanger;
 import org.l3e.boulanger.block.ModBlocks;
+import org.l3e.boulanger.util.ModTags;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -27,6 +28,18 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.WOOD_GASIFIER.get());
 
         this.tag(BlockTags.LOGS_THAT_BURN).add(ModBlocks.PINE_LOG.get()).add(ModBlocks.PINE_WOOD.get()).add(ModBlocks.STRIPPED_PINE_LOG.get()).add(ModBlocks.STRIPPED_PINE_WOOD.get());
+
+        this.tag(BlockTags.LOGS_THAT_BURN)
+                .add(ModBlocks.PINE_LOG.get())
+                .add(ModBlocks.PINE_WOOD.get())
+                .add(ModBlocks.STRIPPED_PINE_LOG.get())
+                .add(ModBlocks.STRIPPED_PINE_WOOD.get());
+
+        this.tag(ModTags.Blocks.MB_MASTER)
+                .add(ModBlocks.MB_MASTER.get());
+
+        this.tag(ModTags.Blocks.MB_SLAVE)
+                .add(ModBlocks.MB_SLAVE.get());
 
     }
 }

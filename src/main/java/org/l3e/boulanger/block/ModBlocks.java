@@ -1,18 +1,18 @@
 package org.l3e.boulanger.block;
 
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LeavesBlock;
-import net.minecraft.world.level.block.SaplingBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.model.obj.ObjMaterialLibrary;
 import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.l3e.boulanger.Boulanger;
 import org.l3e.boulanger.block.crops.HardRedSpringWheatCrop;
@@ -21,25 +21,47 @@ import org.l3e.boulanger.worldgen.tree.ModTreeGrowers;
 
 import java.util.function.Supplier;
 
+
 public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Boulanger.MODID);
-
-    public static final DeferredBlock<Block> MIXER = registerBlock("mixer",
-            () -> new MixerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
-    public static final DeferredBlock<Block> WOOD_GASIFIER = registerBlock("wood_gasifier",
-            () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
-
-    public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",
-            () -> new HardRedSpringWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
-
-    public static final DeferredBlock<Block> WILD_WHEAT = registerBlock("wild_wheat",
-            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS).offsetType(BlockBehaviour.OffsetType.XZ)));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);
         registerBlockItem(name, toReturn);
         return toReturn;
     }
+
+    public static final DeferredBlock<Block> MIXER = registerBlock("mixer",
+            () -> new MixerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+    public static final DeferredBlock<Block> WOOD_GASIFIER = registerBlock("wood_gasifier",
+            () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+    public static final DeferredBlock<Block> MB_MASTER = BLOCKS.register(
+            "mb_master", // Registry name
+            () -> new MB_Master(
+                    BlockBehaviour.Properties.of()
+                            .strength(0.3F)               // Set hardness (similar to glass)
+                            .sound(SoundType.GLASS)       // Use glass sound type
+                            .noOcclusion()                // Make it non-opaque
+                            .isRedstoneConductor((state, level, pos) -> false) // Ensure it doesn't block redstone signals
+            )
+    );
+
+    public static final DeferredBlock<Block> MB_SLAVE = BLOCKS.register(
+            "mb_slave", // Registry name
+            () -> new MB_Slave(
+                    BlockBehaviour.Properties.of()
+                            .strength(0.3F)               // Set hardness (similar to glass)
+                            .sound(SoundType.GLASS)       // Use glass sound type
+                            .noOcclusion()                // Make it non-opaque
+                            .isRedstoneConductor((state, level, pos) -> false) // Ensure it doesn't block redstone signals
+            )
+    );
+
+    public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",
+            () -> new HardRedSpringWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
+
+    public static final DeferredBlock<Block> WILD_WHEAT = registerBlock("wild_wheat",
+            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS).offsetType(BlockBehaviour.OffsetType.XZ)));
 
     public static final DeferredBlock<Block> PINE_LOG = registerBlock("pine_log",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
@@ -95,5 +117,7 @@ public class ModBlocks {
 
     public static void register(IEventBus eventBus) {
         BLOCKS.register(eventBus);
+
     }
 }
+

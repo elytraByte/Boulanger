@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
+import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -20,13 +21,22 @@ public class ModBlockStateProvider extends BlockStateProvider {
     @Override
     protected void registerStatesAndModels() {
 //        blockWithItem(ModBlocks.MIXER);
-//        blockWithItem(ModBlocks.WOOD_GASIFIER);
+
 //        blockWithItem(ModBlocks.HARD_RED_SPRING_WHEAT_CROP);
 
         logBlock(((RotatedPillarBlock) ModBlocks.PINE_LOG.get()));
         logBlock(((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_LOG.get()));
 
         blockItem(ModBlocks.PINE_LOG);
+
+        blockItem(ModBlocks.WOOD_GASIFIER);
+        getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
+                .forAllStates(state -> ConfiguredModel.builder()
+                        .modelFile(models().cubeAll("wood_gasifier", modLoc("block/wood_gasifier/wood_gasifier")))
+                        .build());
+        blockItem(ModBlocks.MB_MASTER);
+        blockItem(ModBlocks.MB_SLAVE);
+
         blockItem(ModBlocks.PINE_WOOD);
         blockItem(ModBlocks.STRIPPED_PINE_LOG);
         blockItem(ModBlocks.STRIPPED_PINE_WOOD);

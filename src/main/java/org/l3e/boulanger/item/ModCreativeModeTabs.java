@@ -20,26 +20,24 @@ public class ModCreativeModeTabs {
             CREATIVE_MODE_TABS.register("boulanger_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.boulanger.boulanger_tab")) //translate !
                     .icon(() -> new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get()))
-                    .displayItems((pParameters, pOutput) -> {
-                        pOutput.accept(ModItems.FLOUR_AP);
-                        pOutput.accept(ModItems.FLOUR_WW);
-                        pOutput.accept(ModItems.YEAST_BREWERS);
-                        pOutput.accept(ModItems.SALT_KOSHER);
-                        pOutput.accept(ModItems.HARD_RED_SPRING_WHEAT);
-                        pOutput.accept(ModItems.HARD_RED_SPRING_WHEAT_SEEDS);
-                        pOutput.accept(ModItems.DOUGH);
-                        pOutput.accept(ModBlocks.MIXER);
-                        pOutput.accept(ModBlocks.WOOD_GASIFIER);
-                        pOutput.accept(ModItems.WRENCH);
-                        pOutput.accept(ModItems.BIG_FLOUR_AP);
-                        pOutput.accept(ModItems.BIG_FLOUR_BR);
-                        pOutput.accept(ModItems.BIG_FLOUR_WW);
-                        pOutput.accept(ModItems.BIG_FLOUR_GW);
-                        pOutput.accept(ModItems.BIG_FLOUR_HG);
-                        pOutput.accept(ModItems.BIG_FLOUR_PK);
-                        pOutput.accept(ModItems.BIG_FLOUR_DU);
-                        pOutput.accept(ModItems.BIG_FLOUR_BLANK);
+                    .displayItems((pParameters, pOutput) ->
 
+
+                    {
+                        pOutput.accept(new ItemStack(ModItems.FLOUR_AP.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.FLOUR_WW.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.YEAST_BREWERS.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT_SEEDS.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MIXER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MB_MASTER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MB_SLAVE.get(), 1));
+                        ItemStack stack = new ItemStack(ModItems.FLOUR_AP.get(), 1);
+                        System.out.println("Adding item: " + stack.getItem() + ", stack size: " + stack.getCount());
+                        pOutput.accept(stack);
 
                     }).build());
 

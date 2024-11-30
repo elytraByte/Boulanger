@@ -91,6 +91,8 @@ public class Boulanger {
             event.accept(ModItems.SALT_KOSHER);
             event.accept((ModBlocks.MIXER));
             event.accept(ModBlocks.WOOD_GASIFIER);
+            event.accept(ModBlocks.MB_MASTER);
+            event.accept(ModBlocks.MB_SLAVE);
         }
     }
 
