@@ -1,9 +1,10 @@
-// 1.21	2024-11-30T03:28:48.2839025	Block States: boulanger
+// 1.21	2024-11-30T23:05:53.9365222	Block States: boulanger
 bc72b69239b5994127c03e8282e813b94a8fe6a0 assets/boulanger/blockstates/pine_leaves.json
 64e42864992d3855f237916c8b79fe6c8a667376 assets/boulanger/blockstates/pine_log.json
 7bb4a3598d999406e39380f14395be64d9c64877 assets/boulanger/blockstates/pine_planks.json
 738026f5eee65fa76ce518ad4dca52ab781ae72c assets/boulanger/blockstates/pine_sapling.json
 9bc7cdcc2599484e0fe9bf911f95e9ffc0b4aae3 assets/boulanger/blockstates/stripped_pine_log.json
+fcbd2fdda591403392616000ff34f51aa0dc2d92 assets/boulanger/blockstates/wood_gasifier.json
 7b63e5b943c18ea6cc46f9f200d7bf9ab6f1d625 assets/boulanger/models/block/pine_leaves.json
 4bc63911edd5e44bdc610be6d78bf0efe764789f assets/boulanger/models/block/pine_log.json
 6f895afe3be888457881aed9b303218ba021a7fb assets/boulanger/models/block/pine_log_horizontal.json
@@ -19,3 +20,4 @@ e18d746c76746753db72227b743b37d69eb80f9c assets/boulanger/models/item/mb_slave.j
 d28a9ccbb2965b72587ce3835afc9191cf8ce7be assets/boulanger/models/item/pine_wood.json
 a3019cdc4a39fee84f842c1e8a176d4440e53521 assets/boulanger/models/item/stripped_pine_log.json
 7ebe31e3cb0e60c1a3f3302417b6122373cfc5e7 assets/boulanger/models/item/stripped_pine_wood.json
+174ef4772a91dbefee68ebdeb5449a5944faa494 assets/boulanger/models/item/wood_gasifier.json

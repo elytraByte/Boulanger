@@ -32,7 +32,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockItem(ModBlocks.WOOD_GASIFIER);
         getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
                 .forAllStates(state -> ConfiguredModel.builder()
-                        .modelFile(models().cubeAll("wood_gasifier", modLoc("block/wood_gasifier/wood_gasifier")))
+                        .modelFile(new ModelFile.UncheckedModelFile("boulanger:block/wood-gasifier/wood-gasifier"))
                         .build());
         blockItem(ModBlocks.MB_MASTER);
         blockItem(ModBlocks.MB_SLAVE);

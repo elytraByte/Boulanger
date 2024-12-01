@@ -37,7 +37,7 @@ public class ModBlocks {
             () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
     public static final DeferredBlock<Block> MB_MASTER = BLOCKS.register(
             "mb_master", // Registry name
-            () -> new MB_Master(
+            () -> new MultiBlockMasterBlock(
                     BlockBehaviour.Properties.of()
                             .strength(0.3F)               // Set hardness (similar to glass)
                             .sound(SoundType.GLASS)       // Use glass sound type
@@ -48,7 +48,7 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> MB_SLAVE = BLOCKS.register(
             "mb_slave", // Registry name
-            () -> new MB_Slave(
+            () -> new MultiBlockSlaveBlock(
                     BlockBehaviour.Properties.of()
                             .strength(0.3F)               // Set hardness (similar to glass)
                             .sound(SoundType.GLASS)       // Use glass sound type
