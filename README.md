@@ -44,7 +44,7 @@ Special thanks to Dr. Bryan Quoc Le for generously volunteering his expertise. D
 
 ### **Textures by Misa**
 Misa's Realistic Texture Pack assets are used under the Attribution-NonCommercial License. These textures significantly enhance the mod's visual appeal, offering realistic representations of ingredients, machines, and environments to immerse players in the baking and milling experience.   
-![Permission Conversation](misa_permission.png)
+![Permission Conversation](misa permission.png)
 
 > **Legal Statement:**  
 > These textures are protected under Creative Commons (Attribution-NonCommercial) and international copyright laws. Redistribution is permitted with proper attribution and no commercial benefit.
