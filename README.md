@@ -43,16 +43,15 @@ Boulanger aims to reinvent bread-making in Minecraft 1.21, integrating realistic
 Special thanks to Dr. Bryan Quoc Le for generously volunteering his expertise. Dr. Le contributed by validating the scientific accuracy of flour properties and advising on realistic baking and milling mechanics, ensuring the mod reflects professional standards.
 
 ### **Textures by Misa**
-Misa's Realistic Texture Pack assets are used under the Attribution-NonCommercial License. These textures significantly enhance the mod's visual appeal, offering realistic representations of ingredients, machines, and environments to immerse players in the baking and milling experience.   
-![Permission Conversation](misa permission.png)
+Misa's Realistic Texture Pack assets are used under the Attribution Non-Commercial License. Furthermore they're used with express permission from the author. 
 
 > **Legal Statement:**  
-> These textures are protected under Creative Commons (Attribution-NonCommercial) and international copyright laws. Redistribution is permitted with proper attribution and no commercial benefit.
+> These textures are protected under Creative Commons (Attribution Non-Commercial) and international copyright laws. Redistribution is permitted with proper attribution and no commercial benefit.
 
 ---
 
 ## **About the Developer**
-This project reflects my passion for bakery science and milling, fueled by nearly a decade of culinary experience and academic pursuits. My time working at a production bakery taught me the intricacies of scaling recipes and optimizing processes, while recreational baking honed my creativity in crafting unique bread varieties. These experiences directly influenced features such as the detailed flour system and realistic equipment mechanics, bringing authentic bakery science into the Minecraft world.
+This project reflects my passion for bakery science and milling, fueled by nearly a decade of culinary experience and academic pursuits. My time working at a production bakery taught me the intricacies of recipes and optimizing processes, while recreational baking honed my creativity in crafting unique bread varieties. These experiences directly influenced features such as the detailed flour system and realistic equipment mechanics, bringing authentic bakery science into the Minecraft world.
 
 ---
 
