@@ -84,10 +84,7 @@ public class Boulanger {
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
 
         if(event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
-            event.accept(ModItems.FLOUR_AP);
-            event.accept(ModItems.FLOUR_WW);
             event.accept(ModItems.DOUGH);
-            event.accept(ModItems.YEAST_BREWERS);
             event.accept(ModItems.SALT_KOSHER);
             event.accept((ModBlocks.MIXER));
             event.accept(ModBlocks.WOOD_GASIFIER);

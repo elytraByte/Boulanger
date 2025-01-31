@@ -29,8 +29,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
         LootItemCondition.Builder lootItemConditionBuilder = LootItemBlockStatePropertyCondition.hasBlockStateProperties(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get())
                 .setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(HardRedSpringWheatCrop.AGE, 7));
-        this.add(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), this.createCropDrops(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(),
-                ModItems.HARD_RED_SPRING_WHEAT_SEEDS.get(),ModItems.HARD_RED_SPRING_WHEAT_SEEDS.asItem(), lootItemConditionBuilder));
+//        this.add(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), this.createCropDrops(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(),
+//                ModItems.HARD_RED_SPRING_WHEAT_SEEDS.get(),ModItems.HARD_RED_SPRING_WHEAT_SEEDS.asItem(), lootItemConditionBuilder));
 
         this.dropSelf(ModBlocks.PINE_LOG.get());
         this.dropSelf(ModBlocks.PINE_WOOD.get());
