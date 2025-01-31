@@ -36,6 +36,6 @@ public class DataGenerator {
         generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, Boulanger.MODID, existingFileHelper));
         generator.addProvider(event.includeClient(), new ModBlockStateProvider(packOutput, Boulanger.MODID, existingFileHelper));
 
-//        generator.addProvider(event.includeServer(), new ModWorldGenProvider(packOutput, lookupProvider));
+        generator.addProvider(event.includeServer(), new ModWorldGenProvider(packOutput, lookupProvider));
     }
 }

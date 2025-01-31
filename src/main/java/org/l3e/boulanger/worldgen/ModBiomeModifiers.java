@@ -14,7 +14,7 @@ import net.neoforged.neoforge.common.world.BiomeModifiers;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import org.l3e.boulanger.Boulanger;
 
-public class ModBiomeModifiers {
+public class  ModBiomeModifiers {
 
     public static final ResourceKey<BiomeModifier> ADD_WILD_WHEAT =registerKey("add_wild_wheat");
     public static final ResourceKey<BiomeModifier> ADD_PINE_TREE =registerKey("add_pine_tree");
