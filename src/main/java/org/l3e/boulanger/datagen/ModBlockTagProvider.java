@@ -24,7 +24,6 @@ public class ModBlockTagProvider extends BlockTagsProvider {
     protected void addTags(HolderLookup.Provider provider) {
 
         this.tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                .add(ModBlocks.MIXER.get())
                 .add(ModBlocks.WOOD_GASIFIER.get());
 
         this.tag(BlockTags.LOGS_THAT_BURN).add(ModBlocks.PINE_LOG.get()).add(ModBlocks.PINE_WOOD.get()).add(ModBlocks.STRIPPED_PINE_LOG.get()).add(ModBlocks.STRIPPED_PINE_WOOD.get());
@@ -34,12 +33,6 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.PINE_WOOD.get())
                 .add(ModBlocks.STRIPPED_PINE_LOG.get())
                 .add(ModBlocks.STRIPPED_PINE_WOOD.get());
-
-        this.tag(ModTags.Blocks.MB_MASTER)
-                .add(ModBlocks.MB_MASTER.get());
-
-        this.tag(ModTags.Blocks.MB_SLAVE)
-                .add(ModBlocks.MB_SLAVE.get());
 
     }
 }

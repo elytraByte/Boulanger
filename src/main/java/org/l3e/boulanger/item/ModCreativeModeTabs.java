@@ -48,13 +48,8 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.FLEISCHMANN.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.MIXER.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
-//                        pOutput.accept(new ItemStack(ModBlocks.MB_MASTER.get(), 1));
-//                        pOutput.accept(new ItemStack(ModBlocks.MB_SLAVE.get(), 1));
-//                        ItemStack stack = new ItemStack(ModItems.FLOUR_AP.get(), 1);
-//                        System.out.println("Adding item: " + stack.getItem() + ", stack size: " + stack.getCount());
-//                        pOutput.accept(stack);
+
 
                     }).build());
 

@@ -45,7 +45,7 @@ public class ModItems {
     public static final DeferredItem<Item> FRESH_YEAST= ITEMS.registerSimpleItem("fresh_yeast");
 
     //Other
-    public static final DeferredItem<Item> SALT_KOSHER = ITEMS.registerItem("salt_kosher", SaltKosher::new, new Item.Properties());
+    public static final DeferredItem<Item> SALT_KOSHER = ITEMS.registerSimpleItem("salt_kosher");
     public static final DeferredItem<Item> DOUGH = ITEMS.registerSimpleItem("dough");
 
     public static final DeferredItem<Item> HARD_RED_SPRING_WHEAT = ITEMS.registerSimpleItem("hard_red_spring_wheat");

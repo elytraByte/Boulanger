@@ -34,8 +34,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 .forAllStates(state -> ConfiguredModel.builder()
                         .modelFile(new ModelFile.UncheckedModelFile("boulanger:block/wood-gasifier/wood-gasifier"))
                         .build());
-        blockItem(ModBlocks.MB_MASTER);
-        blockItem(ModBlocks.MB_SLAVE);
 
         blockItem(ModBlocks.PINE_WOOD);
         blockItem(ModBlocks.STRIPPED_PINE_LOG);

@@ -24,7 +24,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     @Override
     protected void generate() {
         dropSelf(ModBlocks.WOOD_GASIFIER.get());
-        dropSelf(ModBlocks.MIXER.get());
 
 
         LootItemCondition.Builder lootItemConditionBuilder = LootItemBlockStatePropertyCondition.hasBlockStateProperties(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get())

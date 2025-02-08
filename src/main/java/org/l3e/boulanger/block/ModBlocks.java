@@ -1,6 +1,5 @@
 package org.l3e.boulanger.block;
 
-import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
@@ -10,9 +9,7 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.client.model.obj.ObjMaterialLibrary;
 import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.l3e.boulanger.Boulanger;
 import org.l3e.boulanger.block.crops.HardRedSpringWheatCrop;
@@ -31,31 +28,8 @@ public class ModBlocks {
         return toReturn;
     }
 
-    public static final DeferredBlock<Block> MIXER = registerBlock("mixer",
-            () -> new MixerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
     public static final DeferredBlock<Block> WOOD_GASIFIER = registerBlock("wood_gasifier",
             () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
-    public static final DeferredBlock<Block> MB_MASTER = BLOCKS.register(
-            "mb_master", // Registry name
-            () -> new MultiBlockMasterBlock(
-                    BlockBehaviour.Properties.of()
-                            .strength(0.3F)               // Set hardness (similar to glass)
-                            .sound(SoundType.GLASS)       // Use glass sound type
-                            .noOcclusion()                // Make it non-opaque
-                            .isRedstoneConductor((state, level, pos) -> false) // Ensure it doesn't block redstone signals
-            )
-    );
-
-    public static final DeferredBlock<Block> MB_SLAVE = BLOCKS.register(
-            "mb_slave", // Registry name
-            () -> new MultiBlockSlaveBlock(
-                    BlockBehaviour.Properties.of()
-                            .strength(0.3F)               // Set hardness (similar to glass)
-                            .sound(SoundType.GLASS)       // Use glass sound type
-                            .noOcclusion()                // Make it non-opaque
-                            .isRedstoneConductor((state, level, pos) -> false) // Ensure it doesn't block redstone signals
-            )
-    );
 
     public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",
             () -> new HardRedSpringWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
@@ -65,12 +39,16 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> PINE_LOG = registerBlock("pine_log",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
+
     public static final DeferredBlock<Block> PINE_WOOD = registerBlock("pine_wood",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_WOOD)));
+
     public static final DeferredBlock<Block> STRIPPED_PINE_LOG = registerBlock("stripped_pine_log",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_OAK_LOG)));
+
     public static final DeferredBlock<Block> STRIPPED_PINE_WOOD = registerBlock("stripped_pine_wood",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_OAK_WOOD)));
+
 
     public static final DeferredBlock<Block> PINE_PLANKS = registerBlock("pine_planks",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)) {
