@@ -31,6 +31,9 @@ public class ModBlocks {
     public static final DeferredBlock<Block> WOOD_GASIFIER = registerBlock("wood_gasifier",
             () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
+    public static final DeferredBlock<Block> MIXING_TABLE = registerBlock("mixing_table",
+            () -> new MixingTableBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
     public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",
             () -> new HardRedSpringWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
 

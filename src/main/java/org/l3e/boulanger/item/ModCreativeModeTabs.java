@@ -35,10 +35,10 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.RYE_FLOUR.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SEMOLINA_FLOUR.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WHOLE_WHEAT_FLOUR.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.ALL_PURPOSE_FLOUR.get(), 1));
+//                        pOutput.accept(new ItemStack(ModItems.ALL_PURPOSE_FLOUR.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BREAD_FLOUR.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.HIGH_GLUTEN_FLOUR.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.VITAL_WHEAT_GLUTEN.get(), 1));
+//                        pOutput.accept(new ItemStack(ModItems.VITAL_WHEAT_GLUTEN.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.FIFTY_POUND_FLOUR.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
@@ -49,6 +49,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MIXING_TABLE.get(), 1));
 
 
                     }).build());

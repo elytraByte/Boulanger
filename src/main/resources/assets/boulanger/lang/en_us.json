@@ -7,5 +7,16 @@
     "item.boulanger.salt_kosher.description": "Horton's Kosher Salt",
     "item.boulanger.salt_kosher.weight": "1,362 g",
     "item.boulanger.flour_ww": "Whole Wheat Flour",
-    "blockEntity.boulanger.mixer.displayName": "Mixer"
+    "blockEntity.boulanger.mixer.displayName": "Mixer",
+
+    "item.boulanger.flour_item": "Flour",
+    "item.boulanger.flour.wheat_flour_name": "Wheat Flour",
+    "item.boulanger.flour.rye_flour_name": "Rye Flour",
+
+    "item.boulanger.flour.tooltip.weight": "Weight: %s g",
+    "item.boulanger.flour.tooltip.protein": "Protein: %.1f%%",
+    "item.boulanger.flour.tooltip.ash": "Ash: %.2f%%",
+
+    "item.boulanger.flour.wheat_flour_desc": "A versatile flour, good for everyday baking.",
+    "item.boulanger.flour.rye_flour_desc": "Adds a distinctive flavor and texture to breads."
 }
