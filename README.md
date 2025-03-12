@@ -1,25 +1,60 @@
+# **Boulanger**
+*/bulɑ̃ʒe/*
 
-Installation information
-=======
+**noun**  
+*A person who makes bread and cakes, especially as a trade.*
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+---
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+## **Overview**
+Boulanger aims to reinvent bread-making in Minecraft 1.21, integrating realistic baking and milling mechanics.  Immerse yourself in a detailed simulation of bakery and milling science as well as baking 💙
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+---
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+## **Features**
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+### **Ingredients**
+
+| Category              | Examples                                                                                                   |
+|-----------------------|-----------------------------------------------------------------------------------------------------------|
+| **Flour Varieties**   | Whole Wheat (14% protein, 1.2% ash), White Whole Wheat (13.2% protein, 1.52% ash), Bread (12.7% protein, 0.5% ash), High Gluten (14.2% protein, 0.5% ash), Cake (7% protein, 0.35% ash), Rye (7% protein, 1.6% ash) |
+|                       | ***These values reflect real-world flour characteristics that influence dough strength, elasticity, and fermentation performance in baking mechanics.*** |
+| **Milling Intermediates** | Wheat Berries, Bran, Shorts, Patent Flour, First Clear Flour, Second Clear Flour                                     |
+| **Preservatives**     | Calcium Propionate, Potassium Sorbate, Lactic Acid, Acetic Acid, Ethanol                                               |
+| **Redox Agents**      | *l*-cysteine, Glutathione, Sodium Metabisulfite                                                                          |
+| **Oxidizers**         | Ascorbic Acid, Potassium Bromate, Hydrogen Peroxide                                                                    |
+| **Emulsifiers**       |  Sodium Stearoyl Lactylate (SSL), Diacetyl tartaric acid esters of monoglycerides (DATEM), Lecithins
+
+---
+
+### **Machines and Equipment**
+
+| Category                 | Examples                                                                                         |
+|--------------------------|-------------------------------------------------------------------------------------------------|
+| **Bakery Equipment**     | Scales, Mixers, Rounder-dividers, Sheeters, Rolling Machines                                       |
+| **Milling Equipment**    | Stone Mills, Purifiers, Aspirators, Pneumatic Flour Ducts                                      |
+| **Power Systems**        | Wood Gasifier                                                                            |
+
+---
+
+## **Credits**
+
+### **Industry Consultant**
+Special thanks to Dr. Bryan Quoc Le for generously volunteering his expertise. Dr. Le contributed by validating the scientific accuracy of flour properties and advising on realistic baking and milling mechanics, ensuring the mod reflects professional standards.
+
+### **Textures by Misa**
+Misa's Realistic Texture Pack assets are used under the Attribution Non-Commercial License. Furthermore they're used with express permission from the author. 
+
+> **Legal Statement:**  
+> These textures are protected under Creative Commons (Attribution Non-Commercial) and international copyright laws. Redistribution is permitted with proper attribution and no commercial benefit.
+
+---
+
+## **About the Developer**
+This project reflects my passion for bakery science and milling, fueled by nearly a decade of culinary experience and academic pursuits. My time working at a production bakery taught me the intricacies of recipes and optimizing processes, while recreational baking honed my creativity in crafting unique bread varieties. These experiences directly influenced features such as the detailed flour system and realistic equipment mechanics, bringing authentic bakery science into the Minecraft world.
+
+---
+
+## **References**
+1. Sultan, W. J. (1990). *Practical Baking: Fifth Edition*. New York, NY: Van Nostrand Reinhold Company. ISBN-13: 978-0442221957 
+2. Cauvain, S. P. & Young, L. S. (2013). *Bakery Products Science and Technology*. ISBN-13: 978-1119967156
