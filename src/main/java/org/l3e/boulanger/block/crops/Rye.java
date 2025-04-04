@@ -1,4 +1,0 @@
-package org.l3e.boulanger.block.crops;
-
-public class Rye {
-}

@@ -1,0 +1,11 @@
+package net.boulangermod.boulanger.item;
+
+
+import net.minecraft.world.item.Item;
+
+public class WheatSeeds extends Item {
+
+    public WheatSeeds(Properties properties) {
+        super(properties);
+    }
+}
