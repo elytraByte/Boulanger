@@ -1,8 +1,0 @@
-{
-  "name": "item.boulanger.flour.wheat_flour_name",  // Lang key for display name
-  "proteinContent": 12.7,
-  "ashContent": 0.5,
-  "weightGrams": 454,
-  "textureName": "wheat_flour", // Texture name (without extension)
-  "description": "item.boulanger.flour.wheat_flour_desc" // Lang key for description
-}

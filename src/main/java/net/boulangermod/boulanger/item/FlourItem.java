@@ -5,16 +5,15 @@ import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 
-import javax.annotation.Nullable;
-import java.util.List;
 
+import java.util.List;
 
 public class FlourItem extends Item {
     public FlourItem(Properties properties) {
@@ -34,26 +33,12 @@ public class FlourItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        if (!level.isClientSide) {
-            ItemStack stack = player.getItemInHand(hand);
-            FlourType type = stack.get(ModDataComponentTypes.FLOUR_TYPE.get());
-            if (type != null) {
-                System.out.println("Used flour: " + type.type() + " (Protein: " + type.protein() + ", Ash: " + type.ash() + ")");
-            } else {
-                System.out.println("Used unknown flour");
-            }
-        }
-        return InteractionResultHolder.success(player.getItemInHand(hand));
-    }
-
-    @Override
     public Component getName(ItemStack stack) {
         FlourType type = stack.get(ModDataComponentTypes.FLOUR_TYPE.get());
         if (type != null) {
             return Component.translatable("item.boulanger.flour." + type.type());
         }
-        return super.getName(stack); // fallback
+        return super.getName(stack);
     }
 
 }
