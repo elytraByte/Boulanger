@@ -1,45 +1,22 @@
-package org.l3e.boulanger.item;
+package net.boulangermod.boulanger.item;
 
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import org.l3e.boulanger.Boulanger;
-import org.l3e.boulanger.item.ModCreativeModeTabs.*;
+import net.boulangermod.boulanger.Boulanger;
 
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Boulanger.MODID);
 
     // Milling ingredients and Flours
     public static final DeferredItem<Item> WHEAT_BERRIES= ITEMS.registerSimpleItem("wheat_berries");
-    public static final DeferredItem<Item> BRAN= ITEMS.registerSimpleItem("bran");
-    public static final DeferredItem<Item> BREAK_FLOUR = ITEMS.registerSimpleItem("break_flour");
-    public static final DeferredItem<Item> MIDDLINGS_FLOUR = ITEMS.registerSimpleItem("middlings_flour");
-    public static final DeferredItem<Item> PATENT_FLOUR = ITEMS.registerSimpleItem("patent_flour");
-    public static final DeferredItem<Item> SEMOLINA_FLOUR = ITEMS.registerSimpleItem("semolina_flour");
-
-    public static final DeferredItem<Item> FIFTY_POUND_FLOUR= ITEMS.registerSimpleItem("fifty_pound_flour");
+    public static final DeferredItem<Item> FLOUR_ITEM = ITEMS.register("flour",
+            () -> new FlourItem(new Item.Properties())
+    );
 
 
-    public static final DeferredItem<Item> WHOLE_WHEAT_FLOUR = ITEMS.register("whole_wheat_flour",
-            () -> new FlourItem(new Item.Properties(),"whole_wheat_flour")); // Correct tab and flourType
-
-    public static final DeferredItem<Item> RYE_FLOUR = ITEMS.register("rye_flour",
-            () -> new FlourItem(new Item.Properties(), "rye_flour")); // Correct tab and flourType
-
-    // Add more flour types here, following the same pattern
-    public static final DeferredItem<Item> BREAD_FLOUR = ITEMS.register("bread_flour",
-            () -> new FlourItem(new Item.Properties(), "bread_flour"));
-
-    public static final DeferredItem<Item> CAKE_FLOUR = ITEMS.register("cake_flour",
-            () -> new FlourItem(new Item.Properties(),"cake_flour"));
-
-    public static final DeferredItem<Item> HIGH_GLUTEN_FLOUR = ITEMS.register("high_gluten_flour",
-            () -> new FlourItem(new Item.Properties(), "high_gluten_flour"));
-
-    public static final DeferredItem<Item> WHITE_WHOLE_WHEAT_FLOUR = ITEMS.register("white_whole_wheat_flour",
-            () -> new FlourItem(new Item.Properties(), "white_whole_wheat_flour"));
-
+//    public static final DeferredItem<Item> FIFTY_POUND_FLOUR= ITEMS.registerSimpleItem("fifty_pound_flour");
 
     //Dairy and Eggs
     public static final DeferredItem<Item> BUTTER= ITEMS.registerSimpleItem("butter");
