@@ -41,14 +41,24 @@ public class ModItemModelProvider extends ItemModelProvider {
         }
 
 
-//        basicItem(ModItems.BUTTER.get());
-//        basicItem(ModItems.EURO_BUTTER.get());
-//        basicItem(ModItems.EURO_BUTTER_BLEND.get());
-//        basicItem(ModItems.SAF_RED.get());
-//        basicItem(ModItems.SAF_GOLD.get());
-//        basicItem(ModItems.FLEISCHMANN.get());
-//        basicItem(ModItems.FRESH_YEAST.get());
-//        saplingItem(ModBlocks.PINE_SAPLING);
+        basicItem(ModItems.BUTTER.get());
+        basicItem(ModItems.EURO_BUTTER.get());
+        basicItem(ModItems.EURO_BUTTER_BLEND.get());
+        basicItem(ModItems.SAF_RED.get());
+        basicItem(ModItems.SAF_GOLD.get());
+        basicItem(ModItems.FLEISCHMANN.get());
+        basicItem(ModItems.FRESH_YEAST.get());
+        basicItem(ModItems.WHEAT_BERRIES.get());
+        basicItem(ModItems.HARD_RED_SPRING_WHEAT.get());
+        basicItem(ModItems.DOUGH.get());
+        basicItem(ModItems.KAOLINITE_CLAY_BALL.get());
+        basicItem(ModItems.PORCELAIN_MIX.get());
+        basicItem(ModItems.UNFIRED_PORCELAIN_BRICK.get());
+        basicItem(ModItems.PORCELAIN_BRICK.get());
+        basicItem(ModItems.GLASS_DUST.get());
+        basicItem(ModItems.BONE_ASH.get());
+        basicItem(ModItems.SPLIT_PINE_LOGS.get());
+        saplingItem(ModBlocks.PINE_SAPLING);
 
     }
 

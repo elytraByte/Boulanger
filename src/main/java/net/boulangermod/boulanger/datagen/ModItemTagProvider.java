@@ -1,5 +1,7 @@
 package net.boulangermod.boulanger.datagen;
 
+import net.boulangermod.boulanger.item.ModItems;
+import net.boulangermod.boulanger.util.IngredientTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
@@ -26,5 +28,30 @@ public class ModItemTagProvider extends ItemTagsProvider {
         tag(ItemTags.PLANKS)
                 .add(ModBlocks.PINE_PLANKS.asItem());
 
+//        tag(IngredientTags.LIQUIDS)
+//                .add(ModItems.MILK.get(), ModItems.WATER.get(), ModItems.EGGSHELLS.get());
+
+        tag(IngredientTags.SALTS)
+                .add(ModItems.SALT_KOSHER.get());
+
+        tag(IngredientTags.YEASTS)
+                .add(ModItems.SAF_RED.get(), ModItems.SAF_GOLD.get(), ModItems.FRESH_YEAST.get());
+
+        tag(IngredientTags.FATS)
+                .add(ModItems.BUTTER.get(), ModItems.EURO_BUTTER.get());
+
+//        tag(IngredientTags.SUGARS)
+//                .add(ModItems.MOLASSES.get());
+
+//        tag(IngredientTags.ADDITIVES)
+//                .add(ModItems.DIASTATIC_MALT.get(), ModItems.ASCORBIC_ACID.get());
+//
+//        tag(IngredientTags.ENRICHMENTS)
+//                .add(ModItems.EGGS.get(), ModItems.MILK_POWDER.get());
+
+    }
+    @Override
+    public String getName() {
+        return "Boulanger Item Tags";
     }
 }

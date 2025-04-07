@@ -7,26 +7,35 @@ import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.SimpleBlockConfiguration;
-import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.*;
 import net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSize;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.SpruceFoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
+import net.minecraft.world.level.levelgen.feature.stateproviders.RuleBasedBlockStateProvider;
+import net.minecraft.world.level.levelgen.feature.stateproviders.SimpleStateProvider;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
+import net.minecraft.world.level.levelgen.structure.templatesystem.AlwaysTrueTest;
+import net.minecraft.world.level.levelgen.structure.templatesystem.BlockMatchTest;
+import net.minecraft.world.level.levelgen.structure.templatesystem.RuleTest;
+import net.minecraft.world.level.levelgen.structure.templatesystem.TagMatchTest;
+
+import java.util.List;
 
 public class ModConfiguredFeatures {
 
     public static final ResourceKey<ConfiguredFeature<?, ?>> WILD_WHEAT_KEY = registerKey("wild_wheat_key");
 
     public static final ResourceKey<ConfiguredFeature<?, ?>> PINE_TREE_KEY = registerKey("pine_tree_key");
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> KAOLINITE_PATCH_KEY = registerKey("kaolinite_patch_key");
 
     public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
 
@@ -42,7 +51,9 @@ public class ModConfiguredFeatures {
                         1,
                         PlacementUtils.filtered(
                                 Feature.SIMPLE_BLOCK,
-                                new SimpleBlockConfiguration(BlockStateProvider.simple(ModBlocks.WILD_WHEAT.get())), BlockPredicate.matchesBlocks(Blocks.SHORT_GRASS))));
+                                new SimpleBlockConfiguration(BlockStateProvider
+                                        .simple(ModBlocks.WILD_WHEAT.get())),
+                                BlockPredicate.matchesBlocks(Blocks.SHORT_GRASS))));
 
 
 //        register(context, PINE_TREE_KEY, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
@@ -58,7 +69,25 @@ public class ModConfiguredFeatures {
                 new StraightTrunkPlacer(8, 5, 5),
                 BlockStateProvider.simple(ModBlocks.PINE_LEAVES.get()),
                 new SpruceFoliagePlacer(ConstantInt.of(3), ConstantInt.of(5), ConstantInt.of(4)),
-                new TwoLayersFeatureSize(0, 3, 5)).dirt(BlockStateProvider.simple(Blocks.TERRACOTTA)).build());
+                new TwoLayersFeatureSize(0, 3, 5))
+                .dirt(BlockStateProvider.simple(Blocks.TERRACOTTA)).build());
+
+        BlockPredicate replaceSandOrDirt = BlockPredicate.matchesBlocks(Blocks.SAND, Blocks.DIRT);
+
+        // Register the configured feature
+        context.register(
+                KAOLINITE_PATCH_KEY,
+                new ConfiguredFeature<>(
+                        Feature.DISK,
+                        new DiskConfiguration(
+                                RuleBasedBlockStateProvider.simple(ModBlocks.KAOLINITE_CLAY.get()), // This is the block to place
+                                BlockPredicate.matchesBlocks(Blocks.DIRT, Blocks.SAND),     // Replace dirt and sand
+                                UniformInt.of(1, 4),  // Radius (random between 2–5)
+                                2                     // Vertical thickness (halfHeight)
+                        )
+                )
+        );
+
     }
 
 

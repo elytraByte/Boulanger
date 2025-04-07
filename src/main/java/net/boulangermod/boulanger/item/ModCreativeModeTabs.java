@@ -33,33 +33,41 @@ public class ModCreativeModeTabs {
                             stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(type.getModelIndex()));
                             pOutput.accept(stack);
                         }
+                        pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WHEAT_BERRIES.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.EURO_BUTTER_BLEND.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SAF_RED.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SAF_GOLD.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.FLEISCHMANN.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_LOG.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_LOG.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_WOOD.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_PLANKS.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_LEAVES.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_SAPLING.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SPLIT_PINE_LOGS.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.KAOLINITE_CLAY.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.KAOLINITE_CLAY_BALL.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.PORCELAIN_MIX.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.UNFIRED_PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BONE_ASH.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.GLASS_DUST.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.L3E_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.BLUE_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.DARK_BLUE_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.DARK_BLUE_WHITE_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.BLACK_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.WHITE_TILE.get(), 1));
 
-
-
-//                        pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.WHEAT_BERRIES.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.BRAN.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.BREAK_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.MIDDLINGS_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.PATENT_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.RYE_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.SEMOLINA_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.WHOLE_WHEAT_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.ALL_PURPOSE_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.BREAD_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.HIGH_GLUTEN_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.VITAL_WHEAT_GLUTEN.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.FIFTY_POUND_FLOUR.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.EURO_BUTTER_BLEND.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.SAF_RED.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.SAF_GOLD.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.FLEISCHMANN.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
-//                        pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
-//                        pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
 
 
                     }).build());

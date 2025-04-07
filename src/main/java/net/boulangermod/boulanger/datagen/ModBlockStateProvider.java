@@ -26,8 +26,14 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
         logBlock(((RotatedPillarBlock) ModBlocks.PINE_LOG.get()));
         logBlock(((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_LOG.get()));
-
         blockItem(ModBlocks.PINE_LOG);
+        blockWithItem(ModBlocks.KAOLINITE_CLAY);
+        blockItem(ModBlocks.PINE_WOOD);
+        blockItem(ModBlocks.STRIPPED_PINE_LOG);
+        blockItem(ModBlocks.STRIPPED_PINE_WOOD);
+        blockWithItem(ModBlocks.PINE_PLANKS);
+        leavesBlock(ModBlocks.PINE_LEAVES);
+        saplingBlock(ModBlocks.PINE_SAPLING);
 
         blockItem(ModBlocks.WOOD_GASIFIER);
         getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
@@ -35,14 +41,26 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         .modelFile(new ModelFile.UncheckedModelFile("boulanger:block/wood-gasifier/wood-gasifier"))
                         .build());
 
-        blockItem(ModBlocks.PINE_WOOD);
-        blockItem(ModBlocks.STRIPPED_PINE_LOG);
-        blockItem(ModBlocks.STRIPPED_PINE_WOOD);
+        getVariantBuilder(ModBlocks.WOOD_OVEN.get())
+                .forAllStates(state -> ConfiguredModel.builder()
+                        .modelFile(models().orientable(
+                                "wood_oven", // model name
+                                modLoc("block/wood_oven_side"), // side texture
+                                modLoc("block/wood_oven_front_off"),  // top texture
+                                modLoc("block/wood_oven_top")
+                        ))
+                        .build());
 
-        blockWithItem(ModBlocks.PINE_PLANKS);
+        blockItem(ModBlocks.WOOD_OVEN);
+        blockItem(ModBlocks.MIXING_BLOCK);
 
-        leavesBlock(ModBlocks.PINE_LEAVES);
-        saplingBlock(ModBlocks.PINE_SAPLING);
+        blockWithItem(ModBlocks.BLACK_TILE);
+        blockWithItem(ModBlocks.DARK_BLUE_TILE);
+        blockWithItem(ModBlocks.BLUE_TILE);
+        blockWithItem(ModBlocks.DARK_BLUE_WHITE_TILE);
+        blockWithItem(ModBlocks.L3E_TILE);
+        blockWithItem(ModBlocks.WHITE_TILE);
+
 
     }
 
@@ -64,5 +82,4 @@ public class ModBlockStateProvider extends BlockStateProvider {
     private void blockItem(DeferredBlock<Block> deferredBlock) {
         simpleBlockItem(deferredBlock.get(), new ModelFile.UncheckedModelFile("boulanger:block/" + deferredBlock.getId().getPath()));
     }
-
 }

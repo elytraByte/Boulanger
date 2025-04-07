@@ -16,11 +16,14 @@ import net.boulangermod.boulanger.block.crops.HardRedSpringWheatCrop;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.worldgen.tree.ModTreeGrowers;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 
 public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Boulanger.MODID);
+
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);
@@ -30,6 +33,45 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> WOOD_GASIFIER = registerBlock("wood_gasifier",
             () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
+    public static final DeferredBlock<Block> WOOD_OVEN = registerBlock("wood_oven",
+            () -> new WoodOvenBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
+    public static final DeferredBlock<Block> MIXING_BLOCK = registerBlock("mixing_block",
+            () -> new MixingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
+//    public static final DeferredBlock<Block> MIXING_BLOCK = registerBlock("mixing_block",
+//            () -> new MixingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
+    public static final DeferredBlock<Block> KAOLINITE_CLAY = registerBlock("kaolinite_clay",
+            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CLAY)));
+
+    public static final DeferredBlock<Block> BLACK_TILE = registerBlock("black_tile",
+            () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
+
+    public static final DeferredBlock<Block> BLUE_TILE = registerBlock("blue_tile",
+            () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
+
+    public static final DeferredBlock<Block> DARK_BLUE_TILE = registerBlock("dark_blue_tile",
+            () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
+
+    public static final DeferredBlock<Block> DARK_BLUE_WHITE_TILE = registerBlock("dark_blue_white_tile",
+            () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
+
+    public static final DeferredBlock<Block> L3E_TILE = registerBlock("l3e_tile",
+            () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
+
+    public static final DeferredBlock<Block> WHITE_TILE = registerBlock("white_tile",
+            () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
+
+
+
+//    public static final DeferredBlock<Block> PORCELAIN_TILE = registerBlock("porcelain_tile",)
+//    public static final DeferredBlock<Block> KILN = registerBlock("kiln",)
+//    public static final DeferredBlock<Block> PROOFER = registerBlock("proofer",)
+//    public static final DeferredBlock<Block> WOOD_OVEN = registerBlock("wood_oven",)
+//    public static final DeferredBlock<Block> FERMENTATION_JAR = registerBlock("fermentation_jar",)
+
 
     public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",
             () -> new HardRedSpringWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));

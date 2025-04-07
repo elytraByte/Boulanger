@@ -8,7 +8,8 @@ import net.minecraft.network.codec.StreamCodec;
 
 
 public record FlourType(String type, float ash, float protein, int modelIndex) {
-    public static final Codec<FlourType> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+    public static final Codec<FlourType> CODEC = RecordCodecBuilder.create
+            (instance -> instance.group(
             Codec.STRING.fieldOf("type").forGetter(FlourType::type),
             Codec.FLOAT.fieldOf("ash").forGetter(FlourType::ash),
             Codec.FLOAT.fieldOf("protein").forGetter(FlourType::protein),

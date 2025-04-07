@@ -19,6 +19,7 @@ public class ModPlacedFeatures {
 
     public static final ResourceKey<PlacedFeature> WILD_WHEAT = registerKey("wild_wheat");
     public static final ResourceKey<PlacedFeature> PINE_TREE_PLACED_KEY = registerKey("pine_tree_placed");
+    public static final ResourceKey<PlacedFeature> KAOLINITE_CLAY_PLACED_KEY = registerKey("kaolinite_clay_placed");
 
     public static void bootstrap(BootstrapContext<PlacedFeature> context) {
         HolderGetter<ConfiguredFeature<?, ?>> configuredFeatures = context.lookup(Registries.CONFIGURED_FEATURE);
@@ -34,11 +35,23 @@ public class ModPlacedFeatures {
         );
 
         register(context, PINE_TREE_PLACED_KEY, configuredFeatures.getOrThrow(ModConfiguredFeatures.PINE_TREE_KEY),
-                VegetationPlacements.treePlacement(PlacementUtils.countExtra(3,0.1f,3), ModBlocks.PINE_SAPLING.get()));
+                VegetationPlacements.treePlacement(
+                        PlacementUtils.countExtra(3,0.1f,3),
+                        ModBlocks.PINE_SAPLING.get()));
+
+        register(
+                context,
+                KAOLINITE_CLAY_PLACED_KEY,
+                configuredFeatures.getOrThrow(ModConfiguredFeatures.KAOLINITE_PATCH_KEY),
+                List.of(
+                        RarityFilter.onAverageOnceEvery(1),                     // Like vanilla clay
+                        InSquarePlacement.spread(),
+                        PlacementUtils.HEIGHTMAP_WORLD_SURFACE,
+                        BiomeFilter.biome()
+                )
+        );
 
     }
-
-
 
 
     private static ResourceKey<PlacedFeature> registerKey(String name) {
