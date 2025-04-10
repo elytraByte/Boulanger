@@ -11,13 +11,19 @@ import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.IngredientStack;
 import net.boulangermod.boulanger.component.WeightComponent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -183,7 +189,60 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
         return new MixingBlockMenu(id, inv, this);
     }
 
-    public int getMixProgress() { return mixProgress; }
-    public boolean isMixing() { return mixing; }
-    public static int getMaxMixTime() { return MAX_MIX_TIME; }
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.put("Inventory", itemHandler.serializeNBT(registries));
+        tag.putBoolean("Mixing", this.mixing);
+        tag.putInt("MixProgress", this.mixProgress);
+        tag.put("Ingredients", saveIngredientList());
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        itemHandler.deserializeNBT(registries, tag.getCompound("Inventory"));
+        this.mixing = tag.getBoolean("Mixing");
+        this.mixProgress = tag.getInt("MixProgress");
+        loadIngredientList(tag.getList("Ingredients", CompoundTag.TAG_COMPOUND));
+    }
+
+
+
+
+    private ListTag saveIngredientList() {
+        ListTag listTag = new ListTag();
+        for (IngredientStack stack : ingredientList) {
+            CompoundTag tag = new CompoundTag();
+            tag.putString("Item", BuiltInRegistries.ITEM.getKey(stack.item()).toString());
+            tag.putString("Category", stack.category().name());
+            tag.putInt("Grams", stack.grams());
+            listTag.add(tag);
+        }
+        return listTag;
+    }
+
+    private void loadIngredientList(ListTag listTag) {
+        ingredientList.clear();
+        for (int i = 0; i < listTag.size(); i++) {
+            CompoundTag tag = listTag.getCompound(i);
+            ResourceLocation id = ResourceLocation.parse(tag.getString("Item"));
+            Item item = BuiltInRegistries.ITEM.get(id);
+            IngredientCategory category = IngredientCategory.valueOf(tag.getString("Category"));
+            int grams = tag.getInt("Grams");
+            ingredientList.add(new IngredientStack(item, category, grams));
+        }
+    }
+
+    public int getMixProgress() {
+        return mixProgress;
+    }
+
+    public boolean isMixing() {
+        return mixing;
+    }
+
+    public static int getMaxMixTime() {
+        return MAX_MIX_TIME;
+    }
 }

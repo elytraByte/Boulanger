@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger.datagen;
 
 
+import net.boulangermod.boulanger.block.ModBlocks;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
@@ -27,8 +28,19 @@ public class DataGenerator {
 
 
 //        generator.addProvider(event.includeServer(), new ModRecipeProvider(packOutput, lookupProvider));
-//        generator.addProvider(event.includeServer(), new LootTableProvider(packOutput, Collections.emptySet(),
-//                List.of(new LootTableProvider.SubProviderEntry(ModBlock::new, LootContextParamSets.BLOCK)), lookupProvider));
+        generator.addProvider(event.includeServer(),
+                new LootTableProvider(
+                        packOutput,
+                        Collections.emptySet(),
+                        List.of(new LootTableProvider.SubProviderEntry(
+                                // This lambda should return your loot‐table subprovider:
+                                lookup -> new ModBlockLootTableProvider(lookup),
+                                LootContextParamSets.BLOCK
+                        )),
+                        lookupProvider
+                )
+        );
+
 
        BlockTagsProvider blockTagsProvider = new ModBlockTagProvider(packOutput, lookupProvider, Boulanger.MODID, existingFileHelper);
        generator.addProvider(event.includeServer(), blockTagsProvider);

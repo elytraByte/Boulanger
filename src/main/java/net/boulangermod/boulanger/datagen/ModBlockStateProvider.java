@@ -1,11 +1,14 @@
 package net.boulangermod.boulanger.datagen;
 
+import net.boulangermod.boulanger.block.crops.HardRedSpringWheatCrop;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
@@ -14,6 +17,8 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
+
+import java.util.function.Function;
 
 public class ModBlockStateProvider extends BlockStateProvider {
     public ModBlockStateProvider(PackOutput output, String modid, ExistingFileHelper exFileHelper) {
@@ -42,6 +47,16 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.DARK_BLUE_WHITE_TILE);
         blockWithItem(ModBlocks.L3E_TILE);
         blockWithItem(ModBlocks.WHITE_TILE);
+        simpleBlock(ModBlocks.WILD_WHEAT.get(),
+                models().cross(
+                        ModBlocks.WILD_WHEAT.getId().getPath(),
+                        modLoc("block/wild_wheat")
+                ).renderType("cutout")
+        );
+
+
+
+        makeCrop(((HardRedSpringWheatCrop) ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get()), "wheat_stage","boulanger_wheat_stage");
 
 //        blockItem(ModBlocks.WOOD_GASIFIER);
 //        getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
@@ -78,6 +93,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     }
 
+
+
     private void leavesBlock(DeferredBlock<Block> deferredBlock) {
         simpleBlockWithItem(deferredBlock.get(),
                 models().singleTexture(BuiltInRegistries.BLOCK.getKey(deferredBlock.get()).getPath(), ResourceLocation.parse("minecraft:block/leaves"),
@@ -95,5 +112,20 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     private void blockItem(DeferredBlock<Block> deferredBlock) {
         simpleBlockItem(deferredBlock.get(), new ModelFile.UncheckedModelFile("boulanger:block/" + deferredBlock.getId().getPath()));
+    }
+
+    public void makeCrop(CropBlock block, String modelName, String textureName) {
+        Function<BlockState, ConfiguredModel[]> function = state -> states(state, block, modelName, textureName);
+
+        getVariantBuilder(block).forAllStates(function);
+    }
+
+    private ConfiguredModel[] states(BlockState state, CropBlock block, String modelName, String textureName) {
+        ConfiguredModel[] models = new ConfiguredModel[1];
+        models[0] = new ConfiguredModel(models().crop(modelName + state.getValue(((HardRedSpringWheatCrop) block).getAgeProperty()),
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "block/wheat/" + textureName +
+                        state.getValue(((HardRedSpringWheatCrop) block).getAgeProperty()))).renderType("cutout"));
+
+        return models;
     }
 }

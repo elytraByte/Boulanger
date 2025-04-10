@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.component;
 
 import com.mojang.serialization.Codec;
 import net.boulangermod.boulanger.item.BakeryAdditiveType;
+import net.boulangermod.boulanger.item.WheatVariety;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.IngredientStack;
 import net.boulangermod.boulanger.util.StreamCodecsCompat;
@@ -56,6 +57,9 @@ public class ModDataComponentTypes {
                     .persistent(WheatVariety.CODEC)
                     .networkSynchronized(WheatVariety.STREAM_CODEC)
             );
+
+
+
 
 //    public static final DeferredHolder<DataComponentType<?>, DataComponentType<FoodAdditiveComponent>> FOOD_ADDITIVE =
 //            register("food_additive", builder -> builder

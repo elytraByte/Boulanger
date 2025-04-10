@@ -1,7 +1,10 @@
 package net.boulangermod.boulanger.block.crops;
 
+import net.boulangermod.boulanger.item.ModItems;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
@@ -34,4 +37,12 @@ public class HardRedSpringWheatCrop extends CropBlock {
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
         pBuilder.add(AGE);
     }
+
+    @Override
+    protected ItemLike getBaseSeedId() {
+        return ModItems.WHEAT_SEED;
+    }
+
+
+
 }

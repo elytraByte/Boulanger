@@ -16,7 +16,7 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class ScaleBlockScreen extends AbstractContainerScreen<ScaleBlockMenu> {
     private static final ResourceLocation GUI_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/scale.png");
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/scale1.png");
     private EditBox weightInput;
 
     public ScaleBlockScreen(ScaleBlockMenu menu, Inventory playerInventory, Component title) {
@@ -26,54 +26,51 @@ public class ScaleBlockScreen extends AbstractContainerScreen<ScaleBlockMenu> {
     @Override
     protected void init() {
         super.init();
-        // 'leftPos' and 'topPos' represent where your GUI background starts on the screen.
-        // imageWidth and imageHeight default to 176×166 for most ContainerScreens, but confirm in your code.
 
-        // Reposition labels as needed
-        this.inventoryLabelY = 72;
+        // center the title
         this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
+        this.inventoryLabelY = 72;
 
-        // Position the text box (EditBox) about 10px from the left edge and 10px from the top.
-        int textFieldX = this.leftPos + 10;
-        int textFieldY = this.topPos + 20;
-        int textFieldWidth = 70;   // narrower than 100 so it fits comfortably
-        int textFieldHeight = 20;
+        // compute the width/height of our widgets
+        int tfW = 70, tfH = 20;
+        int btnW = 50, btnH = 20;
+
+        // center the text field at the top, say 10px down from the top edge
+        int textFieldX = this.leftPos + (this.imageWidth - tfW) / 2;
+        int textFieldY = this.topPos + 23;
 
         this.weightInput = new EditBox(
                 this.font,
-                textFieldX,
-                textFieldY,
-                textFieldWidth,
-                textFieldHeight,
+                textFieldX, textFieldY,
+                tfW, tfH,
                 Component.literal("Weight")
         );
-        this.weightInput.setMaxLength(9); // up to 5 characters
-        this.weightInput.setValue("");    // start empty
+        this.weightInput.setMaxLength(9);
+        this.weightInput.setValue("");
         addRenderableWidget(this.weightInput);
 
-        // Build a "Measure" button to the right of the text box, with a small gap.
-        int buttonX = textFieldX + textFieldWidth + 5;
-        int buttonY = textFieldY;
-        int buttonWidth = 50;
-        int buttonHeight = 20;
+        // place the Measure button directly under the text field, with a small gap
+        int buttonX = this.leftPos + (this.imageWidth - btnW) / 2;
+        int buttonY = textFieldY + tfH + 5;
 
-        Button measureButton = Button.builder(Component.literal("Measure"), button -> {
-                    // OnPress logic
+        Button measureButton = Button.builder(Component.literal("Measure"), btn -> {
+                    String text = weightInput.getValue();
+                    int weight;
                     try {
-                        int weight = Integer.parseInt(weightInput.getValue());
-                        BlockPos pos = this.menu.getBlockEntity().getBlockPos();
-                        MeasureData payload = new MeasureData(weight, pos);
-                        BoulangerNetwork.sendToServer(payload);
+                        weight = Integer.parseInt(text);
                     } catch (NumberFormatException e) {
-                        weightInput.setValue("0");
+                        this.minecraft.player.sendSystemMessage(Component.literal("Invalid weight: “" + text + "”"));
+                        return;
                     }
+                    BoulangerNetwork.sendToServer(new MeasureData(weight, menu.getBlockEntity().getBlockPos()));
                 })
                 .pos(buttonX, buttonY)
-                .size(buttonWidth, buttonHeight)
+                .size(btnW, btnH)
                 .build();
-
         this.addRenderableWidget(measureButton);
+
     }
+
 
 
     @Override

@@ -1,9 +1,11 @@
 package net.boulangermod.boulanger.item;
 
+import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.WheatVariety;
+import net.boulangermod.boulanger.component.WheatVarietyRecord;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemNameBlockItem;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -47,7 +49,9 @@ public class ModItems {
     public static final DeferredItem<Item> DOUGH = ITEMS.registerSimpleItem("generic_dough");
     public static final DeferredItem<Item> HARD_RED_SPRING_WHEAT = ITEMS.registerSimpleItem("hard_red_spring_wheat");
     public static final DeferredItem<Item> WHEAT_SEED = ITEMS.register("wheat_seeds",
-            () -> new WheatSeedItem(new Item.Properties()));
+            () -> new WheatSeedItem(
+                    ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(),
+                    new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
