@@ -12,7 +12,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 
-
 import java.util.List;
 
 public class FlourItem extends Item {
@@ -27,6 +26,8 @@ public class FlourItem extends Item {
             tooltipComponents.add(Component.literal("Type: " + type.type()).withStyle(ChatFormatting.GRAY));
             tooltipComponents.add(Component.literal("Ash: " + type.ash() + "%").withStyle(ChatFormatting.DARK_GRAY));
             tooltipComponents.add(Component.literal("Protein: " + type.protein() + "%").withStyle(ChatFormatting.BLUE));
+            // New weight line
+            tooltipComponents.add(Component.literal("Weight: " + type.weight() + " g").withStyle(ChatFormatting.GREEN));
         } else {
             tooltipComponents.add(Component.literal("No flour data").withStyle(ChatFormatting.RED));
         }

@@ -1,4 +1,4 @@
-// 1.21	2025-04-06T20:32:43.3990005	Item Models: boulanger
+// 1.21	2025-04-08T02:33:48.3391892	Item Models: boulanger
 c02796273a8a2de88273fd4388f9c5ba13f9fd80 assets/boulanger/models/flour/all_purpose_flour.json
 c9b16c130790044dffda9d7a391cda2a3c76314c assets/boulanger/models/flour/bread_flour.json
 5716210c79dde980828ffe0845a59bb38be6a4ba assets/boulanger/models/flour/fifth_break_flour.json
@@ -38,3 +38,5 @@ ed6aa5143c57ac392067e78295b011a1a6098ce7 assets/boulanger/models/item/saf_red.js
 896234665639fc7033ba8bafe0e7c179c19470f8 assets/boulanger/models/item/split_pine_logs.json
 d6acb58752542a3650807f872627b79b1f21fbb7 assets/boulanger/models/item/unfired_porcelain_brick.json
 3547e4c7215fe0643cdfcb9292c0b42347f53855 assets/boulanger/models/item/wheat_berries.json
+0c94c28e4a97aad583e0af433d881e9da9c13ef7 assets/boulanger/models/item/wheat_seeds.json
+759399399ce94bc76254a3ce6fb7f91f2562bd3a assets/boulanger/models/item/wood_oven.json

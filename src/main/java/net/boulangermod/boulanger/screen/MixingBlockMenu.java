@@ -1,96 +1,154 @@
 package net.boulangermod.boulanger.screen;
 
 import net.boulangermod.boulanger.block.entity.MixingBlockEntity;
-import net.boulangermod.boulanger.block.entity.WoodOvenBlockEntity;
+import net.boulangermod.boulanger.util.IngredientStack;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 public class MixingBlockMenu extends AbstractContainerMenu {
-    private final MixingBlockEntity blockEntity;
+    public static final int INPUT_SLOT  = 0;
+    public static final int FUEL_SLOT   = 1;
+    public static final int OUTPUT_SLOT = 2;
 
+    private final MixingBlockEntity blockEntity;
+    private final ContainerData data;
+
+    // FriendlyByteBuf constructor (called on client)
     public MixingBlockMenu(int id, Inventory playerInv, FriendlyByteBuf extraData) {
-        this(id, playerInv, playerInv.player.level().getBlockEntity(extraData.readBlockPos()));
+        this(id, playerInv, (MixingBlockEntity) playerInv.player.level().getBlockEntity(extraData.readBlockPos()));
     }
 
+    // Primary constructor (server & client after the above redirects here)
     public MixingBlockMenu(int id, Inventory playerInv, BlockEntity be) {
         super(ModMenuTypes.MIXING_BLOCK_MENU.get(), id);
-        this.blockEntity = (MixingBlockEntity) be;
 
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 56, 17)); // Input
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 56, 53)); // Fuel
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 116, 35)); // Output
+        if (!(be instanceof MixingBlockEntity mixer)) {
+            throw new IllegalStateException("Expected MixingBlockEntity but got: " + be);
+        }
+        this.blockEntity = mixer;
 
-        // Player inventory
+        // --- TileEntity slots ---
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), INPUT_SLOT,  56, 17)); // input bowl
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), FUEL_SLOT,   56, 53)); // output bowl
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), OUTPUT_SLOT,116, 35)); // dough
+
+        // --- Player inventory slots ---
+        // main inventory, 3 rows × 9 cols
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
-                this.addSlot(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
+                this.addSlot(new Slot(playerInv, col + row * 9 + 9,
+                        8 + col * 18, 84 + row * 18));
             }
         }
-
-        for (int i = 0; i < 9; ++i) {
-            this.addSlot(new Slot(playerInv, i, 8 + i * 18, 142));
+        // hotbar
+        for (int hot = 0; hot < 9; ++hot) {
+            this.addSlot(new Slot(playerInv, hot,
+                    8 + hot * 18, 142));
         }
+
+        // --- Syncing progress/mixing state ---
+        this.data = new ContainerData() {
+            @Override
+            public int get(int index) {
+                return switch (index) {
+                    case 0 -> blockEntity.getMixProgress();
+                    case 1 -> blockEntity.isMixing() ? 1 : 0;
+                    default -> 0;
+                };
+            }
+
+            @Override
+            public void set(int index, int value) {
+                // no-op: server writes into BE, client only reads
+            }
+
+            @Override
+            public int getCount() {
+                return 2;
+            }
+        };
+        addDataSlots(this.data);
     }
 
     @Override
     public boolean stillValid(Player player) {
-        return blockEntity.getLevel().getBlockState(blockEntity.getBlockPos()).is(blockEntity.getBlockState().getBlock());
+        return blockEntity.getLevel()
+                .getBlockState(blockEntity.getBlockPos())
+                .is(blockEntity.getBlockState().getBlock());
     }
 
-    // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
-    // must assign a slot number to each of the slots used by the GUI.
-    // For this container, we can see both the tile inventory's slots as well as the player inventory slots and the hotbar.
-    // Each time we add a Slot to the container, it automatically increases the slotIndex, which means
-    //  0 - 8 = hotbar slots (which will map to the InventoryPlayer slot numbers 0 - 8)
-    //  9 - 35 = player inventory slots (which map to the InventoryPlayer slot numbers 9 - 35)
-    //  36 - 44 = TileInventory slots, which map to our TileEntity slot numbers 0 - 8)
-    private static final int HOTBAR_SLOT_COUNT = 9;
-    private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
+    // Quick‐move (shift‐click) logic
+    private static final int HOTBAR_SLOT_COUNT             = 9;
+    private static final int PLAYER_INVENTORY_ROW_COUNT    = 3;
     private static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
-    private static final int PLAYER_INVENTORY_SLOT_COUNT = PLAYER_INVENTORY_COLUMN_COUNT * PLAYER_INVENTORY_ROW_COUNT;
-    private static final int VANILLA_SLOT_COUNT = HOTBAR_SLOT_COUNT + PLAYER_INVENTORY_SLOT_COUNT;
-    private static final int VANILLA_FIRST_SLOT_INDEX = 0;
+    private static final int PLAYER_INVENTORY_SLOT_COUNT   = PLAYER_INVENTORY_ROW_COUNT * PLAYER_INVENTORY_COLUMN_COUNT;
+    private static final int VANILLA_SLOT_COUNT            = HOTBAR_SLOT_COUNT + PLAYER_INVENTORY_SLOT_COUNT;
+    private static final int VANILLA_FIRST_SLOT_INDEX      = 0;
     private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
+    private static final int TE_INVENTORY_SLOT_COUNT       = 3; // input, fuel, output
 
-    // THIS YOU HAVE TO DEFINE!
-    private static final int TE_INVENTORY_SLOT_COUNT = 3;  // must be the number of slots you have!
     @Override
-    public ItemStack quickMoveStack(Player playerIn, int pIndex) {
-        Slot sourceSlot = slots.get(pIndex);
-        if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;  //EMPTY_ITEM
+    public ItemStack quickMoveStack(Player playerIn, int index) {
+        Slot sourceSlot = slots.get(index);
+        if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;
         ItemStack sourceStack = sourceSlot.getItem();
-        ItemStack copyOfSourceStack = sourceStack.copy();
+        ItemStack copyStack = sourceStack.copy();
 
-        // Check if the slot clicked is one of the vanilla container slots
-        if (pIndex < VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT) {
-            // This is a vanilla container slot so merge the stack into the tile inventory
-            if (!moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
-                    + TE_INVENTORY_SLOT_COUNT, false)) {
-                return ItemStack.EMPTY;  // EMPTY_ITEM
+        if (index < VANILLA_SLOT_COUNT) {
+            // from player inventory → TE
+            if (!moveItemStackTo(sourceStack,
+                    TE_INVENTORY_FIRST_SLOT_INDEX,
+                    TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT,
+                    false)) {
+                return ItemStack.EMPTY;
             }
-        } else if (pIndex < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
-            // This is a TE slot so merge the stack into the players inventory
-            if (!moveItemStackTo(sourceStack, VANILLA_FIRST_SLOT_INDEX, VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT, false)) {
+        } else if (index < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
+            // from TE → player inventory
+            if (!moveItemStackTo(sourceStack,
+                    VANILLA_FIRST_SLOT_INDEX,
+                    VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT,
+                    false)) {
                 return ItemStack.EMPTY;
             }
         } else {
-            System.out.println("Invalid slotIndex:" + pIndex);
             return ItemStack.EMPTY;
         }
-        // If stack size == 0 (the entire stack was moved) set slot contents to null
+
         if (sourceStack.getCount() == 0) {
             sourceSlot.set(ItemStack.EMPTY);
         } else {
             sourceSlot.setChanged();
         }
         sourceSlot.onTake(playerIn, sourceStack);
-        return copyOfSourceStack;
+        return copyStack;
     }
-}
 
+    /** Expose the synced data for the Screen to read progress/state. */
+    public ContainerData getData() {
+        return data;
+    }
+
+    /** Expose the BE for sending packets (e.g. StartMixingPacket) */
+    public MixingBlockEntity getBlockEntity() {
+        return blockEntity;
+    }
+
+    // In MixingBlockMenu.java, after getData() and getBlockEntity():
+    /** How many ingredients have been added so far. */
+    public int getIngredientCount() {
+        return blockEntity.getIngredientList().size();
+    }
+
+    /** Get the i‑th IngredientStack from the BE. */
+    public IngredientStack getIngredient(int i) {
+        return blockEntity.getIngredientList().get(i);
+    }
+
+}

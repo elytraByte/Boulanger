@@ -1,0 +1,27 @@
+package net.boulangermod.boulanger.item;
+
+public enum BakeryAdditiveType {
+
+    ASCORBIC_ACID,
+    L_CYSTEINE,
+    AZODICARBONAMIDE,
+    CALCIUM_PROPIONATE,
+    ACETIC_ACID,
+    LACTIC_ACID,
+    PURATOS_S500,
+    CL_500,
+    IM_PROVE_200,
+    DATEM,
+    MONO_AND_DIGLYCERIDES,
+    SODIUM_STEAROYL_LACYYLATE,
+    SOY_LECITHIN,
+    SUNFLOWER_LECITHIN,
+    EGG_LECITHIN,
+    GLUCOSE_OXIDAISE,
+    AMYLASE,
+    DIASTATIC_MALT_POWDER,
+    PROTEASE,
+    XYLANASE,
+    LIPASE;
+
+}

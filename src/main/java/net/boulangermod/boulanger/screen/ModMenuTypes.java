@@ -20,6 +20,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<MixingBlockMenu>> MIXING_BLOCK_MENU =
             registerMenuType("mixing_block_menu", MixingBlockMenu::new);
 
+    public static final DeferredHolder<MenuType<?>, MenuType<ScaleBlockMenu>> SCALE_BLOCK_MENU =
+            registerMenuType("scale_block_menu", ScaleBlockMenu::new);
+
     private static <T extends AbstractContainerMenu>DeferredHolder<MenuType<?>,
             MenuType<T>> registerMenuType(String name, IContainerFactory<T> factory) {
         return MENUS.register(name, () -> IMenuTypeExtension.create(factory));

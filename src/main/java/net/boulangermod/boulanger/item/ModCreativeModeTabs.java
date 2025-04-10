@@ -37,6 +37,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WHEAT_BERRIES.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WHEAT_SEED.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER_BLEND.get(), 1));
@@ -47,6 +48,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.SCALE_BLOCK.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_LOG.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_LOG.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_WOOD.get(), 1));

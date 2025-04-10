@@ -1,12 +1,25 @@
 package net.boulangermod.boulanger.component;
 
 
+import com.mojang.serialization.Codec;
+import net.boulangermod.boulanger.item.BakeryAdditiveType;
+import net.boulangermod.boulanger.util.IngredientCategory;
+import net.boulangermod.boulanger.util.IngredientStack;
+import net.boulangermod.boulanger.util.StreamCodecsCompat;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.resources.RegistryFileCodec;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
 
+import java.util.Map;
 import java.util.function.UnaryOperator;
 
 public class ModDataComponentTypes {
@@ -15,9 +28,58 @@ public class ModDataComponentTypes {
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<FlourType>> FLOUR_TYPE =
             register("flour_type", builder -> builder
-                    .persistent(FlourType.CODEC)         // Required for saving
-                    .networkSynchronized(FlourType.STREAM_CODEC)           // Required for syncing to client
+                    .persistent(FlourType.CODEC)
+                    .networkSynchronized(FlourType.STREAM_CODEC)
             );
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<IngredientCategory>> INGREDIENT_CATEGORY =
+            register("ingredient_category", builder -> builder
+                    .persistent(IngredientCategory.CODEC)
+                    .networkSynchronized(IngredientCategory.STREAM_CODEC)
+            );
+
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<WeightComponent>> INGREDIENT_GRAMS =
+            register("ingredient_grams", builder -> builder
+                    .persistent(WeightComponent.CODEC)
+                    .networkSynchronized(WeightComponent.STREAM_CODEC)
+            );
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<IngredientTypeComponent>> INGREDIENT_TYPE =
+            register("ingredient_type", builder -> builder
+                    .persistent(IngredientTypeComponent.CODEC)
+                    .networkSynchronized(IngredientTypeComponent.STREAM_CODEC)
+            );
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<WheatVariety>> WHEAT_VARIETY =
+            register("wheat_variety", builder -> builder
+                    .persistent(WheatVariety.CODEC)
+                    .networkSynchronized(WheatVariety.STREAM_CODEC)
+            );
+
+//    public static final DeferredHolder<DataComponentType<?>, DataComponentType<FoodAdditiveComponent>> FOOD_ADDITIVE =
+//            register("food_additive", builder -> builder
+//                    .persistent(FoodAdditiveComponent.CODEC)
+//                    .networkSynchronized(FoodAdditiveComponent.STREAM_CODEC)
+//            );
+//
+//    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BakeryAdditiveType>> BAKERY_ADDITIVE =
+//            register("bakery_additive", builder -> builder
+//                    .persistent(BakeryAdditiveType.CODEC)
+//                    .networkSynchronized(BakeryAdditiveType.STREAM_CODEC)
+//            );
+
+
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BakerPctComponent>> BAKER_PERCENTAGES =
+            register("baker_percentages", builder -> builder
+                    .persistent(BakerPctComponent.CODEC)
+                    .networkSynchronized(BakerPctComponent.STREAM_CODEC)
+            );
+
+
+
+
 
     private static <T> DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(
             String name,

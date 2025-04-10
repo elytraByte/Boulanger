@@ -21,9 +21,13 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("wood_oven_be", () -> BlockEntityType.Builder.of(
                     WoodOvenBlockEntity::new, ModBlocks.WOOD_OVEN.get()).build(null));
 
-    public static final Supplier<BlockEntityType<WoodOvenBlockEntity>> MIXING_BLOCK_BE =
+    public static final Supplier<BlockEntityType<MixingBlockEntity>> MIXING_BLOCK_BE =
             BLOCK_ENTITIES.register("mixing_block_be", () -> BlockEntityType.Builder.of(
-                    WoodOvenBlockEntity::new, ModBlocks.MIXING_BLOCK.get()).build(null));
+                    MixingBlockEntity::new, ModBlocks.MIXING_BLOCK.get()).build(null));
+
+    public static final Supplier<BlockEntityType<ScaleBlockEntity>> SCALE_BLOCK_BE =
+            BLOCK_ENTITIES.register("scale_block_be", () -> BlockEntityType.Builder.of(
+                    ScaleBlockEntity::new, ModBlocks.SCALE_BLOCK.get()).build(null));
 
 //    public static final Supplier<BlockEntityType<MixingBlockEntity>> MIXING_BLOCK_BE =
 //            BLOCK_ENTITIES.register("mixing_block_be", () -> BlockEntityType.Builder.of(

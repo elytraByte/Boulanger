@@ -1,6 +1,11 @@
 package net.boulangermod.boulanger.util;
 
+import com.mojang.serialization.Codec;
+import io.netty.buffer.ByteBuf;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
 public enum IngredientCategory {
@@ -35,6 +40,15 @@ public enum IngredientCategory {
         // 3. Fallback
         return IngredientCategory.CUSTOM;
     }
+
+    public static final Codec<IngredientCategory> CODEC =
+            Codec.STRING.xmap(IngredientCategory::valueOf, IngredientCategory::name);
+
+    public static final StreamCodec<ByteBuf, IngredientCategory> STREAM_CODEC =
+            ByteBufCodecs.idMapper(
+                    id -> id >= 0 && id < IngredientCategory.values().length ? IngredientCategory.values()[id] : IngredientCategory.CUSTOM,
+                    IngredientCategory::ordinal
+            );
 }
 
 

@@ -1,12 +1,16 @@
 package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
-import net.boulangermod.boulanger.block.entity.MixingBlockEntity;
+import net.boulangermod.boulanger.network.StartMixingPacket;
+import net.boulangermod.boulanger.recipe.ModMixingRecipes;
+import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.screen.MixingBlockScreen;
 import net.boulangermod.boulanger.screen.ModMenuTypes;
 import net.boulangermod.boulanger.screen.WoodOvenScreen;
+import net.boulangermod.boulanger.screen.ScaleBlockScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -45,15 +49,18 @@ public class Boulanger {
 
         ModCreativeModeTabs.register(modEventBus);
 
-        ModItems.register(modEventBus);
-
         ModBlocks.register(modEventBus);
+
+        ModItems.register(modEventBus);
 
         ModBlockEntities.register(modEventBus);
 
         ModMenuTypes.register(modEventBus);
 
         ModDataComponentTypes.register(modEventBus);
+
+        ModRecipeSerializers.register(modEventBus);
+
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (ExampleMod) to respond directly to events.
@@ -74,6 +81,8 @@ public class Boulanger {
         LOGGER.info(Config.magicNumberIntroduction + Config.magicNumber);
 
         Config.items.forEach((item) -> LOGGER.info("ITEM >> {}", item.toString()));
+
+        ModMixingRecipes.registerDefaults();
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
@@ -81,6 +90,7 @@ public class Boulanger {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
@@ -100,6 +110,7 @@ public class Boulanger {
 
             event.register(ModMenuTypes.WOOD_OVEN_MENU.get(), WoodOvenScreen::new);
             event.register(ModMenuTypes.MIXING_BLOCK_MENU.get(), MixingBlockScreen::new);
+            event.register(ModMenuTypes.SCALE_BLOCK_MENU.get(), ScaleBlockScreen::new);
 
         }
     }

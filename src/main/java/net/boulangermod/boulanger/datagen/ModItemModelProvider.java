@@ -49,6 +49,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.FLEISCHMANN.get());
         basicItem(ModItems.FRESH_YEAST.get());
         basicItem(ModItems.WHEAT_BERRIES.get());
+        basicItem(ModItems.WHEAT_SEED.get());
         basicItem(ModItems.HARD_RED_SPRING_WHEAT.get());
         basicItem(ModItems.DOUGH.get());
         basicItem(ModItems.KAOLINITE_CLAY_BALL.get());
@@ -59,6 +60,9 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.BONE_ASH.get());
         basicItem(ModItems.SPLIT_PINE_LOGS.get());
         saplingItem(ModBlocks.PINE_SAPLING);
+
+        withExistingParent("wood_oven", modLoc("block/wood_oven_off"));
+
 
     }
 

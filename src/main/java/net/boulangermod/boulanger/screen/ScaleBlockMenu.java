@@ -1,7 +1,7 @@
 package net.boulangermod.boulanger.screen;
 
-import net.boulangermod.boulanger.block.WoodOvenBlock;
-import net.boulangermod.boulanger.block.entity.WoodOvenBlockEntity;
+import net.boulangermod.boulanger.block.ScaleBlock;
+import net.boulangermod.boulanger.block.entity.ScaleBlockEntity;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -11,20 +11,23 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
-public class WoodOvenMenu extends AbstractContainerMenu {
-    private final WoodOvenBlockEntity blockEntity;
+public class ScaleBlockMenu extends AbstractContainerMenu {
+    private final ScaleBlockEntity blockEntity;
 
-    public WoodOvenMenu(int id, Inventory playerInv, FriendlyByteBuf extraData) {
-        this(id, playerInv, playerInv.player.level().getBlockEntity(extraData.readBlockPos()));
+    public ScaleBlockMenu(int id, Inventory playerInventory, FriendlyByteBuf extraData) {
+        this(id, playerInventory, playerInventory.player.level().getBlockEntity(extraData.readBlockPos()));
     }
 
-    public WoodOvenMenu(int id, Inventory playerInv, BlockEntity be) {
-        super(ModMenuTypes.WOOD_OVEN_MENU.get(), id);
-        this.blockEntity = (WoodOvenBlockEntity) be;
 
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 56, 17)); // Input
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 56, 53)); // Fuel
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 116, 35)); // Output
+    public ScaleBlockMenu(int id, Inventory playerInv, BlockEntity entity) {
+        super(ModMenuTypes.SCALE_BLOCK_MENU.get(), id);
+        this.blockEntity = (ScaleBlockEntity) entity;
+
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 44, 53)); // First slot (Input - empty bowl)
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 80, 53)); // Second slot (Bulk ingredient)
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 116, 53)); // Third slot (Output)
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 3, 142, 53));
+
 
         // Player inventory
         for (int row = 0; row < 3; ++row) {
@@ -41,7 +44,7 @@ public class WoodOvenMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return blockEntity.getLevel().getBlockState(blockEntity.getBlockPos()).getBlock() instanceof WoodOvenBlock;
+        return blockEntity.getLevel().getBlockState(blockEntity.getBlockPos()).getBlock() instanceof ScaleBlock;
     }
 
     // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
@@ -60,7 +63,7 @@ public class WoodOvenMenu extends AbstractContainerMenu {
     private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
 
     // THIS YOU HAVE TO DEFINE!
-    private static final int TE_INVENTORY_SLOT_COUNT = 3;  // must be the number of slots you have!
+    private static final int TE_INVENTORY_SLOT_COUNT = 4;  // must be the number of slots you have!
     @Override
     public ItemStack quickMoveStack(Player playerIn, int pIndex) {
         Slot sourceSlot = slots.get(pIndex);
@@ -94,19 +97,7 @@ public class WoodOvenMenu extends AbstractContainerMenu {
         return copyOfSourceStack;
     }
 
-    public int getCookingProgress() {
-        int cookTime = blockEntity.getCookTime();
-        int maxCookTime = 200; // same as WoodOvenBlockEntity.MAX_COOK_TIME
-        return maxCookTime != 0 ? cookTime / maxCookTime * 86  : 0; // 64 = ARROW_WIDTH
-    }
-
-
-    public boolean isLit() {
-        return true;
-    }
-
-    public boolean isCrafting() {
-        return true;
+    public BlockEntity getBlockEntity() {
+        return blockEntity;
     }
 }
-

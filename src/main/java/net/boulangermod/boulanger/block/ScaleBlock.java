@@ -1,15 +1,14 @@
 package net.boulangermod.boulanger.block;
 
 import com.mojang.serialization.MapCodec;
-import net.boulangermod.boulanger.block.entity.MixingBlockEntity;
+import net.boulangermod.boulanger.block.entity.ScaleBlockEntity;
 import net.boulangermod.boulanger.screen.MixingBlockMenu;
+import net.boulangermod.boulanger.screen.ScaleBlockMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
-import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
@@ -24,40 +23,15 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.MenuProvider;
 import org.jetbrains.annotations.Nullable;
 
-public class MixingBlock extends AbstractProcessingBlock implements MenuProvider {
-    public static final MapCodec<MixingBlock> CODEC = simpleCodec(MixingBlock::new);
-
+public class ScaleBlock extends BaseEntityBlock implements MenuProvider {
+    public static final MapCodec<ScaleBlock> CODEC = simpleCodec(ScaleBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    public MixingBlock(Properties properties) {
+    public ScaleBlock(Properties properties) {
         super(properties);
-        this.registerDefaultState(this.stateDefinition.any()
-                .setValue(FACING, Direction.NORTH));
-    }
-
-    @Override
-    public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
-    }
-
-    @Override
-    public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return this.defaultBlockState()
-                .setValue(FACING, context.getHorizontalDirection());
-    }
-
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
-    }
-
-
-    @Override
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new MixingBlockEntity(pos, state);
+        registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
     @Override
@@ -66,14 +40,25 @@ public class MixingBlock extends AbstractProcessingBlock implements MenuProvider
     }
 
     @Override
-    public @Nullable AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
-        BlockEntity entity = inventory.player.level().getBlockEntity(inventory.player.blockPosition());
-        if (entity instanceof MixingBlockEntity mixer) {
-            return new MixingBlockMenu(id, inventory, mixer);
-        }
-        return null;
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
     }
 
+    @Nullable
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new ScaleBlockEntity(pos, state);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
+    }
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
@@ -82,17 +67,27 @@ public class MixingBlock extends AbstractProcessingBlock implements MenuProvider
             BlockEntity entity = level.getBlockEntity(pos);
             if (entity instanceof MenuProvider provider) {
                 player.openMenu(new SimpleMenuProvider(
-                        (id, inventory, plyr) -> new MixingBlockMenu(id, inventory, entity),
-                        Component.translatable("mixer.boulanger")
+                        (id, inventory, plyr) -> new ScaleBlockMenu(id, inventory, entity),
+                        Component.translatable("scale.boulanger")
                 ), pos); // 🡐 This part ensures extraData contains the block pos
             }
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide());
     }
 
+
+    @Override
+    public AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, Player player) {
+        BlockEntity entity = player.level().getBlockEntity(player.blockPosition());
+        if (entity instanceof ScaleBlockEntity scale) {
+            return scale.createMenu(id, inv, player);
+        }
+        return null;
+    }
+
     @Override
     public Component getDisplayName() {
-        return Component.translatable("mixing_block.boulanger");
+        return Component.translatable("scale.boulanger");
     }
 }
 

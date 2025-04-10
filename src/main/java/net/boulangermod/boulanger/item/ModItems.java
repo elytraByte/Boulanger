@@ -1,5 +1,8 @@
 package net.boulangermod.boulanger.item;
 
+import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.WheatVariety;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -22,10 +25,8 @@ public class ModItems {
     public static final DeferredItem<Item> UNFIRED_PORCELAIN_BRICK = ITEMS.registerSimpleItem("unfired_porcelain_brick");
     public static final DeferredItem<Item> PORCELAIN_BRICK = ITEMS.registerSimpleItem("porcelain_brick");
     public static final DeferredItem<Item> SPLIT_PINE_LOGS = ITEMS.registerSimpleItem("split_pine_logs");
-
-
-
-//    public static final DeferredItem<Item> FIFTY_POUND_FLOUR= ITEMS.registerSimpleItem("fifty_pound_flour");
+    public static final DeferredItem<Item> FILLED_BOWL_ITEM = ITEMS.register("filled_bowl",
+            () -> new FilledBowlItem(new Item.Properties()));
 
     //Dairy and Eggs
     public static final DeferredItem<Item> BUTTER = ITEMS.registerSimpleItem("butter");
@@ -44,12 +45,9 @@ public class ModItems {
     //Other
     public static final DeferredItem<Item> SALT_KOSHER = ITEMS.registerSimpleItem("salt_kosher");
     public static final DeferredItem<Item> DOUGH = ITEMS.registerSimpleItem("generic_dough");
-
     public static final DeferredItem<Item> HARD_RED_SPRING_WHEAT = ITEMS.registerSimpleItem("hard_red_spring_wheat");
-//    public static final DeferredItem<Item> HARD_RED_SPRING_WHEAT_SEEDS = ITEMS.register("hard_red_spring_wheat_seeds"),
-//            () -> new ItemNameBlockItem(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(),
-//            new Item.Properties().component(ModDataCompnentTypes.WHEAT_TYPE.value(), new WheatType(0))));
-//    public static final DeferredItem<Item> BIG_FLOUR_AP = ITEMS.register("big_flour_ap", () -> new BigFlour(new Item.Properties().durability(226796)));
+    public static final DeferredItem<Item> WHEAT_SEED = ITEMS.register("wheat_seeds",
+            () -> new WheatSeedItem(new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
