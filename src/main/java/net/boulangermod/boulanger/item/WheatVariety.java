@@ -4,12 +4,13 @@ import com.mojang.serialization.Codec;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.boulangermod.boulanger.util.StreamCodecsCompat;
+import net.minecraft.util.StringRepresentable;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public enum WheatVariety {
+public enum WheatVariety implements StringRepresentable {
     HARD_RED_WINTER("hard_red_winter"),
     HARD_RED_SPRING("hard_red_spring"),
     DURUM("durum"),
@@ -38,4 +39,9 @@ public enum WheatVariety {
                     WheatVariety::fromId,
                     WheatVariety::getId
             );
+
+    @Override
+    public String getSerializedName() {
+        return this.id;
+    }
 }

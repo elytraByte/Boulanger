@@ -18,6 +18,8 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 public class ModBlockStateProvider extends BlockStateProvider {
@@ -54,9 +56,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 ).renderType("cutout")
         );
 
+        makeCrop((CropBlock) ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), "boulanger_wheat_stage", "boulanger_wheat_stage");
 
-
-        makeCrop(((HardRedSpringWheatCrop) ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get()), "wheat_stage","boulanger_wheat_stage");
 
 //        blockItem(ModBlocks.WOOD_GASIFIER);
 //        getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
@@ -90,9 +91,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 });
 
 
-
     }
-
 
 
     private void leavesBlock(DeferredBlock<Block> deferredBlock) {
@@ -114,18 +113,97 @@ public class ModBlockStateProvider extends BlockStateProvider {
         simpleBlockItem(deferredBlock.get(), new ModelFile.UncheckedModelFile("boulanger:block/" + deferredBlock.getId().getPath()));
     }
 
-    public void makeCrop(CropBlock block, String modelName, String textureName) {
-        Function<BlockState, ConfiguredModel[]> function = state -> states(state, block, modelName, textureName);
+//    public void makeCrop(CropBlock block, String modelName, String textureName) {
+//        Function<BlockState, ConfiguredModel[]> function = state -> states(state, block, modelName, textureName);
+//
+//        getVariantBuilder(block).forAllStates(function);
+//    }
 
-        getVariantBuilder(block).forAllStates(function);
+//    private ConfiguredModel[] states(BlockState state, CropBlock block, String modelName, String textureName) {
+//        // Use block.getAge(state) instead of the property approach
+//        int age = block.getAge(state);
+//
+//        // Build a unique model name for each age
+//        String finalModelName = modelName + age;
+//
+//        // Create a ResourceLocation for the texture
+//        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(
+//                Boulanger.MODID,
+//                "block/wheat/" + textureName
+//        );
+//
+//        // Create the model. The 'renderType("cutout")' part typically goes elsewhere,
+//        // or is handled by your model JSON / client setup code.
+//        return new ConfiguredModel[]{
+//                new ConfiguredModel(models().crop(finalModelName, texture))
+//        };
+//    }
+
+//    private ConfiguredModel[] states(BlockState state, CropBlock block, String modelName, String textureNameBase) {
+//        // Retrieve the crop's age with the public getAge() method.
+//        int age = block.getAge(state);
+//
+//        // Build a unique model name for this age stage (for example: "wheat_stage0", "wheat_stage1", etc.)
+//        String finalModelName = modelName + age;
+//
+//        // Append the age to the texture base name as well.
+//        String finalTextureName = textureNameBase + age;
+//
+//        // Create the ResourceLocation. It will now refer to:
+//        // assets/boulanger/textures/block/wheat/{finalTextureName}.png
+//        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "block/wheat/" + finalTextureName);
+//
+//        // Build and return the model for this state.
+//        return new ConfiguredModel[] {
+//                new ConfiguredModel(models().crop(finalModelName, texture))
+//        };
+//    }
+
+    public void makeCrop(CropBlock block, String modelNameBase, String textureNameBase) {
+        int maxAge = block.getMaxAge();
+
+        // Store each generated ModelFile in a map keyed by the crop’s age
+        Map<Integer, ModelFile> ageToModelMap = new HashMap<>();
+
+        // 1) Generate and register a model file for each possible crop age
+        for (int age = 0; age <= maxAge; age++) {
+            // Build a unique model name, e.g. "wheat_stage0", "wheat_stage1", ...
+            String modelName = modelNameBase + age;
+            // Build a unique texture name, e.g. "boulanger_wheat_stage0", "boulanger_wheat_stage1", ...
+            String textureName = textureNameBase + age;
+
+            // Construct the ResourceLocation for your texture
+            ResourceLocation texture =ResourceLocation.fromNamespaceAndPath(
+                    Boulanger.MODID,
+                    "block/wheat/" + textureName
+            );
+
+            // Generate and register the actual crop model.
+            // 'renderType("cutout")' sets it up to use cutout transparency.
+            ModelFile modelFile = models()
+                    .crop(modelName, texture)
+                    .renderType("cutout");
+
+            // Store this ModelFile so we can reference it when setting block states
+            ageToModelMap.put(age, modelFile);
+        }
+
+        // 2) Register the block state variants so each age points to the matching model
+        getVariantBuilder(block).forAllStates(state -> {
+            // Retrieve the current crop age
+            int age = block.getAge(state);
+
+            // Find the corresponding ModelFile
+            ModelFile modelFile = ageToModelMap.get(age);
+
+            // Build the ConfiguredModel using the ModelFile we generated earlier
+            return new ConfiguredModel[] {
+                    new ConfiguredModel(modelFile)
+            };
+        });
     }
 
-    private ConfiguredModel[] states(BlockState state, CropBlock block, String modelName, String textureName) {
-        ConfiguredModel[] models = new ConfiguredModel[1];
-        models[0] = new ConfiguredModel(models().crop(modelName + state.getValue(((HardRedSpringWheatCrop) block).getAgeProperty()),
-                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "block/wheat/" + textureName +
-                        state.getValue(((HardRedSpringWheatCrop) block).getAgeProperty()))).renderType("cutout"));
 
-        return models;
-    }
+
 }
+

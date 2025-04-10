@@ -8,6 +8,7 @@ import net.boulangermod.boulanger.screen.MixingBlockScreen;
 import net.boulangermod.boulanger.screen.ModMenuTypes;
 import net.boulangermod.boulanger.screen.WoodOvenScreen;
 import net.boulangermod.boulanger.screen.ScaleBlockScreen;
+import net.boulangermod.boulanger.util.MyModLootFunctions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -62,6 +63,8 @@ public class Boulanger {
         ModDataComponentTypes.register(modEventBus);
 
         ModRecipeSerializers.register(modEventBus);
+
+        MyModLootFunctions.register(modEventBus);
 
 
         // Register ourselves for server and other game events we are interested in.
