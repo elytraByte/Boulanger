@@ -18,5 +18,10 @@ public record WeightComponent(float grams) {
                     StreamCodecsCompat.FLOAT, WeightComponent::grams,
                     WeightComponent::new
             );
+
+    public float getWeight() {
+
+        return grams;
+    }
 }
 

@@ -42,6 +42,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockItem(ModBlocks.WOOD_OVEN);
         blockWithItem(ModBlocks.MIXING_BLOCK);
         blockWithItem(ModBlocks.SCALE_BLOCK);
+        blockWithItem(ModBlocks.STONE_MILL_BLOCK);
         blockWithItem(ModBlocks.KAOLINITE_CLAY);
         blockWithItem(ModBlocks.BLACK_TILE);
         blockWithItem(ModBlocks.DARK_BLUE_TILE);

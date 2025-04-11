@@ -29,6 +29,10 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("scale_block_be", () -> BlockEntityType.Builder.of(
                     ScaleBlockEntity::new, ModBlocks.SCALE_BLOCK.get()).build(null));
 
+    public static final Supplier<BlockEntityType<StoneMillBlockEntity>> STONE_MILL_BE =
+            BLOCK_ENTITIES.register("stone_mill_block_be", () -> BlockEntityType.Builder.of(
+                    StoneMillBlockEntity::new, ModBlocks.STONE_MILL_BLOCK.get()).build(null));
+
 //    public static final Supplier<BlockEntityType<MixingBlockEntity>> MIXING_BLOCK_BE =
 //            BLOCK_ENTITIES.register("mixing_block_be", () -> BlockEntityType.Builder.of(
 //                    MixingBlockEntity::new, ModBlocks.MIXING_BLOCK.get()).build(null));

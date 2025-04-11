@@ -4,8 +4,6 @@ import net.boulangermod.boulanger.component.FlourType;
 import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.WeightComponent;
-import net.boulangermod.boulanger.item.FlourItemType;
-import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.screen.ScaleBlockMenu;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.BlockPos;
@@ -120,12 +118,6 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         setChanged();
         level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
     }
-
-
-
-
-
-
 
     public ItemStackHandler getItems() {
         return items;

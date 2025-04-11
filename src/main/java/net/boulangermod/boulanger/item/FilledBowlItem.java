@@ -1,7 +1,6 @@
 package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.component.FlourType;
-import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.WeightComponent;
 import net.minecraft.network.chat.Component;

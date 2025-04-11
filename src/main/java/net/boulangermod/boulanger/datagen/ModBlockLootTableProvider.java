@@ -93,6 +93,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.WOOD_OVEN.get());
         dropSelf(ModBlocks.MIXING_BLOCK.get());
         dropSelf(ModBlocks.SCALE_BLOCK.get());
+        dropSelf(ModBlocks.STONE_MILL_BLOCK.get());
         dropSelf(ModBlocks.KAOLINITE_CLAY.get());
         dropSelf(ModBlocks.BLACK_TILE.get());
         dropSelf(ModBlocks.BLUE_TILE.get());

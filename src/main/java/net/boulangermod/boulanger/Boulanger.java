@@ -4,10 +4,7 @@ import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.network.StartMixingPacket;
 import net.boulangermod.boulanger.recipe.ModMixingRecipes;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
-import net.boulangermod.boulanger.screen.MixingBlockScreen;
-import net.boulangermod.boulanger.screen.ModMenuTypes;
-import net.boulangermod.boulanger.screen.WoodOvenScreen;
-import net.boulangermod.boulanger.screen.ScaleBlockScreen;
+import net.boulangermod.boulanger.screen.*;
 import net.boulangermod.boulanger.util.MyModLootFunctions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
@@ -116,6 +113,7 @@ public class Boulanger {
             event.register(ModMenuTypes.WOOD_OVEN_MENU.get(), WoodOvenScreen::new);
             event.register(ModMenuTypes.MIXING_BLOCK_MENU.get(), MixingBlockScreen::new);
             event.register(ModMenuTypes.SCALE_BLOCK_MENU.get(), ScaleBlockScreen::new);
+            event.register(ModMenuTypes.STONE_MILL_BLOCK_MENU.get(), StoneMillBlockScreen::new);
 
         }
     }

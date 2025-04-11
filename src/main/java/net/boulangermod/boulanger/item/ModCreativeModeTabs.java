@@ -20,24 +20,16 @@ public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Boulanger.MODID);
 
-    public static final Supplier<CreativeModeTab> BOULANGER_TAB =
-            CREATIVE_MODE_TABS.register("boulanger_tab", () -> CreativeModeTab.builder()
+    public static final Supplier<CreativeModeTab> BOULANGER_MAIN =
+            CREATIVE_MODE_TABS.register("boulanger_main", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.boulanger.boulanger_tab")) //translate !
                     .icon(() -> new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get()))
                     .displayItems((pParameters, pOutput) ->
 
                     {
-                        for (FlourItemType type : FlourItemType.values()) {
-                            ItemStack stack = new ItemStack(ModItems.FLOUR_ITEM.get());
-                            stack.set(ModDataComponentTypes.FLOUR_TYPE.get(), type.toFlourType());
-                            stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(type.getModelIndex()));
-                            pOutput.accept(stack);
-                        }
+
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.WHEAT_BERRIES.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.WHEAT_SEED.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER_BLEND.get(), 1));
@@ -46,6 +38,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.FLEISCHMANN.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.STONE_MILL_BLOCK.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.SCALE_BLOCK.get(), 1));
@@ -73,6 +66,40 @@ public class ModCreativeModeTabs {
 
 
                     }).build());
+
+    public static final Supplier<CreativeModeTab> BOULANGER_FLOUR =
+            CREATIVE_MODE_TABS.register("boulanger_flour", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.boulanger.boulanger_tab")) //translate !
+                    .icon(() -> {
+                        // Create an item stack of your FLOUR_ITEM
+                        ItemStack iconStack = new ItemStack(ModItems.FLOUR_ITEM.get());
+                        // Set the custom model data to your desired value, e.g., 1234
+                        iconStack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(17));
+                        return iconStack;
+                    })
+                    .displayItems((pParameters, pOutput) -> {
+
+                        for (FlourItemType type : FlourItemType.values()) {
+                            ItemStack stack = new ItemStack(ModItems.FLOUR_ITEM.get());
+                            stack.set(ModDataComponentTypes.FLOUR_TYPE.get(), type.toFlourType());
+                            stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(type.getModelIndex()));
+                            pOutput.accept(stack);
+                        }
+
+                        for (WheatVariety variety : WheatVariety.values()) {
+                            ItemStack variantStack = new ItemStack(ModItems.WHEAT_SEED.get());
+                            // Set the corresponding wheat variety for the item.
+                            variantStack.set(ModDataComponentTypes.WHEAT_VARIETY.get(), variety);
+                            pOutput.accept(variantStack);
+                        }
+
+                        pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WHEAT_BERRIES.get(), 1));
+//                        pOutput.accept(new ItemStack(ModItems.WHEAT_SEED.get(), 1));
+
+
+                            }).build());
+
 
     public static void register(IEventBus eventBus) {
         CREATIVE_MODE_TABS.register(eventBus);
