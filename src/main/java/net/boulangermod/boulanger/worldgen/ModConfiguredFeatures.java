@@ -1,15 +1,18 @@
 package net.boulangermod.boulanger.worldgen;
 
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -18,16 +21,11 @@ import net.minecraft.world.level.levelgen.feature.featuresize.TwoLayersFeatureSi
 import net.minecraft.world.level.levelgen.feature.foliageplacers.SpruceFoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.feature.stateproviders.RuleBasedBlockStateProvider;
-import net.minecraft.world.level.levelgen.feature.stateproviders.SimpleStateProvider;
+import net.minecraft.world.level.levelgen.feature.stateproviders.WeightedStateProvider;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
-import net.minecraft.world.level.levelgen.structure.templatesystem.AlwaysTrueTest;
-import net.minecraft.world.level.levelgen.structure.templatesystem.BlockMatchTest;
-import net.minecraft.world.level.levelgen.structure.templatesystem.RuleTest;
-import net.minecraft.world.level.levelgen.structure.templatesystem.TagMatchTest;
-
-import java.util.List;
+import net.minecraft.world.level.levelgen.placement.*;
 
 public class ModConfiguredFeatures {
 
@@ -41,19 +39,13 @@ public class ModConfiguredFeatures {
 
          new SimpleBlockConfiguration(BlockStateProvider.simple(ModBlocks.WILD_WHEAT.get()));
 
-        register(
-                context,
-                WILD_WHEAT_KEY,
-                Feature.RANDOM_PATCH,
+        register(context, WILD_WHEAT_KEY, Feature.RANDOM_PATCH,
                 new RandomPatchConfiguration(
-                        96,
-                        64,
-                        1,
-                        PlacementUtils.filtered(
-                                Feature.SIMPLE_BLOCK,
-                                new SimpleBlockConfiguration(BlockStateProvider
-                                        .simple(ModBlocks.WILD_WHEAT.get())),
-                                BlockPredicate.matchesBlocks(Blocks.SHORT_GRASS))));
+                96, 64, 1,
+                PlacementUtils.filtered(Feature.SIMPLE_BLOCK,
+                new SimpleBlockConfiguration(BlockStateProvider
+                .simple(ModBlocks.WILD_WHEAT.get())),
+                BlockPredicate.matchesBlocks(Blocks.SHORT_GRASS))));
 
 
 //        register(context, PINE_TREE_KEY, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
@@ -72,19 +64,13 @@ public class ModConfiguredFeatures {
                 new TwoLayersFeatureSize(0, 3, 5))
                 .dirt(BlockStateProvider.simple(Blocks.TERRACOTTA)).build());
 
-        BlockPredicate replaceSandOrDirt = BlockPredicate.matchesBlocks(Blocks.SAND, Blocks.DIRT);
-
         // Register the configured feature
-        context.register(
-                KAOLINITE_PATCH_KEY,
-                new ConfiguredFeature<>(
-                        Feature.DISK,
-                        new DiskConfiguration(
-                                RuleBasedBlockStateProvider.simple(ModBlocks.KAOLINITE_CLAY.get()), // This is the block to place
-                                BlockPredicate.matchesBlocks(Blocks.DIRT, Blocks.SAND),     // Replace dirt and sand
-                                UniformInt.of(1, 4),  // Radius (random between 2–5)
-                                2                     // Vertical thickness (halfHeight)
-                        )
+        context.register(KAOLINITE_PATCH_KEY, new ConfiguredFeature<> (
+                Feature.DISK,
+                new DiskConfiguration(
+                RuleBasedBlockStateProvider.simple(ModBlocks.KAOLINITE_CLAY.get()), // This is the block to place
+                BlockPredicate.matchesBlocks(Blocks.DIRT, Blocks.SAND),     // Replace dirt and sand
+                UniformInt.of(1, 4),2)
                 )
         );
 

@@ -25,7 +25,6 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
     public static final int BOWL_OUTPUT = 2;
     public static final int REMAINDER_OUTPUT = 3;
 
-
     private final ItemStackHandler items = new ItemStackHandler(4) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -57,19 +56,41 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         ItemStack bowl = items.getStackInSlot(SLOT_BOWL_IN);
         ItemStack bulk = items.getStackInSlot(SLOT_BULK);
 
-        if (bowl.isEmpty() || bulk.isEmpty() || !bowl.is(Items.BOWL) || weightToTransfer <= 0) return;
+        // Basic pre-checks
+        if (bowl.isEmpty() || bulk.isEmpty() || !bowl.is(Items.BOWL) || weightToTransfer <= 0) {
+            System.out.println("[DEBUG] Pre-check failed: bowl empty, bulk empty, bowl not a bowl, or no weight to transfer.");
+            return;
+        }
 
-        // 1) Get per-unit full weight from the flour type component
+        // 1) Determine the "per-unit" weight for the bulk item.
+        // For flour items, use FlourType.
+        // Otherwise, try WeightComponent; if not available, check FoodAdditiveComponent.
         FlourType flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
-        float fullWeight = flourType != null ? flourType.getWeight() : 113f;
+        float fullWeight;
+        if (flourType != null) {
+            fullWeight = flourType.getWeight();
+            System.out.println("[DEBUG] Bulk recognized as flour; full weight from FlourType: " + fullWeight);
+        } else if (bulk.has(ModDataComponentTypes.INGREDIENT_GRAMS.get())) {
+            WeightComponent wc = bulk.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+            fullWeight = wc.getWeight();
+            System.out.println("[DEBUG] Bulk non-flour; full weight from WeightComponent: " + fullWeight);
+        } else if (bulk.has(ModDataComponentTypes.FOOD_ADDITIVE.get())) {
+            fullWeight = bulk.get(ModDataComponentTypes.FOOD_ADDITIVE.get()).getWeight();
+            System.out.println("[DEBUG] Bulk non-flour; full weight from FoodAdditiveComponent: " + fullWeight);
+        } else {
+            fullWeight = 113f;
+            System.out.println("[DEBUG] No component found on bulk; default full weight: " + fullWeight);
+        }
 
         int stackCount = bulk.getCount();
         float totalAvailable = stackCount * fullWeight;
+        System.out.println("[DEBUG] Total available weight = " + stackCount + " * " + fullWeight + " = " + totalAvailable);
 
-        // 2) Determine how much to transfer
+        // 2) Determine weight to transfer.
         int transferAmount = Math.min((int) totalAvailable, weightToTransfer);
+        System.out.println("[DEBUG] Transfer amount: " + transferAmount + " (target: " + weightToTransfer + ")");
 
-        // 3) Create the filled bowl
+        // 3) Create the filled bowl with transferred weight.
         ItemStack taggedBowl = new ItemStack(Items.BOWL);
         taggedBowl.set(ModDataComponentTypes.INGREDIENT_GRAMS, new WeightComponent(transferAmount));
         taggedBowl.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.getIngredientCategory(bulk));
@@ -78,45 +99,76 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
             taggedBowl.set(ModDataComponentTypes.FLOUR_TYPE.get(), flourType);
         }
         items.setStackInSlot(SLOT_BOWL_OUT, taggedBowl);
+        System.out.println("[DEBUG] Created filled bowl with weight " + transferAmount + "g.");
 
-        // 4) Compute remaining total
+        // 4) Compute remaining weight.
         float remainingTotal = totalAvailable - transferAmount;
+        System.out.println("[DEBUG] Remaining weight after transfer: " + remainingTotal);
 
-        if (remainingTotal <= 0) {
-            // No flour left at all
+        // 5) Update the bulk and residual slots.
+        boolean isFlour = (flourType != null);
+        if (remainingTotal < 0.1f) {
             items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
             items.setStackInSlot(SLOT_RESIDUAL, ItemStack.EMPTY);
+            System.out.println("[DEBUG] Remaining weight negligible; cleared bulk and residual slots.");
         } else {
-            // 5a) How many full items remain?
             int fullRemain = (int) (remainingTotal / fullWeight);
-            // 5b) Partial leftover for one item
             float partialRemain = remainingTotal - fullRemain * fullWeight;
+            System.out.println("[DEBUG] Full remaining items: " + fullRemain + " and partial remaining weight: " + partialRemain);
 
-            // Slot 0: fullRemain items
-            ItemStack newBulk = new ItemStack(bulk.getItem(), fullRemain);
-            // Copy other components if needed (e.g. FlourType)
-            if (flourType != null) newBulk.set(ModDataComponentTypes.FLOUR_TYPE.get(), flourType);
-            // No weight component on these full units (they implicitly weigh fullWeight each)
-            items.setStackInSlot(SLOT_BULK, newBulk);
+            if (isFlour) {
+                // For flour: bulk gets full items, residual gets partial (if any).
+                ItemStack newBulk = new ItemStack(bulk.getItem(), fullRemain);
+                if (flourType != null) {
+                    newBulk.set(ModDataComponentTypes.FLOUR_TYPE.get(), flourType);
+                }
+                items.setStackInSlot(SLOT_BULK, newBulk);
+                System.out.println("[DEBUG] Flour: Updated bulk slot with " + fullRemain + " full items.");
 
-            // Slot 3: one partial item
-            if (partialRemain > 0) {
-                ItemStack residual = new ItemStack(bulk.getItem(), 1);
-                residual.set(ModDataComponentTypes.INGREDIENT_GRAMS, new WeightComponent(partialRemain));
-                if (flourType != null) residual.set(ModDataComponentTypes.FLOUR_TYPE.get(), flourType);
-                items.setStackInSlot(SLOT_RESIDUAL, residual);
+                if (partialRemain > 0) {
+                    ItemStack residual = new ItemStack(bulk.getItem(), 1);
+                    residual.set(ModDataComponentTypes.INGREDIENT_GRAMS, new WeightComponent(partialRemain));
+                    if (flourType != null) {
+                        residual.set(ModDataComponentTypes.FLOUR_TYPE.get(), flourType);
+                    }
+                    items.setStackInSlot(SLOT_RESIDUAL, residual);
+                    System.out.println("[DEBUG] Flour: Set residual slot with 1 partial item weighing " + partialRemain + "g.");
+                } else {
+                    items.setStackInSlot(SLOT_RESIDUAL, ItemStack.EMPTY);
+                    System.out.println("[DEBUG] Flour: No partial remain; cleared residual slot.");
+                }
             } else {
-                // No partial remain
-                items.setStackInSlot(SLOT_RESIDUAL, ItemStack.EMPTY);
+                // For non-flour items: bulk slot holds only full items...
+                if (fullRemain > 0) {
+                    ItemStack newBulk = new ItemStack(bulk.getItem(), fullRemain);
+                    newBulk.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(fullWeight));
+                    items.setStackInSlot(SLOT_BULK, newBulk);
+                    System.out.println("[DEBUG] Non-flour: Updated bulk slot with " + fullRemain + " full items.");
+                } else {
+                    // When there are no full units, clear the bulk slot.
+                    items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
+                    System.out.println("[DEBUG] Non-flour: No full units remaining; cleared bulk slot.");
+                }
+                // And place the partial remainder into the residual slot.
+                if (partialRemain > 0) {
+                    ItemStack residual = new ItemStack(bulk.getItem(), 1);
+                    residual.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(partialRemain));
+                    items.setStackInSlot(SLOT_RESIDUAL, residual);
+                    System.out.println("[DEBUG] Non-flour: Moved leftover to residual slot: 1 partial item weighing " + partialRemain + "g.");
+                } else {
+                    items.setStackInSlot(SLOT_RESIDUAL, ItemStack.EMPTY);
+                    System.out.println("[DEBUG] Non-flour: No partial remain; cleared residual slot.");
+                }
             }
         }
 
-        // 6) Clear the input bowl slot and reset
+        // 6) Clear bowl input and reset transfer target.
         items.setStackInSlot(SLOT_BOWL_IN, ItemStack.EMPTY);
         weightToTransfer = 0;
 
         setChanged();
         level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+        System.out.println("[DEBUG] Transfer complete; updated block state.");
     }
 
     public ItemStackHandler getItems() {

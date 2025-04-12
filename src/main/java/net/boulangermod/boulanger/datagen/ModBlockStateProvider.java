@@ -1,6 +1,8 @@
 package net.boulangermod.boulanger.datagen;
 
-import net.boulangermod.boulanger.block.crops.HardRedSpringWheatCrop;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
@@ -8,19 +10,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
-import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
-import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.neoforge.client.model.generators.*;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 public class ModBlockStateProvider extends BlockStateProvider {
     public ModBlockStateProvider(PackOutput output, String modid, ExistingFileHelper exFileHelper) {
@@ -40,8 +39,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
         leavesBlock(ModBlocks.PINE_LEAVES);
         saplingBlock(ModBlocks.PINE_SAPLING);
         blockItem(ModBlocks.WOOD_OVEN);
-        blockWithItem(ModBlocks.MIXING_BLOCK);
-        blockWithItem(ModBlocks.SCALE_BLOCK);
+        mixerBlock(ModBlocks.MIXING_BLOCK.get());
+        scaleBlockWithCustomSides(ModBlocks.SCALE_BLOCK.get());
         blockWithItem(ModBlocks.STONE_MILL_BLOCK);
         blockWithItem(ModBlocks.KAOLINITE_CLAY);
         blockWithItem(ModBlocks.BLACK_TILE);
@@ -92,7 +91,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 });
 
 
+
     }
+
 
 
     private void leavesBlock(DeferredBlock<Block> deferredBlock) {
@@ -203,6 +204,73 @@ public class ModBlockStateProvider extends BlockStateProvider {
             };
         });
     }
+
+    public void stoneMillObjBlock(Block block) {
+        // Get the block's registry name path (e.g. "stone_mill_block")
+        String blockName = block.builtInRegistryHolder().key().location().getPath();
+        // Create a resource location for the model file, which will be written to models/block/<blockName>.json
+        ResourceLocation modelRL = modLoc("block/" + blockName);
+
+        // Register a custom model by putting an anonymous BlockModelBuilder into generatedModels.
+        // Override toJson() to output your custom JSON.
+        models().generatedModels.put(modelRL, new BlockModelBuilder(modelRL, models().existingFileHelper) {
+            @Override
+            public JsonObject toJson() {
+                JsonObject json = new JsonObject();
+                json.addProperty("loader", "neoforge:obj");
+                json.addProperty("model", modLoc("models/block/stone_mill_block.obj").toString());
+                json.addProperty("mtl_override", modLoc("models/block/stone_mill_block.mtl").toString());
+
+                JsonObject textures = new JsonObject();
+                textures.addProperty("texture0", "minecraft:block/cobblestone");
+                textures.addProperty("particle", "minecraft:block/stone");
+                json.add("textures", textures);
+
+                json.addProperty("automatic_culling", false);
+                json.addProperty("flip_v", true);
+                return json;
+            }
+        });
+
+        // Get a reference to the just-registered model file as a ModelFile.
+        ConfiguredModel configModel = new ConfiguredModel(models().getExistingFile(modelRL));
+
+        // Register the blockstate file so that it uses our custom model.
+        // This uses the getVariantBuilder and its partialState() to set the model.
+        simpleBlock(block, configModel);
+    }
+
+
+    public void scaleBlockWithCustomSides(Block block) {
+        String blockName = block.builtInRegistryHolder().key().location().getPath();
+
+        ModelFile model = models().cubeBottomTop(
+                blockName,
+                modLoc("block/scale_side"),     // Side texture
+                modLoc("block/pine_planks"),    // Bottom texture
+                modLoc("block/scale_top")       // Top texture
+        ).texture("particle", modLoc("block/scale_side"));
+
+        simpleBlock(block, model);
+    }
+
+    public void mixerBlock(Block block) {
+        String blockName = block.builtInRegistryHolder().key().location().getPath();
+
+        ModelFile mixerModel = models().withExistingParent(blockName, mcLoc("block/cube"))
+                .texture("up", modLoc("block/mixer_top"))
+                .texture("down", modLoc("block/mixer_side"))
+                .texture("north", modLoc("block/mixer_back"))
+                .texture("south", modLoc("block/mixer_front"))
+                .texture("east", modLoc("block/mixer_side"))
+                .texture("west", modLoc("block/mixer_side"))
+                .texture("particle", modLoc("block/mixer_side"));
+
+        simpleBlock(block, mixerModel);
+    }
+
+
+
 
 
 

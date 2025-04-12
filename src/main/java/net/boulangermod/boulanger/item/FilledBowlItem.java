@@ -1,8 +1,10 @@
 package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.component.FlourType;
+import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.WeightComponent;
+import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -33,16 +35,16 @@ public class FilledBowlItem extends Item {
             tooltipComponents.add(Component.literal("Flour Type: " + flourType.getId()));
         }
 
-//        // Retrieve and add the IngredientTypeComponent tooltip.
-//        IngredientTypeComponent ingredientType = stack.get(ModDataComponentTypes.INGREDIENT_TYPE.get());
-//        if (ingredientType != null) {
-//            tooltipComponents.add(Component.literal("Ingredient: " + ingredientType));
-//        }
+        // Retrieve and add the IngredientTypeComponent tooltip.
+        IngredientTypeComponent ingredientType = stack.get(ModDataComponentTypes.INGREDIENT_TYPE.get());
+        if (ingredientType != null) {
+            tooltipComponents.add(Component.literal("Ingredient: " + ingredientType));
+        }
 
-//        // Retrieve and add the IngredientCategory tooltip.
-//        IngredientCategory category = stack.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get());
-//        if (category != null) {
-//            tooltipComponents.add(Component.literal("Category: " + category.toString()));
-//        }
+        // Retrieve and add the IngredientCategory tooltip.
+        IngredientCategory category = stack.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get());
+        if (category != null) {
+            tooltipComponents.add(Component.literal("Category: " + category.toString()));
+        }
     }
 }

@@ -1,15 +1,13 @@
 package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
-import net.boulangermod.boulanger.network.StartMixingPacket;
+import net.boulangermod.boulanger.item.ModCreativeModeTabs;
 import net.boulangermod.boulanger.recipe.ModMixingRecipes;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.screen.*;
 import net.boulangermod.boulanger.util.MyModLootFunctions;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -20,14 +18,12 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.client.RenderTypeHelper;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.block.entity.ModBlockEntities;
-import net.boulangermod.boulanger.item.ModCreativeModeTabs;
 import net.boulangermod.boulanger.item.ModItems;
 import org.slf4j.Logger;
 

@@ -98,7 +98,7 @@ public class ModCreativeModeTabs {
 //                        pOutput.accept(new ItemStack(ModItems.WHEAT_SEED.get(), 1));
 
 
-                            }).build());
+                    }).build());
 
 
     public static void register(IEventBus eventBus) {

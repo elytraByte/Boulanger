@@ -17,8 +17,8 @@ public class ModMixingRecipes {
         RECIPES.add(new MixingRecipe(
                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "baguette"),
                 Map.of(
-                        IngredientCategory.FLOUR, 100.0
-//                        IngredientCategory.WATER, 65.0,
+                        IngredientCategory.FLOUR, 100.0,
+                       IngredientCategory.FAT, 50.0
 //                        IngredientCategory.SALT, 2.0,
 //                        IngredientCategory.YEAST, 1.0
                 ),

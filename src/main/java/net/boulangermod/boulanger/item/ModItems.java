@@ -1,11 +1,8 @@
 package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.block.ModBlocks;
-import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.WheatVarietyRecord;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemNameBlockItem;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -30,22 +27,34 @@ public class ModItems {
     public static final DeferredItem<Item> FILLED_BOWL_ITEM = ITEMS.register("filled_bowl",
             () -> new FilledBowlItem(new Item.Properties()));
 
-    //Dairy and Eggs
-    public static final DeferredItem<Item> BUTTER = ITEMS.registerSimpleItem("butter");
-//    public static final DeferredItem<Item> BUTTER_SALTED = ITEMS.registerSimpleItem("");
-    public static final DeferredItem<Item> EURO_BUTTER = ITEMS.registerSimpleItem("euro_butter");
-//    public static final DeferredItem<Item> EURO_BUTTER_SALTED = ITEMS.registerSimpleItem("");
-    public static final DeferredItem<Item> EURO_BUTTER_BLEND = ITEMS.registerSimpleItem("euro_butter_blend");
-//    public static final DeferredItem<Item> EURO_BUTTER_BLEND_SALTED = ITEMS.registerSimpleItem("yeast_brewers");
+    // Dairy and Eggs (Food Additives)
+    public static final DeferredItem<Item> BUTTER =
+            ITEMS.register("butter", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.BUTTER));
 
-    //Yeasts
-    public static final DeferredItem<Item> SAF_RED = ITEMS.registerSimpleItem("saf_red");
-    public static final DeferredItem<Item> SAF_GOLD = ITEMS.registerSimpleItem("saf_gold");
-    public static final DeferredItem<Item> FLEISCHMANN = ITEMS.registerSimpleItem("fleischmann");
-    public static final DeferredItem<Item> FRESH_YEAST = ITEMS.registerSimpleItem("fresh_yeast");
+    public static final DeferredItem<Item> EURO_BUTTER =
+            ITEMS.register("euro_butter", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.EUROPEAN_BUTTER));
 
-    //Other
-    public static final DeferredItem<Item> SALT_KOSHER = ITEMS.registerSimpleItem("salt_kosher");
+    public static final DeferredItem<Item> EURO_BUTTER_BLEND =
+            ITEMS.register("euro_butter_blend", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.EUROPEAN_BUTTER_BLEND));
+
+    // Yeasts (Food Additives)
+    public static final DeferredItem<Item> SAF_RED =
+            ITEMS.register("saf_red", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.SAF_RED_YEAST));
+
+    public static final DeferredItem<Item> SAF_GOLD =
+            ITEMS.register("saf_gold", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.SAF_GOLD_YEAST));
+
+    public static final DeferredItem<Item> FLEISCHMANN =
+            ITEMS.register("fleischmann", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.FLEISCHMANNS_YEAST));
+
+    public static final DeferredItem<Item> FRESH_YEAST =
+            ITEMS.register("fresh_yeast", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.FRESH_YEAST));
+
+    // Other additives (Food Additives)
+    public static final DeferredItem<Item> SALT_KOSHER =
+            ITEMS.register("salt_kosher", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.SALT));
+
+    // Other items (Non–additives)
     public static final DeferredItem<Item> DOUGH = ITEMS.registerSimpleItem("generic_dough");
     public static final DeferredItem<Item> HARD_RED_SPRING_WHEAT = ITEMS.registerSimpleItem("hard_red_spring_wheat");
     public static final DeferredItem<Item> WHEAT_SEED = ITEMS.register("wheat_seeds",

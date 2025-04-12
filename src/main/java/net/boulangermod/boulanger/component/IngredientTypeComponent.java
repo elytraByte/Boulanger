@@ -25,6 +25,10 @@ public record IngredientTypeComponent(Item item) {
                     StreamCodecsCompat.ITEM, IngredientTypeComponent::item,
                     IngredientTypeComponent::new
             );
+
+    public float getIngType() {
+        return 0;
+    }
 }
 
 
