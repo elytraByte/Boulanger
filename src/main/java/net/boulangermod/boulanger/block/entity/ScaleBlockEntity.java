@@ -7,6 +7,8 @@ import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.screen.ScaleBlockMenu;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -191,5 +193,27 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
         return new ScaleBlockMenu(id, inventory, this);
+    }
+
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+
+        // save the 4‑slot ItemStackHandler
+        tag.put("Inventory", items.serializeNBT(registries));
+
+        // save the current target‑weight setting
+        tag.putInt("WeightToTransfer", this.weightToTransfer);
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+
+        // restore the ItemStackHandler
+        items.deserializeNBT(registries, tag.getCompound("Inventory"));
+
+        // restore the pending transfer weight
+        this.weightToTransfer = tag.getInt("WeightToTransfer");
     }
 }

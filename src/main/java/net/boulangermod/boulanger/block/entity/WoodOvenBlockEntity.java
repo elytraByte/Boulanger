@@ -145,17 +145,31 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
         return new WoodOvenMenu(id, inventory, this);
     }
 
-//    @Override
-//    protected void saveAdditional(CompoundTag pTag, HolderLookup.Provider pRegistries) {
-//        super.saveAdditional(pTag, pRegistries);
-//        ContainerHelper.saveAllItems(pTag, inventory, pRegistries);
-//    }
-//
-//    @Override
-//    protected void loadAdditional(CompoundTag pTag, HolderLookup.Provider pRegistries) {
-//        super.loadAdditional(pTag, pRegistries);
-//        ContainerHelper.loadAllItems(pTag, inventory, pRegistries);
-//    }
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+
+        // Persist the three inventory slots
+        tag.put("Inventory", itemHandler.serializeNBT(registries));
+
+        // Persist oven state
+        tag.putInt("BurnTime",  this.burnTime);
+        tag.putInt("MaxBurnTime", this.maxBurnTime);
+        tag.putInt("CookTime",  this.cookTime);
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+
+        // Restore the inventory
+        itemHandler.deserializeNBT(registries, tag.getCompound("Inventory"));
+
+        // Restore oven state
+        this.burnTime     = tag.getInt("BurnTime");
+        this.maxBurnTime  = tag.getInt("MaxBurnTime");
+        this.cookTime     = tag.getInt("CookTime");
+    }
 
     @Nullable
     @Override

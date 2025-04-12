@@ -14,8 +14,7 @@ public class ModItems {
     // Milling ingredients and Flours
     public static final DeferredItem<Item> WHEAT_BERRIES = ITEMS.registerSimpleItem("wheat_berries");
     public static final DeferredItem<Item> FLOUR_ITEM = ITEMS.register("flour",
-            () -> new FlourItem(new Item.Properties())
-    );
+            () -> new FlourItem(new Item.Properties()));
 
     public static final DeferredItem<Item> KAOLINITE_CLAY_BALL = ITEMS.registerSimpleItem("kaolinite_clay_ball");
     public static final DeferredItem<Item> BONE_ASH = ITEMS.registerSimpleItem("bone_ash");
@@ -55,7 +54,10 @@ public class ModItems {
             ITEMS.register("salt_kosher", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.SALT));
 
     // Other items (Non–additives)
-    public static final DeferredItem<Item> DOUGH = ITEMS.registerSimpleItem("generic_dough");
+    public static final DeferredItem<Item> DOUGH =
+            ITEMS.register("dough",
+                    () -> new DoughItem(new Item.Properties()));
+
     public static final DeferredItem<Item> HARD_RED_SPRING_WHEAT = ITEMS.registerSimpleItem("hard_red_spring_wheat");
     public static final DeferredItem<Item> WHEAT_SEED = ITEMS.register("wheat_seeds",
             () -> new WheatSeedItem(

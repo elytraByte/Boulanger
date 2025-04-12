@@ -68,7 +68,7 @@ public class MixingBlockScreen extends AbstractContainerScreen<MixingBlockMenu> 
 
         for (int i = 0; i < menu.getIngredientCount(); i++) {
             IngredientStack ingr = menu.getIngredient(i);
-            ItemStack stack = new ItemStack(ingr.item());
+            ItemStack stack = ingr.getBowlStack().copy();
 
             // draw the item icon
             guiGraphics.renderItem(stack, 10, 20 + i * 18);
@@ -78,7 +78,7 @@ public class MixingBlockScreen extends AbstractContainerScreen<MixingBlockMenu> 
                     stack,
                     10,
                     20 + i * 18,
-                    ingr.grams() + "g"
+                    ingr.getGrams() + "g"
             );
         }
         guiGraphics.pose().popPose();
