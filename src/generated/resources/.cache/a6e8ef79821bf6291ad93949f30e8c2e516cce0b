@@ -1,4 +1,7 @@
-// 1.21	2025-04-11T04:41:58.7875902	Item Models: boulanger
+// 1.21	2025-04-12T19:16:22.5219712	Item Models: boulanger
+782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
+5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
+604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
 c02796273a8a2de88273fd4388f9c5ba13f9fd80 assets/boulanger/models/flour/all_purpose_flour.json
 c9b16c130790044dffda9d7a391cda2a3c76314c assets/boulanger/models/flour/bread_flour.json
 5716210c79dde980828ffe0845a59bb38be6a4ba assets/boulanger/models/flour/fifth_break_flour.json
@@ -20,6 +23,7 @@ cce92d20a4e0191b590df7b2403a24cad5fb5fe8 assets/boulanger/models/flour/third_bre
 8b467cc0e1c817f4937e289d6894e1103e7bb43e assets/boulanger/models/flour/wheat_bran.json
 c542fb333137dbd85de9652cea00301ca4abd661 assets/boulanger/models/flour/whole_wheat_flour.json
 1d1a4098c856fcb6a7d107e6fb5f57f95fd64a54 assets/boulanger/models/item/bone_ash.json
+eb2ceb726cfffd07dbb58f714a7664d69dc0c6ea assets/boulanger/models/item/bread.json
 f63a32d222a989b021ff3a9c3542bd737cba6bfb assets/boulanger/models/item/butter.json
 a6daeec68e52d90d8fda12ea1980915977de002c assets/boulanger/models/item/euro_butter.json
 466289a2f76bf328e72cd8a0f488c59a86b0eb07 assets/boulanger/models/item/euro_butter_blend.json

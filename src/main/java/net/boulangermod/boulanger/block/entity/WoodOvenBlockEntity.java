@@ -1,6 +1,11 @@
 package net.boulangermod.boulanger.block.entity;
 
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
+import net.boulangermod.boulanger.component.BakerPctComponent;
+import net.boulangermod.boulanger.component.DoughRecipeComponent;
+import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.WeightComponent;
+import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.screen.WoodOvenMenu;
 import net.minecraft.core.BlockPos;
@@ -95,9 +100,10 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
         ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
         ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
 
+        // Only allow cooking your dough into your bread
         if (input.isEmpty() || input.getItem() != ModItems.DOUGH.get()) return false;
         if (output.isEmpty()) return true;
-        if (output.getItem() != Items.BREAD) return false;
+        if (output.getItem() != ModItems.BREAD.get()) return false;
         return output.getCount() < output.getMaxStackSize();
     }
 
@@ -107,16 +113,48 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
         ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
         ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
 
+        // Read all components from the dough
+        BakerPctComponent bakerPct = input.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
+        DoughRecipeComponent doughRecipe = input.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        WeightComponent weightComp = input.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+
+        // Create the new bread stack (or grow existing)
+        ItemStack breadStack;
         if (output.isEmpty()) {
-            itemHandler.setStackInSlot(SLOT_OUTPUT, new ItemStack(Items.BREAD));
+            breadStack = new ItemStack(ModItems.BREAD.get());
         } else {
-            output.grow(1);
+            breadStack = output.copy();
+            breadStack.grow(1);
         }
 
+        // 1) Copy baker's percentages
+        if (bakerPct != null) {
+            breadStack.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(), bakerPct);
+        }
+
+        // 2) Copy the dough recipe component
+        if (doughRecipe != null) {
+            breadStack.set(ModDataComponentTypes.DOUGH_RECIPE.get(), doughRecipe);
+        }
+
+        // 3) Copy weight
+        if (weightComp != null) {
+            breadStack.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), weightComp);
+        }
+
+        // 4) Set the BREAD_TYPE from the recipe name
+        if (doughRecipe != null) {
+            String recipeName = doughRecipe.recipeName();          // e.g. "baguette"
+            BreadType type = BreadType.byId(recipeName)
+                    .orElse(BreadType.BAGUETTE);
+            breadStack.set(ModDataComponentTypes.BREAD_TYPE.get(), type);
+        }
+
+        // 5) Commit to the output slot and consume one dough
+        itemHandler.setStackInSlot(SLOT_OUTPUT, breadStack);
         input.shrink(1);
-
-
     }
+
 
     private boolean isBurning() {
         return burnTime > 0;

@@ -55,7 +55,11 @@ public class ModItems {
 
     // Other items (Non–additives)
     public static final DeferredItem<Item> DOUGH =
-            ITEMS.register("dough",
+            ITEMS.register("generic_dough",
+                    () -> new DoughItem(new Item.Properties()));
+
+    public static final DeferredItem<Item> BREAD =
+            ITEMS.register("bread",
                     () -> new DoughItem(new Item.Properties()));
 
     public static final DeferredItem<Item> HARD_RED_SPRING_WHEAT = ITEMS.registerSimpleItem("hard_red_spring_wheat");

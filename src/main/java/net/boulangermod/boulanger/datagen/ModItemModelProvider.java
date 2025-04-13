@@ -1,5 +1,6 @@
 package net.boulangermod.boulanger.datagen;
 
+import net.boulangermod.boulanger.item.BreadType;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -39,6 +40,23 @@ public class ModItemModelProvider extends ItemModelProvider {
             withExistingParent("flour/" + type.getId(), "item/generated")
                     .texture("layer0", modLoc("item/flour/" + type.getId()));
         }
+
+        // Base “bread” item
+        ItemModelBuilder bread = withExistingParent("bread", "item/generated")
+                .texture("layer0", modLoc("item/baguette")); // a generic white texture, maybe unused
+
+        for (BreadType type : BreadType.values()) {
+            // override for custom_model_data
+            bread.override()
+                    .predicate(ResourceLocation.fromNamespaceAndPath("minecraft","custom_model_data"), type.getModelIndex())
+                    .model(withExistingParent("bread/" + type.getId(), "item/generated"))
+                    .end();
+
+            // register the individual model
+            withExistingParent("bread/" + type.getId(), "item/generated")
+                    .texture("layer0", modLoc("item/" + type.getId()));
+        }
+
 
 
         basicItem(ModItems.BUTTER.get());

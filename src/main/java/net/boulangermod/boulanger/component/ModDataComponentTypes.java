@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.component;
 
 import com.mojang.serialization.Codec;
 import net.boulangermod.boulanger.item.BakeryAdditiveType;
+import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.WheatVariety;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.IngredientStack;
@@ -84,6 +85,12 @@ public class ModDataComponentTypes {
                     .networkSynchronized(BakerPctComponent.STREAM_CODEC)
             );
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BreadType>> BREAD_TYPE =
+            register("bread_type", builder -> builder
+                    .persistent(BreadType.CODEC)
+                    .networkSynchronized(BreadType.STREAM_CODEC)
+            );
+
 
 
 
@@ -94,6 +101,8 @@ public class ModDataComponentTypes {
     ) {
         return DATA_COMPONENT_TYPES.register(name, () -> builderOperator.apply(DataComponentType.builder()).build());
     }
+
+
 
     public static void register(IEventBus eventBus) {
         DATA_COMPONENT_TYPES.register(eventBus);

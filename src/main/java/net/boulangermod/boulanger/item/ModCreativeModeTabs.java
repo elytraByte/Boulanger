@@ -29,6 +29,7 @@ public class ModCreativeModeTabs {
                     {
 
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BREAD.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));

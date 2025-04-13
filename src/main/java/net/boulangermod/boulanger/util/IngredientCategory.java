@@ -4,8 +4,8 @@ import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import net.boulangermod.boulanger.component.FoodAdditiveComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.item.FoodAdditiveType;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
@@ -24,88 +24,99 @@ public enum IngredientCategory {
     CUSTOM;
 
     public static IngredientCategory getIngredientCategory(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return IngredientCategory.CUSTOM;
+        if (stack == null || stack.isEmpty()) {
+            return CUSTOM;
+        }
 
-        // Check if the ItemStack has a FoodAdditiveComponent.
+        // 1) If it has a FoodAdditiveComponent, map specific IDs to SALT or YEAST
         if (stack.has(ModDataComponentTypes.FOOD_ADDITIVE.get())) {
             FoodAdditiveComponent additive = stack.get(ModDataComponentTypes.FOOD_ADDITIVE.get());
             if (additive != null) {
                 String id = additive.getId();
-                // Map known food additive IDs to FAT, if applicable.
-                if ("butter".equals(id) || "butter_salted".equals(id) ||
-                        "european_butter".equals(id) || "european_butter_salted".equals(id) ||
-                        "european_butter_blend".equals(id) || "salted_european_butter_blend".equals(id)) {
-                    return IngredientCategory.FAT;
+                // Yeasts
+                if (id.equals(FoodAdditiveType.SAF_RED_YEAST.getId())
+                        || id.equals(FoodAdditiveType.FRESH_YEAST.getId())) {
+                    return YEAST;
                 }
-                // Otherwise, return a generic ADDITIVE category.
-                return IngredientCategory.ADDITIVE;
+//                // Salts
+//                if (id.equals(FoodAdditiveType.SALT_KOSHER.getId())
+//                        || id.equals(FoodAdditiveType.SALT_SEA.getId())
+//                        || id.equals(FoodAdditiveType.SALT_TABLE.getId())) {
+//                    return SALT;
+//                }
+//                // Fats
+//                if (id.equals(FoodAdditiveType.BUTTER.getId())
+//                        || id.equals(FoodAdditiveType.EUROPEAN_BUTTER.getId())) {
+//                    return FAT;
+//                }
+//                // Sugars
+//                if (id.equals(FoodAdditiveType.SUGAR_WHITE.getId())
+//                        || id.equals(FoodAdditiveType.SUGAR_BROWN.getId())) {
+//                    return SUGAR;
+//                }
+//                // Enrichments (e.g. milk powder, eggs)
+//                if (id.equals(FoodAdditiveType.MILK_POWDER.getId())
+//                        || id.equals(FoodAdditiveType.EGG.getId())) {
+//                    return ENRICHMENT;
+//                }
+                // Everything else with a FoodAdditiveComponent
+                return ADDITIVE;
             }
         }
 
-        // Check if the item has a FlourType component.
+        // 2) Flour
         if (stack.has(ModDataComponentTypes.FLOUR_TYPE.get())) {
-            return IngredientCategory.FLOUR;
+            return FLOUR;
         }
 
-        // Use item tags.
-        if (stack.is(IngredientTags.LIQUIDS)) return IngredientCategory.LIQUID;
-        if (stack.is(IngredientTags.SALTS)) return IngredientCategory.SALT;
-        if (stack.is(IngredientTags.YEASTS)) return IngredientCategory.YEAST;
-        if (stack.is(IngredientTags.FATS)) return IngredientCategory.FAT;
-        if (stack.is(IngredientTags.SUGARS)) return IngredientCategory.SUGAR;
-        if (stack.is(IngredientTags.ADDITIVES)) return IngredientCategory.ADDITIVE;
-        if (stack.is(IngredientTags.ENRICHMENTS)) return IngredientCategory.ENRICHMENT;
+        // 3) Tags for liquids, salts, yeasts, fats, sugars, additives, enrichments
+        if (stack.is(IngredientTags.LIQUIDS))    return LIQUID;
+        if (stack.is(IngredientTags.SALTS))      return SALT;
+        if (stack.is(IngredientTags.YEASTS))     return YEAST;
+        if (stack.is(IngredientTags.FATS))       return FAT;
+        if (stack.is(IngredientTags.SUGARS))     return SUGAR;
+        if (stack.is(IngredientTags.ADDITIVES))  return ADDITIVE;
+        if (stack.is(IngredientTags.ENRICHMENTS))return ENRICHMENT;
 
-        // Fallback
-        return IngredientCategory.CUSTOM;
+        // 4) Fallback
+        return CUSTOM;
     }
 
-    // A simple Codec (for JSON or config persistence) converting using strings.
+    // === CODEC and STREAM_CODEC as before ===
     public static final Codec<IngredientCategory> CODEC =
             Codec.STRING.xmap(IngredientCategory::valueOf, IngredientCategory::name);
 
-    /**
-     * A StreamCodec that encodes/decodes an IngredientCategory to/from a RegistryFriendlyByteBuf by writing its ordinal.
-     */
     public static final StreamCodec<RegistryFriendlyByteBuf, IngredientCategory> STREAM_CODEC =
             new StreamCodec<RegistryFriendlyByteBuf, IngredientCategory>() {
                 @Override
                 public void encode(RegistryFriendlyByteBuf buffer, IngredientCategory value) {
-                    // Write the enum's ordinal as an int.
-                    ByteBufCodecs.INT.encode(buffer, value.ordinal());
+                    buffer.writeInt(value.ordinal());
                 }
-
                 @Override
                 public IngredientCategory decode(RegistryFriendlyByteBuf buffer) {
-                    int ordinal = ByteBufCodecs.INT.decode(buffer);
-                    IngredientCategory[] values = IngredientCategory.values();
-                    return (ordinal >= 0 && ordinal < values.length) ? values[ordinal] : CUSTOM;
+                    int ord = buffer.readInt();
+                    IngredientCategory[] vals = IngredientCategory.values();
+                    return (ord >= 0 && ord < vals.length) ? vals[ord] : CUSTOM;
                 }
             };
 
-    /**
-     * Returns a StreamCodec for a List of IngredientCategory using RegistryFriendlyByteBuf.
-     */
     public static StreamCodec<RegistryFriendlyByteBuf, List<IngredientCategory>> listOf() {
         return new StreamCodec<RegistryFriendlyByteBuf, List<IngredientCategory>>() {
             @Override
             public void encode(RegistryFriendlyByteBuf buffer, List<IngredientCategory> list) {
-                // Write the list size as an int.
-                ByteBufCodecs.INT.encode(buffer, list.size());
-                // Encode each IngredientCategory using the STREAM_CODEC defined above.
-                for (IngredientCategory cat : list) {
+                buffer.writeInt(list.size());
+                for (var cat : list) {
                     STREAM_CODEC.encode(buffer, cat);
                 }
             }
-
             @Override
             public List<IngredientCategory> decode(RegistryFriendlyByteBuf buffer) {
-                int size = ByteBufCodecs.INT.decode(buffer);
-                List<IngredientCategory> result = new ArrayList<>(size);
+                int size = buffer.readInt();
+                List<IngredientCategory> out = new ArrayList<>(size);
                 for (int i = 0; i < size; i++) {
-                    result.add(STREAM_CODEC.decode(buffer));
+                    out.add(STREAM_CODEC.decode(buffer));
                 }
-                return result;
+                return out;
             }
         };
     }

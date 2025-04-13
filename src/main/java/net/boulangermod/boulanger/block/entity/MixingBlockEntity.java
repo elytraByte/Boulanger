@@ -1,12 +1,8 @@
 package net.boulangermod.boulanger.block.entity;
 
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
-import net.boulangermod.boulanger.component.BakerPctComponent;
-import net.boulangermod.boulanger.component.DoughRecipeComponent;
-import net.boulangermod.boulanger.component.FlourType;
-import net.boulangermod.boulanger.component.IngredientInfo;
-import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.WeightComponent;
+import net.boulangermod.boulanger.component.*;
+import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.FlourItemType;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.recipe.MixingRecipe;
@@ -94,42 +90,62 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
 
     private void generateDough() {
         Optional<MixingRecipe> opt = matchRecipe();
-        if (opt.isPresent()) {
-            MixingRecipe recipe = opt.get();
-            ItemStack dough = new ItemStack(recipe.resultItem());
-
-            // Attach baker's percentages
-            dough.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(),
-                    new BakerPctComponent(recipe.targetPercentages()));
-
-            // Build IngredientInfo list
-            List<IngredientInfo> infos = new ArrayList<>();
-            int totalWeight = 0;
-            for (IngredientStack st : ingredientList) {
-                String itemId = BuiltInRegistries.ITEM
-                        .getKey(st.getActualItem())
-                        .toString();
-                String cat = st.getCategory().name().toLowerCase();
-                int grams = st.getGrams();
-                totalWeight += grams;
-                infos.add(new IngredientInfo(itemId, cat, grams));
-            }
-
-            // Create DoughRecipeComponent
-            DoughRecipeComponent dr = new DoughRecipeComponent(
-                    recipe.getId().toString(),
-                    recipe.targetPercentages(),
-                    infos,
-                    totalWeight
-            );
-            dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(), dr);
-
-            itemHandler.setStackInSlot(OUTPUT_DOUGH, dough);
-        } else {
+        if (opt.isEmpty()) {
             itemHandler.setStackInSlot(OUTPUT_DOUGH, ItemStack.EMPTY);
+            ingredientList.clear();
+            return;
         }
+
+        MixingRecipe recipe = opt.get();
+
+        // 1) Create the dough item
+        ItemStack doughStack = new ItemStack(ModItems.DOUGH.get());
+
+        // 2) Attach baker’s percentages
+        doughStack.set(
+                ModDataComponentTypes.BAKER_PERCENTAGES.get(),
+                new BakerPctComponent(recipe.targetPercentages())
+        );
+
+        // 3) Build and attach the DoughRecipeComponent
+        List<IngredientInfo> infos = new ArrayList<>();
+        int totalWeight = 0;
+        for (IngredientStack st : ingredientList) {
+            String itemId = BuiltInRegistries.ITEM
+                    .getKey(st.getActualItem())
+                    .toString();
+            String cat = st.getCategory().name().toLowerCase();
+            int grams = st.getGrams();
+            totalWeight += grams;
+            infos.add(new IngredientInfo(itemId, cat, grams));
+        }
+        DoughRecipeComponent dr = new DoughRecipeComponent(
+                recipe.getId().toString(),
+                recipe.targetPercentages(),
+                infos,
+                totalWeight
+        );
+        doughStack.set(
+                ModDataComponentTypes.DOUGH_RECIPE.get(),
+                dr
+        );
+
+        // 4) Attach total weight so oven can pass it through
+        doughStack.set(
+                ModDataComponentTypes.INGREDIENT_GRAMS.get(),
+                new WeightComponent(totalWeight)
+        );
+
+        // 5) Place the dough in the output slot
+        itemHandler.setStackInSlot(OUTPUT_DOUGH, doughStack);
+
+        // 6) Clear ingredients for the next batch
         ingredientList.clear();
     }
+
+
+
+
 
     private Optional<MixingRecipe> matchRecipe() {
         if (ingredientList.isEmpty()) return Optional.empty();
