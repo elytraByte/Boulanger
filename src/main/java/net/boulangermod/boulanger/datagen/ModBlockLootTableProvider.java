@@ -104,6 +104,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.STRIPPED_PINE_LOG.get());
         dropSelf(ModBlocks.STRIPPED_PINE_WOOD.get());
         dropSelf(ModBlocks.PINE_LOG.get());
+        dropSelf(ModBlocks.IRON_WEDGE.get());
         dropSelf(ModBlocks.PINE_PLANKS.get());
         dropSelf(ModBlocks.PINE_WOOD.get());
         dropSelf(ModBlocks.PINE_SAPLING.get());

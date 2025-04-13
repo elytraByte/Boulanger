@@ -33,6 +33,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         logBlock(((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_LOG.get()));
         logBlock(((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_WOOD.get()));
         blockItem(ModBlocks.PINE_LOG);
+        blockItem(ModBlocks.IRON_WEDGE);
         blockItem(ModBlocks.STRIPPED_PINE_LOG);
         blockItem(ModBlocks.STRIPPED_PINE_WOOD);
         blockWithItem(ModBlocks.PINE_PLANKS);
@@ -55,6 +56,21 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         modLoc("block/wild_wheat")
                 ).renderType("cutout")
         );
+        getVariantBuilder(ModBlocks.IRON_WEDGE.get())
+                .forAllStates(state -> {
+                    ModelFile model = models().getExistingFile(modLoc("block/iron_wedge"));
+                    return new ConfiguredModel[] {
+                            new ConfiguredModel(model)
+                    };
+                });
+
+// And still generate the item model:
+        simpleBlockItem(ModBlocks.IRON_WEDGE.get(),
+                models().getExistingFile(modLoc("block/iron_wedge")));
+
+
+        simpleBlockItem(ModBlocks.IRON_WEDGE.get(), models().getExistingFile(modLoc("block/iron_wedge")));
+
 
         makeCrop((CropBlock) ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), "boulanger_wheat_stage", "boulanger_wheat_stage");
 
@@ -181,7 +197,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
             );
 
             // Generate and register the actual crop model.
-            // 'renderType("cutout")' sets it up to use cutout transparency.
+            // 'renderType("cutout")' sets it up to useItemOn cutout transparency.
             ModelFile modelFile = models()
                     .crop(modelName, texture)
                     .renderType("cutout");

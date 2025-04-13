@@ -73,8 +73,8 @@ public class WoodOvenBlock extends AbstractProcessingBlock implements MenuProvid
             double fx = x + direction.getStepX() * offset;
             double fz = z + direction.getStepZ() * offset;
 
-            level.addParticle(ParticleTypes.FLAME, fx, y, fz, 0.0, 0.01, 0.0);
-            level.addParticle(ParticleTypes.SMOKE, fx, y, fz, 0.0, 0.1, 0.0);
+            level.addParticle(ParticleTypes.FLAME, fx, y, fz, 0.0, 0.05, 0.0);
+            level.addParticle(ParticleTypes.SMOKE, fx, y, fz, 0.0, 0.05, 0.0);
         }
     }
 

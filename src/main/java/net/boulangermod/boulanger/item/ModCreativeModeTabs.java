@@ -50,6 +50,8 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.PINE_LEAVES.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_SAPLING.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SPLIT_PINE_LOGS.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.IRON_WEDGE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SLEDGEHAMMER.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.KAOLINITE_CLAY.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.KAOLINITE_CLAY_BALL.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PORCELAIN_MIX.get(), 1));

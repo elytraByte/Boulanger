@@ -83,7 +83,7 @@ public class Boulanger {
         ModMixingRecipes.registerDefaults();
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
+    // You can useItemOn SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
@@ -91,7 +91,7 @@ public class Boulanger {
 
     }
 
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
+    // You can useItemOn EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent

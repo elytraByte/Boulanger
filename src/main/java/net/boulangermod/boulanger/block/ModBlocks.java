@@ -1,5 +1,6 @@
 package net.boulangermod.boulanger.block;
 
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
@@ -69,6 +70,9 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> WHITE_TILE = registerBlock("white_tile",
             () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
+
+    public static final DeferredBlock<Block> IRON_WEDGE = BLOCKS.register("iron_wedge",
+            () -> new IronWedgeBlock(BlockBehaviour.Properties.of().strength(2f).noOcclusion()));
 
 
 

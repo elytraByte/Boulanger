@@ -104,7 +104,7 @@ public class StoneMillBlockEntity extends BlockEntity implements AbstractProcess
     }
 
     /**
-     * Optional method for use in the menu to get the total cycle time.
+     * Optional method for useItemOn in the menu to get the total cycle time.
      */
     public static int getMaxMixTime() {
         return MAX_MILL_TIME;

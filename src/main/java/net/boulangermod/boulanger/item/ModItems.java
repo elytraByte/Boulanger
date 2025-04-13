@@ -68,6 +68,15 @@ public class ModItems {
                     ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(),
                     new Item.Properties()));
 
+    public static final DeferredItem<Item> IRON_WEDGE = ITEMS.register("iron_wedge",
+            () -> new IronWedgeItem(ModBlocks.IRON_WEDGE.get(),
+                    new Item.Properties())
+    );
+
+    public static final DeferredItem<Item> SLEDGEHAMMER = ITEMS.register("sledgehammer",
+            () -> new SledgehammerItem(new Item.Properties()));
+
+
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
     }

@@ -77,6 +77,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.GLASS_DUST.get());
         basicItem(ModItems.BONE_ASH.get());
         basicItem(ModItems.SPLIT_PINE_LOGS.get());
+        basicItem(ModItems.SLEDGEHAMMER.get());
+        basicItem(ModItems.IRON_WEDGE.get());
         saplingItem(ModBlocks.PINE_SAPLING);
 
         withExistingParent("wood_oven", modLoc("block/wood_oven_off"));

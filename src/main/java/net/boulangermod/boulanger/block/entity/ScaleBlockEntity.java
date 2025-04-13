@@ -65,7 +65,7 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         // 1) Determine the "per-unit" weight for the bulk item.
-        // For flour items, use FlourType.
+        // For flour items, useItemOn FlourType.
         // Otherwise, try WeightComponent; if not available, check FoodAdditiveComponent.
         FlourType flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
         float fullWeight;
