@@ -37,15 +37,15 @@ public class ModConfiguredFeatures {
 
     public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
 
-         new SimpleBlockConfiguration(BlockStateProvider.simple(ModBlocks.WILD_WHEAT.get()));
+        new SimpleBlockConfiguration(BlockStateProvider.simple(ModBlocks.WILD_WHEAT.get()));
 
         register(context, WILD_WHEAT_KEY, Feature.RANDOM_PATCH,
                 new RandomPatchConfiguration(
-                96, 64, 1,
-                PlacementUtils.filtered(Feature.SIMPLE_BLOCK,
-                new SimpleBlockConfiguration(BlockStateProvider
-                .simple(ModBlocks.WILD_WHEAT.get())),
-                BlockPredicate.matchesBlocks(Blocks.SHORT_GRASS))));
+                        96, 64, 1,
+                        PlacementUtils.filtered(Feature.SIMPLE_BLOCK,
+                                new SimpleBlockConfiguration(BlockStateProvider
+                                        .simple(ModBlocks.WILD_WHEAT.get())),
+                                BlockPredicate.matchesBlocks(Blocks.SHORT_GRASS))));
 
 
 //        register(context, PINE_TREE_KEY, Feature.TREE, new TreeConfiguration.TreeConfigurationBuilder(
@@ -62,15 +62,15 @@ public class ModConfiguredFeatures {
                 BlockStateProvider.simple(ModBlocks.PINE_LEAVES.get()),
                 new SpruceFoliagePlacer(ConstantInt.of(3), ConstantInt.of(5), ConstantInt.of(4)),
                 new TwoLayersFeatureSize(0, 3, 5))
-                .dirt(BlockStateProvider.simple(Blocks.TERRACOTTA)).build());
+                .dirt(BlockStateProvider.simple(Blocks.DIRT)).forceDirt().build());
 
         // Register the configured feature
         context.register(KAOLINITE_PATCH_KEY, new ConfiguredFeature<> (
-                Feature.DISK,
-                new DiskConfiguration(
-                RuleBasedBlockStateProvider.simple(ModBlocks.KAOLINITE_CLAY.get()), // This is the block to place
-                BlockPredicate.matchesBlocks(Blocks.DIRT, Blocks.SAND),     // Replace dirt and sand
-                UniformInt.of(1, 4),2)
+                        Feature.DISK,
+                        new DiskConfiguration(
+                                RuleBasedBlockStateProvider.simple(ModBlocks.KAOLINITE_CLAY.get()), // This is the block to place
+                                BlockPredicate.matchesBlocks(Blocks.DIRT, Blocks.SAND),     // Replace dirt and sand
+                                UniformInt.of(1, 4),2)
                 )
         );
 
@@ -86,7 +86,3 @@ public class ModConfiguredFeatures {
                                                                                           ResourceKey<ConfiguredFeature<?, ?>> key, F feature, FC configuration) {context.register(key, new ConfiguredFeature<>(feature, configuration));
     }
 }
-
-
-
-

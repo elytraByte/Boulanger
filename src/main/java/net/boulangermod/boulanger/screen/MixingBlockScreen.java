@@ -18,7 +18,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 public class MixingBlockScreen extends AbstractContainerScreen<MixingBlockMenu> {
     private static final ResourceLocation GUI_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/mixing_block.png");
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/mixer.png");
 
     public MixingBlockScreen(MixingBlockMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -30,20 +30,27 @@ public class MixingBlockScreen extends AbstractContainerScreen<MixingBlockMenu> 
         this.inventoryLabelY = 72;
         this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
 
-        // center coordinates
+        // GUI origin
         int x0 = (this.width - this.imageWidth) / 2;
         int y0 = (this.height - this.imageHeight) / 2;
 
-// inside init(), after calculating x0/y0:
+        // button size
+        int btnW = 40;
+        int btnH = 18;
+        // center X within the GUI
+        int btnX = x0 + (this.imageWidth / 2) - (btnW / 2);
+        // desired Y offset (tweak as needed)
+        int btnY = y0 + 60;
+
         Button mixButton = Button.builder(Component.literal("Mix"), btn -> {
                     StartMixingPacket.sendFromClient(menu.getBlockEntity().getBlockPos());
                 })
-                .bounds(x0 + 80, y0 + 35, 50, 20)
+                .bounds(btnX, btnY, btnW, btnH)
                 .build();
 
         this.addRenderableWidget(mixButton);
-
     }
+
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {

@@ -82,6 +82,9 @@ public class ModItemModelProvider extends ItemModelProvider {
         saplingItem(ModBlocks.PINE_SAPLING);
 
         withExistingParent("wood_oven", modLoc("block/wood_oven_off"));
+        withExistingParent("mixing_block", modLoc("block/mixing_block"));
+        withExistingParent("stone_mill_block", modLoc("block/stone_mill_block"));
+        withExistingParent("scale_block", modLoc("block/scale_block"));
 
 
     }

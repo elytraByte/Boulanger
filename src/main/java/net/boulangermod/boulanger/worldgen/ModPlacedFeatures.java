@@ -1,5 +1,6 @@
 package net.boulangermod.boulanger.worldgen;
 
+import net.boulangermod.boulanger.util.ModTags;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
@@ -8,6 +9,7 @@ import net.minecraft.data.worldgen.placement.PlacementUtils;
 import net.minecraft.data.worldgen.placement.VegetationPlacements;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.*;
 import net.boulangermod.boulanger.Boulanger;
@@ -37,7 +39,7 @@ public class ModPlacedFeatures {
         register(context, PINE_TREE_PLACED_KEY, configuredFeatures.getOrThrow(ModConfiguredFeatures.PINE_TREE_KEY),
                 VegetationPlacements.treePlacement(
                         PlacementUtils.countExtra(6,0.1f,10),
-                        ModBlocks.PINE_SAPLING.get()));
+                        Blocks.SPRUCE_SAPLING));
 
         register(
                 context,
