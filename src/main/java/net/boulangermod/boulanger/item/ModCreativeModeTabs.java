@@ -55,8 +55,14 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.KAOLINITE_CLAY.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.KAOLINITE_CLAY_BALL.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PORCELAIN_MIX.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BRICK_MOLD.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.DIORITE_PLATE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.REINFORCED_DIORITE_PLATE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.UNFIRED_PORCELAIN_BRICK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.PCB.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.GILDED_PCB.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.PINE_RESIN.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BONE_ASH.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.GLASS_DUST.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.L3E_TILE.get(), 1));

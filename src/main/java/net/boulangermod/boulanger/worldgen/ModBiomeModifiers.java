@@ -32,7 +32,7 @@ public class  ModBiomeModifiers {
 
 
         context.register(ADD_PINE_TREE,
-                new BiomeModifiers.AddFeaturesBiomeModifier(HolderSet.direct(biomes.getOrThrow(Biomes.SAVANNA), biomes.getOrThrow(Biomes.OLD_GROWTH_PINE_TAIGA), biomes.getOrThrow((Biomes.TAIGA))),
+                new BiomeModifiers.AddFeaturesBiomeModifier(HolderSet.direct(biomes.getOrThrow(Biomes.WINDSWEPT_FOREST), biomes.getOrThrow(Biomes.OLD_GROWTH_PINE_TAIGA), biomes.getOrThrow((Biomes.TAIGA))),
                         HolderSet.direct(placedFeatures.getOrThrow(ModPlacedFeatures.PINE_TREE_PLACED_KEY)),
                         GenerationStep.Decoration.VEGETAL_DECORATION));
 

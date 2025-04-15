@@ -23,6 +23,12 @@ public class ModItems {
     public static final DeferredItem<Item> UNFIRED_PORCELAIN_BRICK = ITEMS.registerSimpleItem("unfired_porcelain_brick");
     public static final DeferredItem<Item> PORCELAIN_BRICK = ITEMS.registerSimpleItem("porcelain_brick");
     public static final DeferredItem<Item> SPLIT_PINE_LOGS = ITEMS.registerSimpleItem("split_pine_logs");
+    public static final DeferredItem<Item> BRICK_MOLD = ITEMS.registerSimpleItem("brick_mold");
+    public static final DeferredItem<Item> DIORITE_PLATE = ITEMS.registerSimpleItem("diorite_plate");
+    public static final DeferredItem<Item> PINE_RESIN = ITEMS.registerSimpleItem("pine_resin");
+    public static final DeferredItem<Item> PCB = ITEMS.registerSimpleItem("pcb");
+    public static final DeferredItem<Item> GILDED_PCB = ITEMS.registerSimpleItem("gilded_pcb");
+    public static final DeferredItem<Item> REINFORCED_DIORITE_PLATE = ITEMS.registerSimpleItem("reinforced_diorite_plate");
     public static final DeferredItem<Item> FILLED_BOWL_ITEM = ITEMS.register("filled_bowl",
             () -> new FilledBowlItem(new Item.Properties()));
 

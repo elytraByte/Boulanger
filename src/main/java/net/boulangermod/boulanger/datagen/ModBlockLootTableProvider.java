@@ -9,10 +9,12 @@ import net.boulangermod.boulanger.util.CopyWheatVarietyFunction;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.loot.BlockLootSubProvider;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
@@ -94,7 +96,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.MIXING_BLOCK.get());
         dropSelf(ModBlocks.SCALE_BLOCK.get());
         dropSelf(ModBlocks.STONE_MILL_BLOCK.get());
-        dropSelf(ModBlocks.KAOLINITE_CLAY.get());
         dropSelf(ModBlocks.BLACK_TILE.get());
         dropSelf(ModBlocks.BLUE_TILE.get());
         dropSelf(ModBlocks.DARK_BLUE_TILE.get());
@@ -127,6 +128,16 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                                 .hasProperty(HardRedSpringWheatCrop.AGE, 7)
                         )
         ));
+
+        this.add(ModBlocks.KAOLINITE_CLAY.get(),
+                LootTable.lootTable()
+                        .withPool(LootPool.lootPool()
+                                .setRolls(ConstantValue.exactly(1f))
+                                .add(LootItem.lootTableItem(ModItems.KAOLINITE_CLAY_BALL.get())
+                                        .apply(SetItemCountFunction.setCount(ConstantValue.exactly(4)))
+                                )
+                        )
+        );
 
 
         // wild wheat:

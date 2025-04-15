@@ -72,6 +72,12 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.DOUGH.get());
         basicItem(ModItems.KAOLINITE_CLAY_BALL.get());
         basicItem(ModItems.PORCELAIN_MIX.get());
+        basicItem(ModItems.BRICK_MOLD.get());
+        basicItem(ModItems.DIORITE_PLATE.get());
+        basicItem(ModItems.PINE_RESIN.get());
+        basicItem(ModItems.PCB.get());
+        basicItem(ModItems.GILDED_PCB.get());
+        basicItem(ModItems.REINFORCED_DIORITE_PLATE.get());
         basicItem(ModItems.UNFIRED_PORCELAIN_BRICK.get());
         basicItem(ModItems.PORCELAIN_BRICK.get());
         basicItem(ModItems.GLASS_DUST.get());
