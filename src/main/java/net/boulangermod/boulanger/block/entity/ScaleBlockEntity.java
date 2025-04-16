@@ -4,6 +4,7 @@ import net.boulangermod.boulanger.component.FlourType;
 import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.WeightComponent;
+import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.screen.ScaleBlockMenu;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.BlockPos;
@@ -93,7 +94,7 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         System.out.println("[DEBUG] Transfer amount: " + transferAmount + " (target: " + weightToTransfer + ")");
 
         // 3) Create the filled bowl with transferred weight.
-        ItemStack taggedBowl = new ItemStack(Items.BOWL);
+        ItemStack taggedBowl = new ItemStack(ModItems.FILLED_BOWL_ITEM.get());
         taggedBowl.set(ModDataComponentTypes.INGREDIENT_GRAMS, new WeightComponent(transferAmount));
         taggedBowl.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.getIngredientCategory(bulk));
         taggedBowl.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(bulk.getItem()));

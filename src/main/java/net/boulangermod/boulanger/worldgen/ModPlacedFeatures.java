@@ -39,7 +39,7 @@ public class ModPlacedFeatures {
         register(context, PINE_TREE_PLACED_KEY, configuredFeatures.getOrThrow(ModConfiguredFeatures.PINE_TREE_KEY),
                 VegetationPlacements.treePlacement(
                         PlacementUtils.countExtra(2,0.1f,3),
-                        Blocks.SPRUCE_SAPLING));
+                        ModBlocks.PINE_SAPLING.get()));
 
         register(
                 context,

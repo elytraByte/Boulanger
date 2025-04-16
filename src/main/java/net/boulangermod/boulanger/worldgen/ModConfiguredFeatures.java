@@ -62,7 +62,7 @@ public class ModConfiguredFeatures {
                 BlockStateProvider.simple(ModBlocks.PINE_LEAVES.get()),
                 new SpruceFoliagePlacer(ConstantInt.of(3), ConstantInt.of(5), ConstantInt.of(4)),
                 new TwoLayersFeatureSize(0, 3, 5))
-                .dirt(BlockStateProvider.simple(Blocks.DIRT)).forceDirt().build());
+                .dirt(BlockStateProvider.simple(Blocks.GRASS_BLOCK)).forceDirt().build());
 
         // Register the configured feature
         context.register(KAOLINITE_PATCH_KEY, new ConfiguredFeature<> (
