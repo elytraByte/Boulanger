@@ -63,6 +63,32 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
+        // --- Water bucket branch: treat as 4000g of water ---
+        if (bulk.getItem() == Items.WATER_BUCKET) {
+            // How much to pour out (max 4000g)
+            int toTransfer = Math.min(4000, weightToTransfer);
+
+            // Build the filled‑bowl of water
+            ItemStack filled = new ItemStack(ModItems.FILLED_BOWL_ITEM.get());
+            filled.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(toTransfer));
+            filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.LIQUID);
+            filled.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(Items.WATER_BUCKET));
+            items.setStackInSlot(SLOT_BOWL_OUT, filled);
+
+            // Give back the empty bucket
+            items.setStackInSlot(SLOT_RESIDUAL, new ItemStack(Items.BUCKET));
+
+            // Clear the inputs and reset
+            items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
+            items.setStackInSlot(SLOT_BOWL_IN, ItemStack.EMPTY);
+            weightToTransfer = 0;
+
+            setChanged();
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+            return;
+        }
+
+        // --- Original flour/ingredient logic ---
         // 1) figure full‑stack weight
         FlourType flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
         float perUnit = flourType != null
@@ -122,6 +148,7 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         setChanged();
         level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
     }
+
 
     public ItemStackHandler getItemHandler() {
         return items;
