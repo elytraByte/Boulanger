@@ -73,46 +73,106 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide) return;
 
+        //LOGGER.debug("Ticking mixer at {}", this.worldPosition);
+
         ItemStack in = itemHandler.getStackInSlot(INPUT_BOWL);
         if (!in.isEmpty() && isWeighedIngredient(in)) {
-            // 1) add your ingredient to the list
-            addIngredientFromBowl(in);
+            LOGGER.debug("Input bowl contains {} grams of category {}",
+                    in.get(ModDataComponentTypes.INGREDIENT_GRAMS.get()).grams(),
+                    in.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get()));
 
-            // 2) clear the input
+            addIngredientFromBowl(in);
+            LOGGER.info("Added ingredient: {} -> {}g",
+                    ingredientList.get(ingredientList.size()-1).getCategory(),
+                    ingredientList.get(ingredientList.size()-1).getGrams());
+
             itemHandler.setStackInSlot(INPUT_BOWL, ItemStack.EMPTY);
 
-            // 3) spawn an empty bowl in OUTPUT_BOWL, stacking if possible
+            // spawn empty bowls
             ItemStack out = itemHandler.getStackInSlot(OUTPUT_BOWL);
             if (out.isEmpty()) {
-                // nothing there yet → place one bowl
                 itemHandler.setStackInSlot(OUTPUT_BOWL, new ItemStack(Items.BOWL));
             } else if (out.getItem() == Items.BOWL) {
-                // already a stack of bowls → grow it
                 out.grow(1);
                 itemHandler.setStackInSlot(OUTPUT_BOWL, out);
             } else {
-                // somehow another item is in that slot → overwrite
                 itemHandler.setStackInSlot(OUTPUT_BOWL, new ItemStack(Items.BOWL));
             }
         }
 
-        // ... rest of your mixing logic unchanged ...
+        if (mixing) {
+            mixProgress++;
+            LOGGER.debug("Mixing in progress: {}/{}", mixProgress, MAX_MIX_TIME);
+            if (mixProgress >= MAX_MIX_TIME) {
+                generateDough();
+                mixing = false;
+                mixProgress = 0;
+            }
+        }
     }
 
+    private Map<IngredientCategory, Double> calculateBakersPercentages(List<IngredientStack> ingredients) {
+        // Sum weights per category
+        Map<IngredientCategory, Integer> weightPerCat = new EnumMap<>(IngredientCategory.class);
+        int flourTotal = 0;
+        for (IngredientStack st : ingredients) {
+            int g = st.getGrams();
+            IngredientCategory cat = st.getCategory();
+            weightPerCat.merge(cat, g, Integer::sum);
+            if (cat == IngredientCategory.FLOUR) {
+                flourTotal += g;
+            }
+        }
+
+        // Avoid divide-by-zero
+        if (flourTotal <= 0) {
+            return Collections.emptyMap();
+        }
+
+        // Compute percentages
+        Map<IngredientCategory, Double> pct = new EnumMap<>(IngredientCategory.class);
+        for (Map.Entry<IngredientCategory, Integer> e : weightPerCat.entrySet()) {
+            pct.put(e.getKey(), e.getValue() / (double) flourTotal * 100.0);
+        }
+        return pct;
+    }
+
+    private Optional<MixingRecipe> findMatchingRecipe() {
+        // 1) compute total grams per category
+        Map<IngredientCategory, Double> actualPercentages = calculateBakersPercentages(ingredientList);
+        LOGGER.info("→ Computed baker’s % from ingredients: {}", actualPercentages);
+
+        // 2) try every recipe
+        for (MixingRecipe recipe : ModMixingRecipes.getAll()) {
+            LOGGER.info("  • Testing recipe {} → target: {}", recipe.getId(), recipe.targetPercentages());
+            boolean ok = recipe.matches(ingredientList, actualPercentages);
+            LOGGER.info("    → match? {}", ok);
+            if (ok) {
+                LOGGER.info("    ✓ Matched recipe {}", recipe.getId());
+                return Optional.of(recipe);
+            }
+        }
+
+        LOGGER.warn("No recipe matched for computed %: {}", actualPercentages);
+        return Optional.empty();
+    }
 
     public void startMixing() {
+        LOGGER.info("Start mixing requested. Current ingredients:");
+        for (IngredientStack st : ingredientList) {
+            LOGGER.info(" - {} : {}g", st.getCategory(), st.getGrams());
+        }
         if (ingredientList.isEmpty()) {
-            LOGGER.warn("Debug: crafting default whole wheat bread dough");
+            LOGGER.warn("Ingredient list empty, crafting debug dough");
+            ModMixingRecipes.getAll().forEach(r -> LOGGER.info("Available recipe: {} -> {}", r.getId(), r.targetPercentages()));
             Optional<MixingRecipe> debugRec = ModMixingRecipes.getAll().stream()
                     .filter(r -> r.getId().getPath().equals("whole_wheat_bread"))
                     .findFirst();
             debugRec.ifPresent(this::craftDebugDough);
             return;
         }
-        if (!mixing) {
-            mixing = true;
-            mixProgress = 0;
-        }
+        mixing = true;
+        mixProgress = 0;
     }
 
     private void craftDebugDough(MixingRecipe recipe) {
@@ -158,7 +218,7 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
         }
 
         DoughRecipeComponent dr = new DoughRecipeComponent(
-                recipe.getId().toString(),
+                recipe.getId().getPath(),
                 recipe.targetPercentages(),
                 infos,
                 totalWeight

@@ -41,20 +41,15 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .texture("layer0", modLoc("item/flour/" + type.getId()));
         }
 
-        // Base “bread” item
-        ItemModelBuilder bread = withExistingParent("bread", "item/generated")
-                .texture("layer0", modLoc("item/baguette")); // a generic white texture, maybe unused
+        ItemModelBuilder bread = withExistingParent("bread", mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/bread"));
 
+        // One override per BreadType using CustomModelData
         for (BreadType type : BreadType.values()) {
-            // override for custom_model_data
-            bread.override()
-                    .predicate(ResourceLocation.fromNamespaceAndPath("minecraft","custom_model_data"), type.getModelIndex())
-                    .model(withExistingParent("bread/" + type.getId(), "item/generated"))
+            bread.override().predicate(ResourceLocation.fromNamespaceAndPath("minecraft", "custom_model_data"), type.getModelIndex())
+                    .model(withExistingParent("item/" + type.getId(), "item/generated"))
+                    // flour/first_break_flour
                     .end();
-
-            // register the individual model
-            withExistingParent("bread/" + type.getId(), "item/generated")
-                    .texture("layer0", modLoc("item/" + type.getId()));
         }
 
 
@@ -64,6 +59,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.WOODEN_BUCKET.get());
         basicItem(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get());
         basicItem(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get());
+        basicItem(ModItems.BROWN_SUGAR.get());
         basicItem(ModItems.WHOLE_MILK.get());
         basicItem(ModItems.EURO_BUTTER.get());
         basicItem(ModItems.EURO_BUTTER_BLEND.get());
@@ -91,6 +87,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.SPLIT_PINE_LOGS.get());
         basicItem(ModItems.SLEDGEHAMMER.get());
         basicItem(ModItems.IRON_WEDGE.get());
+        basicItem(ModItems.HEFFER_SPAWN_EGG.get());
+        basicItem(ModItems.HEN_SPAWN_EGG.get());
         saplingItem(ModBlocks.PINE_SAPLING);
 
         withExistingParent("wood_oven", modLoc("block/wood_oven_off"));

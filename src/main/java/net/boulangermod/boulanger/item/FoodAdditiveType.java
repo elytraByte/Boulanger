@@ -12,9 +12,9 @@ public enum FoodAdditiveType {
     SALTED_EUROPEAN_BUTTER ("european_butter_salted", 454f, IngredientCategory.FAT),
     EUROPEAN_BUTTER_BLEND ("butter", 454.0f, IngredientCategory.FAT),
     SALTED_EUROPEAN_BUTTER_BLEND ("butter", 454.0f, IngredientCategory.FAT),
-    WHOLE_MILK         ("whole_milk", 3900f, IngredientCategory.LIQUID),
-    HEAVY_CREAM        ("heavy_cream", 3900f, IngredientCategory.LIQUID),
-    BUTTERMILK         ("buttermilk", 3900f, IngredientCategory.LIQUID),
+    WHOLE_MILK         ("whole_milk", 3900f, IngredientCategory.DAIRY),
+    HEAVY_CREAM        ("heavy_cream", 3900f, IngredientCategory.DAIRY),
+    BUTTERMILK         ("buttermilk", 3900f, IngredientCategory.DAIRY),
     SALT               ("salt", 1360f, IngredientCategory.SALT),
     BREWERS_YEAST      ("brewers_yeast", 226f, IngredientCategory.YEAST),
     WILD_YEAST         ("wild_yeast", 113f, IngredientCategory.YEAST),
@@ -30,9 +30,9 @@ public enum FoodAdditiveType {
     POWDERED_SUGAR     ("powdered_sugar", 907f, IngredientCategory.SUGAR),
     MOLASSES           ("molasses", 672f, IngredientCategory.SUGAR),
     CARAMEL_COLOR      ("caramel_color", 1000f, IngredientCategory.ADDITIVE),
-    FANCY_EGG          ("fancy_egg", 50f, IngredientCategory.ENRICHMENT),
-    EGG_YOLK           ("egg_yolk", 20f, IngredientCategory.ENRICHMENT),
-    EGG_WHITE          ("egg_white", 30f, IngredientCategory.ENRICHMENT);
+    FANCY_EGG          ("fancy_egg", 50f, IngredientCategory.EGGS),
+    EGG_YOLK           ("egg_yolk", 20f, IngredientCategory.EGGS),
+    EGG_WHITE          ("egg_white", 30f, IngredientCategory.EGGS);
 
 
     private final String id;

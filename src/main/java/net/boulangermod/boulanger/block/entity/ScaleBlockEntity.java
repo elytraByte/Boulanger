@@ -71,7 +71,7 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
             // Build the filled‑bowl of water
             ItemStack filled = new ItemStack(ModItems.FILLED_BOWL_ITEM.get());
             filled.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(toTransfer));
-            filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.LIQUID);
+            filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.DAIRY);
             filled.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(Items.WATER_BUCKET));
             items.setStackInSlot(SLOT_BOWL_OUT, filled);
 

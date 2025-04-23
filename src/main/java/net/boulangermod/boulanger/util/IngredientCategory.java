@@ -1,7 +1,6 @@
 package net.boulangermod.boulanger.util;
 
 import com.mojang.serialization.Codec;
-import io.netty.buffer.ByteBuf;
 import net.boulangermod.boulanger.component.FoodAdditiveComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.item.FoodAdditiveType;
@@ -14,7 +13,9 @@ import java.util.List;
 
 public enum IngredientCategory {
     FLOUR,
-    LIQUID,
+    DAIRY,
+    WATER,
+    EGGS,
     SALT,
     YEAST,
     FAT,
@@ -28,59 +29,44 @@ public enum IngredientCategory {
             return CUSTOM;
         }
 
-        // 1) If it has a FoodAdditiveComponent, map specific IDs to SALT or YEAST
-        if (stack.has(ModDataComponentTypes.FOOD_ADDITIVE.get())) {
-            FoodAdditiveComponent additive = stack.get(ModDataComponentTypes.FOOD_ADDITIVE.get());
-            if (additive != null) {
-                String id = additive.getId();
-                // Yeasts
-                if (id.equals(FoodAdditiveType.SAF_RED_YEAST.getId())
-                        || id.equals(FoodAdditiveType.FRESH_YEAST.getId())) {
-                    return YEAST;
-                }
-//                // Salts
-//                if (id.equals(FoodAdditiveType.SALT_KOSHER.getId())
-//                        || id.equals(FoodAdditiveType.SALT_SEA.getId())
-//                        || id.equals(FoodAdditiveType.SALT_TABLE.getId())) {
-//                    return SALT;
-//                }
-//                // Fats
-//                if (id.equals(FoodAdditiveType.BUTTER.getId())
-//                        || id.equals(FoodAdditiveType.EUROPEAN_BUTTER.getId())) {
-//                    return FAT;
-//                }
-//                // Sugars
-//                if (id.equals(FoodAdditiveType.SUGAR_WHITE.getId())
-//                        || id.equals(FoodAdditiveType.SUGAR_BROWN.getId())) {
-//                    return SUGAR;
-//                }
-//                // Enrichments (e.g. milk powder, eggs)
-//                if (id.equals(FoodAdditiveType.MILK_POWDER.getId())
-//                        || id.equals(FoodAdditiveType.EGG.getId())) {
-//                    return ENRICHMENT;
-//                }
-                // Everything else with a FoodAdditiveComponent
-                return ADDITIVE;
+        // 0) If something (e.g. the Scale) already set an explicit category on this stack, return it:
+        if (stack.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())) {
+            IngredientCategory cat = stack.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get());
+            if (cat != null) {
+                return cat;
             }
         }
 
-        // 2) Flour
+        // 1) If it has a FoodAdditiveComponent, defer to the enum’s built-in category:
+        if (stack.has(ModDataComponentTypes.FOOD_ADDITIVE.get())) {
+            FoodAdditiveComponent comp = stack.get(ModDataComponentTypes.FOOD_ADDITIVE.get());
+            if (comp != null) {
+                return FoodAdditiveType
+                        .fromId(comp.getId())
+                        .getCategory();
+            }
+        }
+
+        // 2) Flour items:
         if (stack.has(ModDataComponentTypes.FLOUR_TYPE.get())) {
             return FLOUR;
         }
 
-        // 3) Tags for liquids, salts, yeasts, fats, sugars, additives, enrichments
-        if (stack.is(IngredientTags.LIQUIDS))    return LIQUID;
-        if (stack.is(IngredientTags.SALTS))      return SALT;
-        if (stack.is(IngredientTags.YEASTS))     return YEAST;
-        if (stack.is(IngredientTags.FATS))       return FAT;
-        if (stack.is(IngredientTags.SUGARS))     return SUGAR;
-        if (stack.is(IngredientTags.ADDITIVES))  return ADDITIVE;
-        if (stack.is(IngredientTags.ENRICHMENTS))return ENRICHMENT;
+        // 3) (Optional) Raw-item tags, if you’ve actually tagged your vanilla/ModItems:
+        if (stack.is(IngredientTags.WATER))     return WATER;
+        if (stack.is(IngredientTags.EGGS))      return EGGS;
+        if (stack.is(IngredientTags.DAIRY))     return DAIRY;
+        if (stack.is(IngredientTags.SALTS))     return SALT;
+        if (stack.is(IngredientTags.YEASTS))    return YEAST;
+        if (stack.is(IngredientTags.FATS))      return FAT;
+        if (stack.is(IngredientTags.SUGARS))    return SUGAR;
+        if (stack.is(IngredientTags.ADDITIVES)) return ADDITIVE;
+        if (stack.is(IngredientTags.ENRICHMENTS)) return ENRICHMENT;
 
         // 4) Fallback
         return CUSTOM;
     }
+
 
     // === CODEC and STREAM_CODEC as before ===
     public static final Codec<IngredientCategory> CODEC =

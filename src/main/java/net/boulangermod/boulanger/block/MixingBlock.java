@@ -2,6 +2,7 @@ package net.boulangermod.boulanger.block;
 
 import com.mojang.serialization.MapCodec;
 import net.boulangermod.boulanger.block.entity.MixingBlockEntity;
+import net.boulangermod.boulanger.recipe.ModMixingRecipes;
 import net.boulangermod.boulanger.screen.MixingBlockMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -23,9 +24,12 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.MenuProvider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class MixingBlock extends AbstractProcessingBlock implements MenuProvider {
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final MapCodec<MixingBlock> CODEC = simpleCodec(MixingBlock::new);
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -63,12 +67,21 @@ public class MixingBlock extends AbstractProcessingBlock implements MenuProvider
     }
 
     @Override
-    public @Nullable AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
-        BlockEntity entity = inventory.player.level().getBlockEntity(inventory.player.blockPosition());
-        if (entity instanceof MixingBlockEntity mixer) {
-            return new MixingBlockMenu(id, inventory, mixer);
+    public @Nullable AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+        BlockEntity be = player.level().getBlockEntity(player.blockPosition());
+        if (be instanceof MixingBlockEntity mixer) {
+            LOGGER.info("Opening mixer UI, printing all recipes to console:");
+            ModMixingRecipes.getAll().forEach(r ->
+                    LOGGER.info(" * {} : {}", r.getId(), r.targetPercentages())
+            );
+            return new MixingBlockMenu(id, inv, mixer);
         }
         return null;
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("mixing_block.boulanger");
     }
 
 
@@ -87,9 +100,5 @@ public class MixingBlock extends AbstractProcessingBlock implements MenuProvider
         return ItemInteractionResult.sidedSuccess(level.isClientSide());
     }
 
-    @Override
-    public Component getDisplayName() {
-        return Component.translatable("mixing_block.boulanger");
-    }
 }
 

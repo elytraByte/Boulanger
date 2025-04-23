@@ -9,7 +9,7 @@ import java.util.Optional;
 public enum BreadType {
     BAGUETTE (1, "baguette"),
     CROISSANT(2, "croissant"),
-    SOURDOUGH(3, "whole_wheat_bread");
+    WHOLE_WHEAT_BREAD(3, "whole_wheat_bread");
 
     private final int modelIndex;
     private final String id;

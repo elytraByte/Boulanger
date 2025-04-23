@@ -4,6 +4,7 @@ import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.entity.ModEntities;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -22,6 +23,7 @@ public class ModItems {
     public static final DeferredItem<Item> WOODEN_BUCKET = ITEMS.registerSimpleItem("wooden_bucket");
     public static final DeferredItem<Item> WOODEN_BUCKET_OF_SHELL_EGG = ITEMS.registerSimpleItem("wooden_shell_egg_bucket");
     public static final DeferredItem<Item> WOODEN_BUCKET_OF_WHOLE_MILK = ITEMS.registerSimpleItem("wooden_milk_bucket");
+    public static final DeferredItem<Item> BROWN_SUGAR = ITEMS.registerSimpleItem("brown_sugar");
     public static final DeferredItem<Item> WHOLE_MILK = ITEMS.registerSimpleItem("whole_milk");
     public static final DeferredItem<Item> BONE_ASH = ITEMS.registerSimpleItem("bone_ash");
     public static final DeferredItem<Item> GLASS_DUST = ITEMS.registerSimpleItem("glass_dust");
@@ -88,6 +90,25 @@ public class ModItems {
 
     public static final DeferredItem<Item> SLEDGEHAMMER = ITEMS.register("sledgehammer",
             () -> new SledgehammerItem(new Item.Properties()));
+
+    public static final DeferredItem<SpawnEggItem> HEN_SPAWN_EGG = ITEMS.register("hen_spawn_egg",
+            // <-- note the .get() here:
+            () -> new SpawnEggItem(
+                    ModEntities.HEN.get(),   // EntityType<HenEntity>, not the Supplier
+                    0xF2E6C5,
+                    0xB07A4F,
+                    new Item.Properties()
+            )
+    );
+
+    public static final DeferredItem<SpawnEggItem> HEFFER_SPAWN_EGG = ITEMS.register("heffer_spawn_egg",
+            () -> new SpawnEggItem(
+                    ModEntities.HEFFER.get(), // call .get() here too
+                    0xC0C0C0,
+                    0x8B4513,
+                    new Item.Properties()
+            )
+    );
 
 
 
