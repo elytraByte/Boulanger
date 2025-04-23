@@ -61,6 +61,9 @@ public class ModItemModelProvider extends ItemModelProvider {
 
         basicItem(ModItems.BUTTER.get());
         basicItem(ModItems.FANCY_EGG.get());
+        basicItem(ModItems.WOODEN_BUCKET.get());
+        basicItem(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get());
+        basicItem(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get());
         basicItem(ModItems.WHOLE_MILK.get());
         basicItem(ModItems.EURO_BUTTER.get());
         basicItem(ModItems.EURO_BUTTER_BLEND.get());

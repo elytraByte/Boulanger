@@ -1,4 +1,4 @@
-// 1.21	2025-04-22T23:15:20.0449438	Item Models: boulanger
+// 1.21	2025-04-23T08:43:36.7273331	Item Models: boulanger
 782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
 5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
 604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
@@ -57,4 +57,7 @@ d6acb58752542a3650807f872627b79b1f21fbb7 assets/boulanger/models/item/unfired_po
 3547e4c7215fe0643cdfcb9292c0b42347f53855 assets/boulanger/models/item/wheat_berries.json
 0c94c28e4a97aad583e0af433d881e9da9c13ef7 assets/boulanger/models/item/wheat_seeds.json
 84f4a4231aa97e36369772ccd7da555468a55bc0 assets/boulanger/models/item/whole_milk.json
+af67ff14a893e7cbeef53141e1914db13af06683 assets/boulanger/models/item/wooden_bucket.json
+5c7ff4550db85f9231ec782e1ed348cc1c233a1f assets/boulanger/models/item/wooden_milk_bucket.json
+2388291b589418804ef78ad91a6df8054509e471 assets/boulanger/models/item/wooden_shell_egg_bucket.json
 759399399ce94bc76254a3ce6fb7f91f2562bd3a assets/boulanger/models/item/wood_oven.json

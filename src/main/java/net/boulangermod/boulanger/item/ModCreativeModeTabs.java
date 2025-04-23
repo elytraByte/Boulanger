@@ -31,6 +31,9 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WHOLE_MILK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.FANCY_EGG.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BREAD.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
