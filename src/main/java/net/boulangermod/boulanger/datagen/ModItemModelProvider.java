@@ -60,6 +60,8 @@ public class ModItemModelProvider extends ItemModelProvider {
 
 
         basicItem(ModItems.BUTTER.get());
+        basicItem(ModItems.FANCY_EGG.get());
+        basicItem(ModItems.WHOLE_MILK.get());
         basicItem(ModItems.EURO_BUTTER.get());
         basicItem(ModItems.EURO_BUTTER_BLEND.get());
         basicItem(ModItems.SAF_RED.get());
@@ -73,6 +75,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.KAOLINITE_CLAY_BALL.get());
         basicItem(ModItems.PORCELAIN_MIX.get());
         basicItem(ModItems.BRICK_MOLD.get());
+        basicItem(ModItems.DIORITE_BRICK.get());
         basicItem(ModItems.DIORITE_PLATE.get());
         basicItem(ModItems.PINE_RESIN.get());
         basicItem(ModItems.PCB.get());

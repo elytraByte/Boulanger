@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.block.ModBlocks;
+import net.boulangermod.boulanger.entity.ModEntities;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
@@ -17,6 +18,8 @@ public class ModItems {
             () -> new FlourItem(new Item.Properties()));
 
     public static final DeferredItem<Item> KAOLINITE_CLAY_BALL = ITEMS.registerSimpleItem("kaolinite_clay_ball");
+    public static final DeferredItem<Item> FANCY_EGG = ITEMS.registerSimpleItem("fancy_egg");
+    public static final DeferredItem<Item> WHOLE_MILK = ITEMS.registerSimpleItem("whole_milk");
     public static final DeferredItem<Item> BONE_ASH = ITEMS.registerSimpleItem("bone_ash");
     public static final DeferredItem<Item> GLASS_DUST = ITEMS.registerSimpleItem("glass_dust");
     public static final DeferredItem<Item> PORCELAIN_MIX = ITEMS.registerSimpleItem("porcelain_mix");
@@ -29,6 +32,7 @@ public class ModItems {
     public static final DeferredItem<Item> PCB = ITEMS.registerSimpleItem("pcb");
     public static final DeferredItem<Item> GILDED_PCB = ITEMS.registerSimpleItem("gilded_pcb");
     public static final DeferredItem<Item> REINFORCED_DIORITE_PLATE = ITEMS.registerSimpleItem("reinforced_diorite_plate");
+    public static final DeferredItem<Item> DIORITE_BRICK = ITEMS.registerSimpleItem("diorite_brick");
     public static final DeferredItem<Item> FILLED_BOWL_ITEM = ITEMS.register("filled_bowl",
             () -> new FilledBowlItem(new Item.Properties()));
 
@@ -81,6 +85,7 @@ public class ModItems {
 
     public static final DeferredItem<Item> SLEDGEHAMMER = ITEMS.register("sledgehammer",
             () -> new SledgehammerItem(new Item.Properties()));
+
 
 
     public static void register(IEventBus eventBus) {

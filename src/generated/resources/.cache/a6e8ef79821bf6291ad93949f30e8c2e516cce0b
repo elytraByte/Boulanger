@@ -1,4 +1,4 @@
-// 1.21	2025-04-15T07:21:59.7352239	Item Models: boulanger
+// 1.21	2025-04-22T23:15:20.0449438	Item Models: boulanger
 782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
 5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
 604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
@@ -26,9 +26,11 @@ c542fb333137dbd85de9652cea00301ca4abd661 assets/boulanger/models/flour/whole_whe
 eb2ceb726cfffd07dbb58f714a7664d69dc0c6ea assets/boulanger/models/item/bread.json
 7ece4ea173416640ac6dc4349caa76439419be4d assets/boulanger/models/item/brick_mold.json
 f63a32d222a989b021ff3a9c3542bd737cba6bfb assets/boulanger/models/item/butter.json
+ebb258e4d5e3f0308633dbed3ca5b8229fa3602c assets/boulanger/models/item/diorite_brick.json
 17bf6ae4cc961bda12d5f9ac3fc821610b27db3c assets/boulanger/models/item/diorite_plate.json
 a6daeec68e52d90d8fda12ea1980915977de002c assets/boulanger/models/item/euro_butter.json
 466289a2f76bf328e72cd8a0f488c59a86b0eb07 assets/boulanger/models/item/euro_butter_blend.json
+d1d238109204f92ae447597288889c1f7b418b39 assets/boulanger/models/item/fancy_egg.json
 0e144b8890eb0448bf3e547eb9662efaa08d82b7 assets/boulanger/models/item/fleischmann.json
 a69ab60d4d3ba04e23637133d31a335b0232270b assets/boulanger/models/item/flour.json
 82819b8d5582d17676d5119890f793fe33950210 assets/boulanger/models/item/fresh_yeast.json
@@ -54,4 +56,5 @@ a744a3a5a294221b04accf766117a29e7b96082b assets/boulanger/models/item/sledgehamm
 d6acb58752542a3650807f872627b79b1f21fbb7 assets/boulanger/models/item/unfired_porcelain_brick.json
 3547e4c7215fe0643cdfcb9292c0b42347f53855 assets/boulanger/models/item/wheat_berries.json
 0c94c28e4a97aad583e0af433d881e9da9c13ef7 assets/boulanger/models/item/wheat_seeds.json
+84f4a4231aa97e36369772ccd7da555468a55bc0 assets/boulanger/models/item/whole_milk.json
 759399399ce94bc76254a3ce6fb7f91f2562bd3a assets/boulanger/models/item/wood_oven.json

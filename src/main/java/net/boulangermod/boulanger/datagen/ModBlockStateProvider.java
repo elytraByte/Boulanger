@@ -91,8 +91,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
         String mixerName = ModBlocks.MIXING_BLOCK.getId().getPath();
         ModelFile mixerModel = models().orientable(
                 mixerName,
-                modLoc("block/mixer_side"),
-                modLoc("block/mixer_front"),
+                modLoc("block/diorite_side"),
+                modLoc("block/diorite_copper_back"),
                 modLoc("block/mixer_top")
         );
         // Item model
@@ -155,16 +155,16 @@ public class ModBlockStateProvider extends BlockStateProvider {
     }
 
     /**
-     * Custom scale block with side/top/bottom textures.
+     * Custom scale block with side/bottom/top textures.
      */
     public void scaleBlockWithCustomSides(Block block) {
         String name = block.builtInRegistryHolder().key().location().getPath();
         ModelFile model = models().cubeBottomTop(
                 name,
-                modLoc("block/scale_side"),
+                modLoc("block/diorite_side"),
                 modLoc("block/pine_planks"),
                 modLoc("block/scale_top")
-        ).texture("particle", modLoc("block/scale_side"));
+        ).texture("particle", modLoc("block/diorite_side"));
         simpleBlock(block, model);
     }
 }

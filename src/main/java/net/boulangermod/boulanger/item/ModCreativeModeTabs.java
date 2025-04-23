@@ -29,6 +29,8 @@ public class ModCreativeModeTabs {
                     {
 
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WHOLE_MILK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.FANCY_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BREAD.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
@@ -56,6 +58,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.KAOLINITE_CLAY_BALL.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PORCELAIN_MIX.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BRICK_MOLD.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.DIORITE_BRICK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.DIORITE_PLATE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.REINFORCED_DIORITE_PLATE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.UNFIRED_PORCELAIN_BRICK.get(), 1));
