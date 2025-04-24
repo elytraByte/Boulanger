@@ -43,6 +43,6 @@ public class DataGenerator {
         BlockTagsProvider blockTagsProvider = new ModBlockTagProvider(packOutput, lookupProvider, Boulanger.MODID, existingFileHelper);generator.addProvider(event.includeServer(), blockTagsProvider);generator.addProvider(event.includeServer(), new ModItemTagProvider(packOutput, lookupProvider, blockTagsProvider.contentsGetter(), existingFileHelper));
       generator.addProvider(event.includeClient(), new ModBlockStateProvider(packOutput, Boulanger.MODID, existingFileHelper));
       generator.addProvider(event.includeClient(), new ModItemModelProvider(packOutput, Boulanger.MODID, existingFileHelper));
-      generator.addProvider(event.includeServer(), new ModWorldGenProvider(packOutput, lookupProvider));
+      generator.addProvider(event.includeClient(), new ModWorldGenProvider(packOutput, lookupProvider));
     }
 }

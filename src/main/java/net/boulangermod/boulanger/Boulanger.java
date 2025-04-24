@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
+import net.boulangermod.boulanger.entity.ModEntitySpawns;
 import net.boulangermod.boulanger.item.ModCreativeModeTabs;
 import net.boulangermod.boulanger.recipe.ModMixingRecipes;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
