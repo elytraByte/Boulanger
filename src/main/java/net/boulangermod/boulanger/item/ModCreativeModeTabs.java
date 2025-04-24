@@ -1,6 +1,5 @@
 package net.boulangermod.boulanger.item;
 
-import net.boulangermod.boulanger.component.FlourType;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -29,6 +28,7 @@ public class ModCreativeModeTabs {
                     {
 
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BROWN_SUGAR.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WHOLE_MILK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.FANCY_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET.get(), 1));

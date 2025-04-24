@@ -20,9 +20,6 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-        // Basic items
-//        basicItem(ModItems.WHEAT_BERRIES.get());
-//        basicItem(ModItems.BUTTER.get());
 
         // Flour base model with all overrides
         ItemModelBuilder flour = withExistingParent("flour", "item/generated")
@@ -41,16 +38,26 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .texture("layer0", modLoc("item/flour/" + type.getId()));
         }
 
+        //breads
         ItemModelBuilder bread = withExistingParent("bread", mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/bread"));
 
-        // One override per BreadType using CustomModelData
         for (BreadType type : BreadType.values()) {
-            bread.override().predicate(ResourceLocation.fromNamespaceAndPath("minecraft", "custom_model_data"), type.getModelIndex())
-                    .model(withExistingParent("item/" + type.getId(), "item/generated"))
-                    // flour/first_break_flour
+            String id = type.getId();
+            String modelPath = "bread/" + id;
+
+            // build it once, capture it
+            ItemModelBuilder overrideModel = withExistingParent(modelPath, mcLoc("item/generated"))
+                    .texture("layer0", modLoc("item/" + id));
+
+            // reference _that_ builder in your override
+            bread.override()
+                    .predicate(mcLoc("custom_model_data"), type.getModelIndex())
+                    .model(overrideModel)
                     .end();
         }
+
+
 
 
 
@@ -89,6 +96,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.IRON_WEDGE.get());
         basicItem(ModItems.HEFFER_SPAWN_EGG.get());
         basicItem(ModItems.HEN_SPAWN_EGG.get());
+        basicItem(ModItems.FILLED_BOWL_ITEM.get());
         saplingItem(ModBlocks.PINE_SAPLING);
 
         withExistingParent("wood_oven", modLoc("block/wood_oven_off"));

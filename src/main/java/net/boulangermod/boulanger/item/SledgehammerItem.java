@@ -2,7 +2,6 @@ package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.block.IronWedgeBlock;
 import net.boulangermod.boulanger.block.ModBlocks;
-import net.boulangermod.boulanger.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;

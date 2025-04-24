@@ -57,30 +57,36 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         if (level == null || level.isClientSide()) return;
 
         ItemStack bulk = items.getStackInSlot(SLOT_BULK);
-        ItemStack bowl = items.getStackInSlot(SLOT_BOWL_IN);
+        ItemStack bowlIn = items.getStackInSlot(SLOT_BOWL_IN);
 
-        if (bulk.isEmpty() || bowl.isEmpty() || !bowl.is(Items.BOWL) || weightToTransfer <= 0) {
+        if (bulk.isEmpty() || bowlIn.isEmpty() || !bowlIn.is(Items.BOWL) || weightToTransfer <= 0) {
             return;
         }
 
         // --- Water bucket branch: treat as 4000g of water ---
         if (bulk.getItem() == Items.WATER_BUCKET) {
-            // How much to pour out (max 4000g)
             int toTransfer = Math.min(4000, weightToTransfer);
 
-            // Build the filled‑bowl of water
+            // Build the filled-bowl
             ItemStack filled = new ItemStack(ModItems.FILLED_BOWL_ITEM.get());
             filled.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(toTransfer));
-            filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.DAIRY);
+            filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.WATER);
             filled.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(Items.WATER_BUCKET));
             items.setStackInSlot(SLOT_BOWL_OUT, filled);
 
             // Give back the empty bucket
             items.setStackInSlot(SLOT_RESIDUAL, new ItemStack(Items.BUCKET));
 
-            // Clear the inputs and reset
+            // Clear the bulk slot
             items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
-            items.setStackInSlot(SLOT_BOWL_IN, ItemStack.EMPTY);
+
+            // *** Instead of wiping all bowls, just remove one ***
+            bowlIn.shrink(1);
+            if (bowlIn.isEmpty()) {
+                items.setStackInSlot(SLOT_BOWL_IN, ItemStack.EMPTY);
+            } else {
+                items.setStackInSlot(SLOT_BOWL_IN, bowlIn);
+            }
             weightToTransfer = 0;
 
             setChanged();
@@ -89,7 +95,6 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         // --- Original flour/ingredient logic ---
-        // 1) figure full‑stack weight
         FlourType flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
         float perUnit = flourType != null
                 ? flourType.getWeight()
@@ -102,7 +107,7 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         float totalAvailable = bulk.getCount() * perUnit;
         int toTransfer = Math.min((int) totalAvailable, weightToTransfer);
 
-        // 2) build the filled bowl
+        // Build the filled-bowl
         ItemStack filled = new ItemStack(ModItems.FILLED_BOWL_ITEM.get());
         filled.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(toTransfer));
         filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.getIngredientCategory(bulk));
@@ -112,7 +117,7 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         }
         items.setStackInSlot(SLOT_BOWL_OUT, filled);
 
-        // 3) compute remainder and refill bulk/residual
+        // Compute remainder and refill bulk + residual...
         float remaining = totalAvailable - toTransfer;
         if (remaining < 0.1f) {
             items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
@@ -121,7 +126,6 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
             int fullRemain = (int)(remaining / perUnit);
             float partialRemain = remaining - fullRemain * perUnit;
 
-            // refill bulk slot, preserving NBT
             if (fullRemain > 0) {
                 ItemStack newBulk = bulk.copy();
                 newBulk.setCount(fullRemain);
@@ -130,7 +134,6 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
                 items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
             }
 
-            // put partial remainder into residual, preserving NBT
             if (partialRemain > 0f) {
                 ItemStack res = bulk.copy();
                 res.setCount(1);
@@ -141,13 +144,19 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
 
-        // 4) clear input and reset
-        items.setStackInSlot(SLOT_BOWL_IN, ItemStack.EMPTY);
+        // *** Again, only remove one empty bowl ***
+        bowlIn.shrink(1);
+        if (bowlIn.isEmpty()) {
+            items.setStackInSlot(SLOT_BOWL_IN, ItemStack.EMPTY);
+        } else {
+            items.setStackInSlot(SLOT_BOWL_IN, bowlIn);
+        }
         weightToTransfer = 0;
 
         setChanged();
         level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
     }
+
 
 
     public ItemStackHandler getItemHandler() {

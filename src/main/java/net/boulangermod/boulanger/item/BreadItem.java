@@ -1,10 +1,7 @@
 package net.boulangermod.boulanger.item;
 
-import net.boulangermod.boulanger.component.BakerPctComponent;
-import net.boulangermod.boulanger.component.DoughRecipeComponent;
 import net.boulangermod.boulanger.component.IngredientInfo;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -12,7 +9,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class BreadItem extends Item {
@@ -23,109 +24,130 @@ public class BreadItem extends Item {
     @Override
     public void appendHoverText(
             ItemStack stack,
-            TooltipContext context,
+            @Nullable TooltipContext context,
             List<Component> tooltipComponents,
             TooltipFlag tooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
 
-        // pull out all of your components
-        BreadType type        = stack.get(ModDataComponentTypes.BREAD_TYPE.get());
-        WeightComponent wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-        BakerPctComponent pctComp   = stack.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
-        DoughRecipeComponent recipeComp = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        // — Type line
+        tooltipComponents.add(
+                Component.literal("Type: " + getTypeName(stack))
+                        .withStyle(ChatFormatting.GREEN)
+        );
 
-        if (type != null) {
-            // — Type
+        // — Baker’s percentages header
+        tooltipComponents.add(
+                Component.literal("----------------------------------------------")
+                        .withStyle(ChatFormatting.GREEN)
+        );
+        tooltipComponents.add(
+                Component.literal("Baker's Percentages")
+                        .withStyle(ChatFormatting.GREEN)
+        );
+        tooltipComponents.add(
+                Component.literal("----------------------------------------------")
+                        .withStyle(ChatFormatting.GREEN)
+        );
+
+        // — Flour breakdown
+        tooltipComponents.add(
+                Component.literal("Flours:")
+                        .withStyle(ChatFormatting.GREEN)
+        );
+        getFlourPercentages(stack).forEach((name, frac) -> {
+            int pct = (int) Math.round(frac * 100);
             tooltipComponents.add(
-                    Component.literal("Type: " + type.name())
-                            .withStyle(ChatFormatting.GRAY)
+                    Component.literal(String.format(" * %d%% %s", pct, name))
+                            .withStyle(ChatFormatting.GREEN)
             );
+        });
 
-            // — Total weight
-            if (wComp != null) {
-                tooltipComponents.add(
-                        Component.literal(String.format("Weight: %.1f g", wComp.getWeight()))
-                                .withStyle(ChatFormatting.GREEN)
-                );
-            } else {
-                tooltipComponents.add(
-                        Component.literal("Weight: unknown")
-                                .withStyle(ChatFormatting.DARK_GRAY)
-                );
-            }
-
-            // — Baker's percentages
-            if (pctComp != null && recipeComp != null) {
-                // 1) Total flour weight
-                double flourWeight = 0;
-                for (IngredientInfo info : recipeComp.ingredients()) {
-                    if (info.category() == IngredientCategory.FLOUR) {
-                        flourWeight += info.weight();
-                    }
-                }
-
-                tooltipComponents.add(
-                        Component.literal("Baker’s %:")
-                                .withStyle(ChatFormatting.YELLOW)
-                );
-
-                // 2) Flour breakdown
-                if (flourWeight > 0) {
-                    tooltipComponents.add(
-                            Component.literal("  Flours:")
-                                    .withStyle(ChatFormatting.GRAY)
-                    );
-                    for (IngredientInfo info : recipeComp.ingredients()) {
-                        if (info.category() == IngredientCategory.FLOUR) {
-                            double pct = info.weight() / flourWeight * 100.0;
-                            tooltipComponents.add(
-                                    Component.literal(
-                                            String.format("    %s: %.1f%%", info.itemId(), pct)
-                                    ).withStyle(ChatFormatting.GRAY)
-                            );
-                        }
-                    }
-                }
-
-                // 3) Other categories from your pctComp map
-                tooltipComponents.add(
-                        Component.literal("  Others:")
-                                .withStyle(ChatFormatting.GRAY)
-                );
-                for (Map.Entry<IngredientCategory, Double> entry : pctComp.percentages().entrySet()) {
-                    if (entry.getKey() != IngredientCategory.FLOUR) {
-                        String catName = entry.getKey().name().toLowerCase();
-                        double pct     = entry.getValue();
-                        tooltipComponents.add(
-                                Component.literal(
-                                        String.format("    %s: %.1f%%", catName, pct)
-                                ).withStyle(ChatFormatting.GRAY)
-                        );
-                    }
-                }
-            }
-
-            // — Full ingredient list with grams
-            if (recipeComp != null) {
-                tooltipComponents.add(
-                        Component.literal("Ingredients:")
-                                .withStyle(ChatFormatting.GOLD)
-                );
-                for (IngredientInfo info : recipeComp.ingredients()) {
-                    tooltipComponents.add(
-                            Component.literal(
-                                    String.format("  %s: %dg", info.itemId(), info.weight())
-                            ).withStyle(ChatFormatting.GRAY)
-                    );
-                }
-            }
-
-        } else {
+        // — Other ingredients (percent values already in pctComp)
+        tooltipComponents.add(
+                Component.literal("Other:")
+                        .withStyle(ChatFormatting.GREEN)
+        );
+        getOtherIngredientPercentages(stack).forEach((name, pctVal) -> {
+            int pct = (int) Math.round(pctVal);
             tooltipComponents.add(
-                    Component.literal("Unbaked dough?")
-                            .withStyle(ChatFormatting.RED)
+                    Component.literal(String.format(" * %d%% %s", pct, name))
+                            .withStyle(ChatFormatting.GREEN)
             );
+        });
+
+        // — Footer: Hydration & Weight
+        tooltipComponents.add(
+                Component.literal("----------------------------------------------")
+                        .withStyle(ChatFormatting.GREEN)
+        );
+        tooltipComponents.add(
+                Component.literal(
+                        "Hydration: " + (int)Math.round(getHydration(stack)) + "% (this is the water)"
+                ).withStyle(ChatFormatting.GREEN)
+        );
+        tooltipComponents.add(
+                Component.literal("Weight: " + getTotalWeight(stack) + " g")
+                        .withStyle(ChatFormatting.GREEN)
+        );
+    }
+
+    // — Helpers —
+
+    private String getTypeName(ItemStack stack) {
+        var type = stack.get(ModDataComponentTypes.BREAD_TYPE.get());
+        return (type != null)
+                ? type.name().toLowerCase(Locale.ROOT)
+                : "unknown";
+    }
+
+    private Map<String, Double> getFlourPercentages(ItemStack stack) {
+        var recipe = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        if (recipe == null) return Collections.emptyMap();
+
+        double totalFlour = recipe.ingredients().stream()
+                .filter(i -> i.category() == IngredientCategory.FLOUR)
+                .mapToDouble(IngredientInfo::weight)
+                .sum();
+        if (totalFlour <= 0) return Collections.emptyMap();
+
+        Map<String, Double> map = new LinkedHashMap<>();
+        for (IngredientInfo info : recipe.ingredients()) {
+            if (info.category() == IngredientCategory.FLOUR) {
+                map.put(info.itemId(), info.weight() / totalFlour);
+            }
         }
+        return map;
+    }
+
+    private Map<String, Double> getOtherIngredientPercentages(ItemStack stack) {
+        var pctComp = stack.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
+        if (pctComp == null) return Collections.emptyMap();
+
+        Map<String, Double> map = new LinkedHashMap<>();
+        for (Map.Entry<IngredientCategory, Double> e : pctComp.percentages().entrySet()) {
+            if (e.getKey() != IngredientCategory.FLOUR) {
+                map.put(
+                        e.getKey().name().toLowerCase(Locale.ROOT),
+                        e.getValue()
+                );
+            }
+        }
+        return map;
+    }
+
+    private double getHydration(ItemStack stack) {
+        var pctComp = stack.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
+        if (pctComp != null && pctComp.percentages().containsKey(IngredientCategory.WATER)) {
+            return pctComp.percentages().get(IngredientCategory.WATER);
+        }
+        return 0.0;
+    }
+
+    private int getTotalWeight(ItemStack stack) {
+        var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        return (wComp != null)
+                ? Math.round(wComp.getWeight())
+                : 0;
     }
 }
