@@ -1,7 +1,7 @@
 package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
-import net.boulangermod.boulanger.entity.HefferRenderer;
+import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
 import net.boulangermod.boulanger.item.ModCreativeModeTabs;
@@ -79,7 +79,7 @@ public class Boulanger {
         @SubscribeEvent
         public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerEntityRenderer(ModEntities.HEN.get(), HenRenderer::new);
-            event.registerEntityRenderer(ModEntities.HEFFER.get(), HefferRenderer::new);
+            event.registerEntityRenderer(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), HolsteinFriesianCowRenderer::new);
         }
 
         @SubscribeEvent

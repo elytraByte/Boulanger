@@ -94,7 +94,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.SPLIT_PINE_LOGS.get());
         basicItem(ModItems.SLEDGEHAMMER.get());
         basicItem(ModItems.IRON_WEDGE.get());
-        basicItem(ModItems.HEFFER_SPAWN_EGG.get());
+        basicItem(ModItems.HOLSTEIN_FRIESIAN_COW_SPAWN_EGG.get());
         basicItem(ModItems.HEN_SPAWN_EGG.get());
         basicItem(ModItems.FILLED_BOWL_ITEM.get());
         saplingItem(ModBlocks.PINE_SAPLING);

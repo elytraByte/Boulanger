@@ -18,8 +18,8 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
-public class HefferEntity extends Cow {
-    public HefferEntity(EntityType<? extends Cow> type, Level level) {
+public class HolsteinFriesianCowEntity extends Cow {
+    public HolsteinFriesianCowEntity(EntityType<? extends Cow> type, Level level) {
         super(type, level);
     }
 
@@ -59,8 +59,8 @@ public class HefferEntity extends Cow {
     /** Breed baby heffers */
     @Nullable
     @Override
-    public HefferEntity getBreedOffspring(ServerLevel level, AgeableMob otherParent) {
-        return ModEntities.HEFFER.get().create(level);
+    public HolsteinFriesianCowEntity getBreedOffspring(ServerLevel level, AgeableMob otherParent) {
+        return ModEntities.HOLSTEIN_FRIESAIN_COW.get().create(level);
     }
 
     @Override

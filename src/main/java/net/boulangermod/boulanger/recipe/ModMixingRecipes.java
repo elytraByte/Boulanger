@@ -8,7 +8,6 @@ import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static java.util.Map.of;
@@ -41,6 +40,7 @@ public class ModMixingRecipes {
                 // 1) Baker’s %: flour is baseline 100%, then eggs/salt/sugar/yeast on top
                 of(
                         IngredientCategory.FLOUR, 100.0,
+                        IngredientCategory.WATER, 70.0,
                         IngredientCategory.EGGS,   10.0,
                         IngredientCategory.SALT,    4.0,
                         IngredientCategory.SUGAR,   4.0,
@@ -79,6 +79,67 @@ public class ModMixingRecipes {
                                         FlourItemType.BRAN.getId()),
                                 IngredientCategory.FLOUR,
                                 10.0
+                        )
+                )
+        ));
+
+        // White Pan Bread: 100% bread flour (high-gluten), 67% water, 2% yeast, 6% sugar, 3% salt
+        RECIPES.add(new MixingRecipe(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "white_pan_bread"),
+                of(
+                        IngredientCategory.FLOUR, 100.0,
+                        IngredientCategory.WATER, 67.0,
+                        IngredientCategory.YEAST,   2.0,
+                        IngredientCategory.SUGAR,   6.0,
+                        IngredientCategory.SALT,    3.0
+                ),
+                ModItems.DOUGH.get(),
+                // only bread (high-gluten) flour, yeast, sugar, and salt allowed
+                Set.of(
+                        FlourItemType.BREAD_FLOUR.getId(),
+                        FoodAdditiveType.SAF_RED_YEAST.getId(),
+                        FoodAdditiveType.BROWN_SUGAR.getId(),
+                        FoodAdditiveType.SALT.getId()
+                )
+        ));
+
+        // Banh Mi: 50% bread flour, 50% high-gluten flour, 15% eggs, 30% water, 30% milk, 5% butter, 5% yeast, 3% sugar
+        RECIPES.add(new MixingRecipe(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "banh_mi"),
+                of(
+                        IngredientCategory.FLOUR, 100.0,
+                        IngredientCategory.EGGS,   15.0,
+                        IngredientCategory.WATER,  30.0,
+                        IngredientCategory.DAIRY,   30.0,
+                        IngredientCategory.FAT, 5.0,
+                        IngredientCategory.YEAST,  5.0,
+                        IngredientCategory.SUGAR,  3.0
+                ),
+                ModItems.DOUGH.get(),
+                // whitelist ingredient IDs
+                Set.of(
+                        FlourItemType.BREAD_FLOUR.getId(),  // custom type for bread flour
+                        FlourItemType.HIGH_GLUTEN_FLOUR.getId(),
+                        FoodAdditiveType.FANCY_EGG.getId(),
+                        FoodAdditiveType.SAF_RED_YEAST.getId(),
+                        FoodAdditiveType.BUTTER.getId(),
+                        FoodAdditiveType.WHOLE_MILK.getId(),
+                        FoodAdditiveType.BROWN_SUGAR.getId(),
+                        FoodAdditiveType.SALT.getId()
+                ),
+                // breakdown of the FLOUR category
+                List.of(
+                        new MixingRecipe.IngredientRequirement(
+                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
+                                        FlourItemType.BREAD_FLOUR.getId()),
+                                IngredientCategory.FLOUR,
+                                50.0
+                        ),
+                        new MixingRecipe.IngredientRequirement(
+                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
+                                        FlourItemType.HIGH_GLUTEN_FLOUR.getId()),
+                                IngredientCategory.FLOUR,
+                                50.0
                         )
                 )
         ));

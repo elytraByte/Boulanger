@@ -2,7 +2,6 @@ package net.boulangermod.boulanger.entity;
 
 import net.boulangermod.boulanger.Boulanger;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.neoforged.bus.api.IEventBus;
@@ -21,11 +20,11 @@ public class ModEntities {
                             .build("hen"));
 
 
-    public static final Supplier<EntityType<HefferEntity>> HEFFER =
-            ENTITY_TYPES.register("heffer", () ->
-                    EntityType.Builder.of(HefferEntity::new, MobCategory.CREATURE)
+    public static final Supplier<EntityType<HolsteinFriesianCowEntity>> HOLSTEIN_FRIESAIN_COW =
+            ENTITY_TYPES.register("holstein_friesain_cow", () ->
+                    EntityType.Builder.of(HolsteinFriesianCowEntity::new, MobCategory.CREATURE)
                             .sized(0.9f, 1.4f) // same size as cow
-                            .build("heffer"));
+                            .build("holstein_friesain_cow"));
 
 
 

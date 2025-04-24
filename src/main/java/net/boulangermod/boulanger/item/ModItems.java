@@ -2,7 +2,6 @@ package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.entity.ModEntities;
-import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.bus.api.IEventBus;
@@ -101,9 +100,9 @@ public class ModItems {
             )
     );
 
-    public static final DeferredItem<SpawnEggItem> HEFFER_SPAWN_EGG = ITEMS.register("heffer_spawn_egg",
+    public static final DeferredItem<SpawnEggItem> HOLSTEIN_FRIESIAN_COW_SPAWN_EGG = ITEMS.register("holstein_friesain_cow_spawn_egg",
             () -> new SpawnEggItem(
-                    ModEntities.HEFFER.get(), // call .get() here too
+                    ModEntities.HOLSTEIN_FRIESAIN_COW.get(), // call .get() here too
                     0xC0C0C0,
                     0x8B4513,
                     new Item.Properties()

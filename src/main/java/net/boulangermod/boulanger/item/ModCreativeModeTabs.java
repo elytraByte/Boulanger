@@ -111,7 +111,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WHEAT_BERRIES.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.HEN_SPAWN_EGG.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.HEFFER_SPAWN_EGG.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.HOLSTEIN_FRIESIAN_COW_SPAWN_EGG.get(), 1));
 
 
                     }).build());
