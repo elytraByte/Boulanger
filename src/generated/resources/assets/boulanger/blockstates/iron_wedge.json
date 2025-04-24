@@ -1,0 +1,1543 @@
+{
+  "variants": {
+    "damage=0": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=1": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=10": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=100": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=101": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=102": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=103": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=104": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=105": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=106": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=107": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=108": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=109": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=11": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=110": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=111": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=112": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=113": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=114": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=115": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=116": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=117": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=118": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=119": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=12": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=120": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=121": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=122": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=123": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=124": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=125": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=126": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=127": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=128": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=129": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=13": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=130": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=131": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=132": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=133": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=134": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=135": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=136": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=137": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=138": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=139": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=14": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=140": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=141": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=142": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=143": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=144": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=145": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=146": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=147": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=148": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=149": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=15": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=150": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=151": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=152": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=153": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=154": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=155": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=156": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=157": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=158": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=159": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=16": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=160": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=161": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=162": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=163": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=164": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=165": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=166": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=167": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=168": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=169": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=17": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=170": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=171": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=172": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=173": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=174": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=175": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=176": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=177": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=178": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=179": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=18": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=180": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=181": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=182": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=183": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=184": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=185": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=186": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=187": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=188": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=189": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=19": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=190": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=191": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=192": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=193": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=194": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=195": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=196": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=197": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=198": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=199": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=2": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=20": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=200": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=201": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=202": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=203": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=204": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=205": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=206": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=207": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=208": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=209": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=21": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=210": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=211": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=212": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=213": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=214": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=215": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=216": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=217": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=218": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=219": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=22": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=220": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=221": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=222": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=223": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=224": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=225": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=226": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=227": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=228": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=229": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=23": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=230": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=231": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=232": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=233": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=234": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=235": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=236": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=237": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=238": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=239": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=24": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=240": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=241": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=242": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=243": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=244": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=245": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=246": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=247": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=248": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=249": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=25": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=250": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=251": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=252": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=253": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=254": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=255": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=256": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=257": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=258": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=259": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=26": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=260": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=261": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=262": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=263": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=264": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=265": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=266": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=267": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=268": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=269": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=27": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=270": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=271": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=272": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=273": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=274": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=275": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=276": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=277": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=278": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=279": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=28": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=280": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=281": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=282": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=283": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=284": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=285": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=286": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=287": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=288": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=289": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=29": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=290": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=291": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=292": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=293": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=294": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=295": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=296": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=297": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=298": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=299": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=3": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=30": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=300": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=301": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=302": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=303": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=304": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=305": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=306": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=307": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=308": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=309": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=31": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=310": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=311": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=312": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=313": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=314": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=315": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=316": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=317": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=318": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=319": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=32": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=320": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=321": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=322": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=323": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=324": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=325": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=326": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=327": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=328": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=329": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=33": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=330": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=331": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=332": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=333": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=334": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=335": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=336": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=337": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=338": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=339": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=34": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=340": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=341": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=342": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=343": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=344": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=345": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=346": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=347": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=348": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=349": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=35": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=350": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=351": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=352": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=353": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=354": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=355": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=356": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=357": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=358": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=359": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=36": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=360": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=361": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=362": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=363": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=364": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=365": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=366": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=367": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=368": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=369": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=37": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=370": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=371": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=372": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=373": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=374": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=375": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=376": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=377": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=378": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=379": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=38": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=380": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=381": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=382": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=383": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=384": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=385": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=386": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=387": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=388": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=389": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=39": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=390": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=391": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=392": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=393": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=394": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=395": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=396": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=397": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=398": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=399": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=4": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=40": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=400": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=401": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=402": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=403": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=404": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=405": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=406": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=407": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=408": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=409": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=41": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=410": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=411": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=412": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=413": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=414": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=415": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=416": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=417": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=418": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=419": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=42": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=420": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=421": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=422": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=423": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=424": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=425": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=426": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=427": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=428": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=429": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=43": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=430": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=431": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=432": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=433": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=434": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=435": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=436": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=437": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=438": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=439": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=44": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=440": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=441": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=442": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=443": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=444": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=445": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=446": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=447": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=448": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=449": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=45": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=450": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=451": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=452": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=453": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=454": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=455": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=456": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=457": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=458": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=459": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=46": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=460": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=461": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=462": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=463": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=464": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=465": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=466": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=467": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=468": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=469": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=47": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=470": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=471": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=472": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=473": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=474": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=475": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=476": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=477": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=478": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=479": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=48": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=480": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=481": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=482": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=483": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=484": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=485": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=486": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=487": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=488": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=489": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=49": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=490": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=491": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=492": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=493": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=494": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=495": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=496": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=497": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=498": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=499": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=5": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=50": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=500": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=501": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=502": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=503": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=504": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=505": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=506": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=507": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=508": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=509": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=51": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=510": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=511": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=512": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=52": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=53": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=54": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=55": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=56": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=57": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=58": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=59": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=6": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=60": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=61": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=62": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=63": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=64": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=65": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=66": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=67": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=68": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=69": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=7": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=70": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=71": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=72": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=73": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=74": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=75": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=76": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=77": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=78": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=79": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=8": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=80": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=81": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=82": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=83": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=84": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=85": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=86": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=87": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=88": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=89": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=9": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=90": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=91": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=92": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=93": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=94": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=95": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=96": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=97": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=98": {
+      "model": "boulanger:block/iron_wedge"
+    },
+    "damage=99": {
+      "model": "boulanger:block/iron_wedge"
+    }
+  }
+}

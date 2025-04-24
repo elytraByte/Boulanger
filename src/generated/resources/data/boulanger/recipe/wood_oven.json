@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "D": {
+      "item": "minecraft:diorite"
+    },
+    "U": {
+      "item": "minecraft:blast_furnace"
+    },
+    "W": {
+      "item": "boulanger:reinforced_diorite_plate"
+    }
+  },
+  "pattern": [
+    "DDD",
+    "WUW",
+    "DDD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "boulanger:wood_oven"
+  }
+}

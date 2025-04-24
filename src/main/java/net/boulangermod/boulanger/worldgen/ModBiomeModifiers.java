@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.entity.ModEntities;
 import net.minecraft.core.HolderSet;
-import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
@@ -99,13 +98,5 @@ public class ModBiomeModifiers {
                 biomes.getOrThrow(Tags.Biomes.IS_OVERWORLD),
                 List.of(new SpawnerData(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), 8, 1, 3))
         ));
-    }
-
-    /** Helper for hooking this into your ModWorldGenProvider */
-    public static RegistrySetBuilder BUILDER() {
-        return new RegistrySetBuilder()
-                .add(Registries.CONFIGURED_FEATURE, ModConfiguredFeatures::bootstrap)
-                .add(Registries.PLACED_FEATURE,    ModPlacedFeatures::bootstrap)
-                .add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, ModBiomeModifiers::bootstrap);
     }
 }

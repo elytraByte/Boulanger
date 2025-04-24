@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "boulanger:block/mixing_block",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "boulanger:block/mixing_block"
+    },
+    "facing=south": {
+      "model": "boulanger:block/mixing_block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "boulanger:block/mixing_block",
+      "y": 270
+    }
+  }
+}

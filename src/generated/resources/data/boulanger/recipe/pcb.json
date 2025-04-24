@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "minecraft:comparator"
+    },
+    "G": {
+      "item": "boulanger:glass_dust"
+    },
+    "I": {
+      "item": "minecraft:copper_ingot"
+    },
+    "P": {
+      "item": "boulanger:pine_resin"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "CPC",
+    "GRG",
+    "III"
+  ],
+  "result": {
+    "count": 1,
+    "id": "boulanger:pcb"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "model": "boulanger:bread/baguette",
+      "predicate": {
+        "minecraft:custom_model_data": 1.0
+      }
+    },
+    {
+      "model": "boulanger:bread/croissant",
+      "predicate": {
+        "minecraft:custom_model_data": 2.0
+      }
+    },
+    {
+      "model": "boulanger:bread/whole_wheat_bread",
+      "predicate": {
+        "minecraft:custom_model_data": 3.0
+      }
+    }
+  ],
+  "textures": {
+    "layer0": "boulanger:item/bread"
+  }
+}

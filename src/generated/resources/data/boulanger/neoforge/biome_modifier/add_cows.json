@@ -1,0 +1,10 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "#c:is_overworld",
+  "spawners": {
+    "type": "boulanger:holstein_friesain_cow",
+    "maxCount": 3,
+    "minCount": 1,
+    "weight": 8
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_pcb": {
+      "conditions": {
+        "items": [
+          {
+            "items": "boulanger:pcb"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "boulanger:mixing_block"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_pcb"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "boulanger:mixing_block"
+    ]
+  }
+}
