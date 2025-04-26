@@ -155,66 +155,42 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_wheat_seeds", has(ModItems.WHEAT_SEED))
                 .save(pRecipeOutput);
 
-        // ✅ Ratio-Based Recipe: Baguette
         new RatioRecipeBuilder(
-                BreadType.BAGUETTE.rl(),
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "baguette"),
                 new ItemStack(ModItems.DOUGH.get()),
-                Map.of(
-                        IngredientCategory.FLOUR, 100.0,
-                        IngredientCategory.WATER,  67.0,
-                        IngredientCategory.YEAST,   2.0,
-                        IngredientCategory.SALT,     3.0
-                ),
-                2.0,
-                // ← here’s your allowed_items map:
-                Map.of(
-                        IngredientCategory.FLOUR, List.of(
-                                ResourceLocation.fromNamespaceAndPath(MODID, "bread_flour"),
-                                ResourceLocation.fromNamespaceAndPath(MODID, "high_gluten_flour")
-                        )
+                2.0D                               // your tolerance %
+        )
+                // 100% bread flour
+                .addComponent(
+                        IngredientCategory.FLOUR,
+                        100.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "bread_flour"))
                 )
-        ).save(pRecipeOutput);
-
-        // ✅ Ratio-Based Recipe: Whole Wheat Bread
-        new RatioRecipeBuilder(
-                BreadType.WHOLE_WHEAT_BREAD.rl(),
-                new ItemStack(ModItems.DOUGH.get()),
-                Map.of(
-                        IngredientCategory.FLOUR, 100.0,
-                        IngredientCategory.WATER,  75.0,
-                        IngredientCategory.YEAST,   2.0,
-                        IngredientCategory.SALT,     3.0
-                ),
-                2.0,
-                Map.of(
-                        IngredientCategory.FLOUR, List.of(
-                                ResourceLocation.fromNamespaceAndPath(MODID, "whole_wheat_flour")
-                        )
+                // 5% vital wheat gluten
+                .addComponent(
+                        IngredientCategory.FLOUR,
+                        5.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "vital_wheat_gluten"))
                 )
-        ).save(pRecipeOutput);
-
-// ✅ Ratio-Based Recipe: Bánh Mì
-//        new RatioRecipeBuilder(
-//                BreadType.BANH_MI.rl(),
-//                new ItemStack(ModItems.DOUGH.get()),
-//                Map.of(
-//                        IngredientCategory.FLOUR, 100.0,
-//                        IngredientCategory.WATER,  67.0,
-//                        IngredientCategory.EGG,    15.0,
-//                        IngredientCategory.MILK,   30.0,
-//                        IngredientCategory.FAT,     5.0,   // butter
-//                        IngredientCategory.YEAST,   5.0,
-//                        IngredientCategory.SUGAR,   3.0
-//                ),
-//                2.0,
-//                Map.of(
-//                        IngredientCategory.FLOUR, List.of(
-//                                ResourceLocation.fromNamespaceAndPath(MODID, "bread_flour"),
-//                                ResourceLocation.fromNamespaceAndPath(MODID, "high_gluten_flour")
-//                        )
-//                )
-//        ).save(pRecipeOutput);
-
+                // 70% water (we’ll accept vanilla water_bucket here)
+                .addComponent(
+                        IngredientCategory.WATER,
+                        70.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
+                )
+                // 3% salt
+                .addComponent(
+                        IngredientCategory.SALT,
+                        3.0,
+                        List.of()
+                )
+                // 4% yeast
+                .addComponent(
+                        IngredientCategory.YEAST,
+                        4.0,
+                        List.of()
+                )
+                .save(pRecipeOutput);
 
     }
 }
