@@ -155,10 +155,114 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_wheat_seeds", has(ModItems.WHEAT_SEED))
                 .save(pRecipeOutput);
 
+//        new RatioRecipeBuilder(
+//                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "baguette"),
+//                new ItemStack(ModItems.DOUGH.get()),
+//                2.0D // your tolerance %
+//        )
+//                // 100% bread flour
+//                .addComponent(
+//                        IngredientCategory.FLOUR,
+//                        100.0,
+//                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "bread_flour"))
+//                )
+//                // 5% vital wheat gluten
+//                .addComponent(
+//                        IngredientCategory.FLOUR,
+//                        5.0,
+//                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "vital_wheat_gluten"))
+//                )
+//                // 70% water (we’ll accept vanilla water_bucket here)
+//                .addComponent(
+//                        IngredientCategory.WATER,
+//                        70.0,
+//                        List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
+//                )
+//                // 3% salt
+//                .addComponent(
+//                        IngredientCategory.SALT,
+//                        3.0,
+//                        List.of()
+//                )
+//                // 4% yeast
+//                .addComponent(
+//                        IngredientCategory.YEAST,
+//                        4.0,
+//                        List.of()
+//                )
+//                .save(pRecipeOutput);
+//
+//        new RatioRecipeBuilder(
+//                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_bread"),
+//                new ItemStack(ModItems.DOUGH.get()),
+//                2.0D // tolerance %
+//        )
+//                // 100% total FLOUR (any combination of the three sub-types)
+//                .addComponent(
+//                        IngredientCategory.FLOUR,
+//                        100.0,
+//                        List.of(
+//                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"),
+//                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"),
+//                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran")
+//                        )
+//                )
+//                // Enforce exact gram splits for each flour subtype
+//                .addItemRequirement(
+//                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"),
+//                        75.0
+//                )
+//                .addItemRequirement(
+//                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"),
+//                        25.0
+//                )
+//                .addItemRequirement(
+//                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran"),
+//                        5.0
+//                )
+//                // 10% brown sugar
+//                .addComponent(
+//                        IngredientCategory.SUGAR,
+//                        10.0,
+//                        List.of(
+//                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brown_sugar")
+//                        )
+//                )
+//                // 6% salt
+//                .addComponent(
+//                        IngredientCategory.SALT,
+//                        6.0,
+//                        List.of()
+//                )
+//                // 8% yeast
+//                .addComponent(
+//                        IngredientCategory.YEAST,
+//                        8.0,
+//                        List.of()
+//                )
+//                // 10% eggs
+//                .addComponent(
+//                        IngredientCategory.EGGS,                           // <- singular here
+//                        10.0,
+//                        List.of(
+//                                ResourceLocation.fromNamespaceAndPath("minecraft", "egg")
+//                        )
+//                )
+//                // 72% water
+//                .addComponent(
+//                        IngredientCategory.WATER,
+//                        72.0,
+//                        List.of(
+//                                ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket")
+//                        )
+//                )
+//                .save(pRecipeOutput);
+
+        // ——— Baguette ———
         new RatioRecipeBuilder(
                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "baguette"),
                 new ItemStack(ModItems.DOUGH.get()),
-                2.0D                               // your tolerance %
+                2.0D // tolerance %
         )
                 // 100% bread flour
                 .addComponent(
@@ -172,7 +276,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                         5.0,
                         List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "vital_wheat_gluten"))
                 )
-                // 70% water (we’ll accept vanilla water_bucket here)
+                // 70% water (vanilla water_bucket)
                 .addComponent(
                         IngredientCategory.WATER,
                         70.0,
@@ -191,6 +295,70 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                         List.of()
                 )
                 .save(pRecipeOutput);
+
+// ——— Whole Wheat Bread ———
+        new RatioRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_bread"),
+                new ItemStack(ModItems.DOUGH.get()),
+                2.0D // tolerance %
+        )
+                // 100% total FLOUR (any combination of the three sub-types)
+                .addComponent(
+                        IngredientCategory.FLOUR,
+                        100.0,
+                        List.of(
+                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"),
+                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"),
+                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran")
+                        )
+                )
+                // Enforce the *actual grams* you’ll be inserting:
+                .addItemRequirement(
+                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"),
+                        113.0    // not 75.0% – you’re actually feeding 113 g
+                )
+                .addItemRequirement(
+                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"),
+                        37.7     // the ~37.7 g you measured
+                )
+                .addItemRequirement(
+                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran"),
+                        7.5      // the ~7.5 g you measured
+                )
+                // 10% brown sugar
+                .addComponent(
+                        IngredientCategory.SUGAR,
+                        10.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brown_sugar"))
+                )
+                // 6% salt
+                .addComponent(
+                        IngredientCategory.SALT,
+                        6.0,
+                        List.of()
+                )
+                // 8% yeast
+                .addComponent(
+                        IngredientCategory.YEAST,
+                        8.0,
+                        List.of()
+                )
+                // 10% eggs
+                .addComponent(
+                        IngredientCategory.EGGS,
+                        10.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath("boulanger", "fancy_egg"))
+                )
+                // 72% water
+                .addComponent(
+                        IngredientCategory.WATER,
+                        72.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
+                )
+                .save(pRecipeOutput);
+
+
+
 
     }
 }

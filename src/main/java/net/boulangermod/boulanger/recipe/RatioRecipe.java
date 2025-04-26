@@ -88,6 +88,10 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         return Recipe.super.getRemainingItems(inv);
     }
 
+    public IngredientRequirement[] getItemRequirements() {
+        return new IngredientRequirement[0];
+    }
+
     // -------------------------------------------------------------
     // SERIALIZER
     // -------------------------------------------------------------

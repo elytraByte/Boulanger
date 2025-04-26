@@ -5,10 +5,7 @@ import net.boulangermod.boulanger.block.AbstractProcessingBlock;
 import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.item.FlourItemType;
 import net.boulangermod.boulanger.item.ModItems;
-import net.boulangermod.boulanger.recipe.IngredientComponent;
-import net.boulangermod.boulanger.recipe.MixingContainer;
-import net.boulangermod.boulanger.recipe.RatioRecipe;
-import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
+import net.boulangermod.boulanger.recipe.*;
 import net.boulangermod.boulanger.screen.MixingBlockMenu;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.IngredientStack;
@@ -117,7 +114,7 @@ public class MixingBlockEntity extends BlockEntity
         var recipes = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.RATIO_TYPE.get());
 
-        // 1) sum the actual flour grams in the mixer
+        // 1) total flour in the mixer
         double flourTotal = ingredientList.stream()
                 .filter(st -> st.getCategory() == IngredientCategory.FLOUR)
                 .mapToDouble(IngredientStack::getGrams)
@@ -127,29 +124,30 @@ public class MixingBlockEntity extends BlockEntity
         for (var holder : recipes) {
             RatioRecipe recipe = holder.value();
 
-            // 2) compute sum of the flour‐parts in the recipe
+            // 2) sum of all the recipe's flour-percent entries
             double sumFlourParts = recipe.getComponents().stream()
                     .filter(c -> c.category() == IngredientCategory.FLOUR)
                     .mapToDouble(IngredientComponent::targetPercent)
                     .sum();
 
             boolean matches = true;
+            // 3) check each component’s ratio
             for (IngredientComponent comp : recipe.getComponents()) {
-                // sum up only that component’s grams
                 double foundGrams = ingredientList.stream()
+                        .filter(st -> st.getCategory() == comp.category())
                         .filter(st -> {
-                            if (st.getCategory() != comp.category()) return false;
                             ResourceLocation actualId;
                             if (comp.category() == IngredientCategory.FLOUR) {
+                                // use the FlourType tag
                                 var ft = st.getFlourType();
                                 if (ft == null) return false;
-                                actualId = ResourceLocation.fromNamespaceAndPath(
-                                        Boulanger.MODID, ft.getId());
+                                actualId = ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.getId());
                             } else {
-                                var itc = st.getBowlStack()
-                                        .get(ModDataComponentTypes.INGREDIENT_TYPE.get());
-                                if (itc == null) return false;
-                                actualId = BuiltInRegistries.ITEM.getKey(itc.item());
+                                // try the TYPE component, else raw item
+                                var itc = st.getBowlStack().get(ModDataComponentTypes.INGREDIENT_TYPE.get());
+                                actualId = itc != null
+                                        ? BuiltInRegistries.ITEM.getKey(itc.item())
+                                        : BuiltInRegistries.ITEM.getKey(st.getActualItem());
                             }
                             return comp.allowedItems().isEmpty()
                                     || comp.allowedItems().contains(actualId);
@@ -157,20 +155,26 @@ public class MixingBlockEntity extends BlockEntity
                         .mapToDouble(IngredientStack::getGrams)
                         .sum();
 
-                // 3) compute actual baker’s % (always relative to flourTotal)
-                double actualPct = foundGrams / flourTotal * 100.0;
-
-                // 4) compute desired baker’s %
+                // 4) compute actual vs desired baker’s %
+                double actualPct;
                 double desiredPct;
                 if (comp.category() == IngredientCategory.FLOUR) {
-                    desiredPct = comp.targetPercent() / sumFlourParts * 100.0;
+                    // flour always 100%
+                    actualPct  = 100.0;
+                    desiredPct = 100.0;
                 } else {
+                    actualPct  = foundGrams / flourTotal * 100.0;
                     desiredPct = comp.targetPercent();
                 }
 
-                LOGGER.info("{} → {}: {}g → {:.1f}% vs target {:.1f}%",
-                        recipe.getId(), comp.category(),
-                        foundGrams, actualPct, desiredPct);
+                LOGGER.info(
+                        "{} → {}: {}g → {}% vs target {}%",
+                        recipe.getId(),
+                        comp.category(),
+                        foundGrams,
+                        String.format("%.1f", actualPct),
+                        String.format("%.1f", desiredPct)
+                );
 
                 if (Math.abs(actualPct - desiredPct) > recipe.getTolerance()) {
                     matches = false;
@@ -178,11 +182,35 @@ public class MixingBlockEntity extends BlockEntity
                 }
             }
 
-            if (matches) return Optional.of(recipe);
+            // 5) enforce per‐item requirements from your JSON “requirements” field
+            if (matches) {
+                for (IngredientRequirement req : recipe.getItemRequirements()) {
+                    double got = ingredientList.stream()
+                            .filter(st -> {
+                                ResourceLocation id = (st.getCategory() == IngredientCategory.FLOUR)
+                                        ? ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, st.getFlourType().getId())
+                                        : BuiltInRegistries.ITEM.getKey(st.getActualItem());
+                                return id.equals(req.getItemId());
+                            })
+                            .mapToDouble(IngredientStack::getGrams)
+                            .sum();
+                    if (got < req.getAmount()) {
+                        matches = false;
+                        break;
+                    }
+                }
+            }
+
+            if (matches) {
+                return Optional.of(recipe);
+            }
         }
 
         return Optional.empty();
     }
+
+
+
 
     public void startMixing() {
         LOGGER.info("Start mixing. Ingredients:");

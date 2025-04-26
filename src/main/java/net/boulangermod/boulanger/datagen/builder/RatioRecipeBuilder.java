@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
+import net.boulangermod.boulanger.recipe.IngredientRequirement;
 import net.boulangermod.boulanger.recipe.RatioRecipe;
 import net.boulangermod.boulanger.recipe.RatioRecipe.Serializer;
 import net.boulangermod.boulanger.recipe.IngredientComponent;
@@ -25,6 +26,8 @@ public class RatioRecipeBuilder {
     private final ItemStack       result;
     private final double          tolerance;
     private final List<IngredientComponent> components = new ArrayList<>();
+    private final List<IngredientRequirement> itemRequirements = new ArrayList<>();
+
 
     public RatioRecipeBuilder(ResourceLocation id,
                               ItemStack result,
@@ -42,6 +45,14 @@ public class RatioRecipeBuilder {
         components.add(new IngredientComponent(category, percent, allowedItems));
         return this;
     }
+
+       /**
+         * Enforce a minimum gram amount of a specific item in this recipe.
+        */
+       public RatioRecipeBuilder addItemRequirement(ResourceLocation itemId, double amount) {
+                this.itemRequirements.add(new IngredientRequirement(itemId, amount));
+                return this;
+       }
 
     /**
      * 1) Build the JSON exactly as before
@@ -79,6 +90,18 @@ public class RatioRecipeBuilder {
         // tolerance
         json.addProperty("tolerance", tolerance);
 
+       // requirements (item-level splits)
+       if (!itemRequirements.isEmpty()) {
+            JsonArray reqArr = new JsonArray();
+            for (IngredientRequirement req : itemRequirements) {
+                JsonObject o = new JsonObject();
+                o.addProperty("itemId", req.getItemId().toString());
+                o.addProperty("amount", req.getAmount());
+                reqArr.add(o);
+            }
+            json.add("requirements", reqArr);
+        }
+
         // 2) log it
         LOGGER.debug("Generated recipe JSON for {}: {}", id, json);
 
@@ -93,4 +116,5 @@ public class RatioRecipeBuilder {
         // 4) hand it off (no advancement, no conditions)
         out.accept(id, recipe, null);
     }
+
 }
