@@ -4,9 +4,7 @@ import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
-import net.boulangermod.boulanger.entity.ModEntitySpawns;
 import net.boulangermod.boulanger.item.ModCreativeModeTabs;
-import net.boulangermod.boulanger.recipe.ModMixingRecipes;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.screen.*;
 import net.boulangermod.boulanger.util.MyModLootFunctions;
@@ -60,8 +58,6 @@ public class Boulanger {
 
         LOGGER.info(Config.magicNumberIntroduction + Config.magicNumber);
         Config.items.forEach(item -> LOGGER.info("ITEM >> {}", item));
-
-        ModMixingRecipes.registerDefaults();
     }
 
     @SubscribeEvent

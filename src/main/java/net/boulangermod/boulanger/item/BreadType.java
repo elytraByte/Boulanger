@@ -2,6 +2,7 @@ package net.boulangermod.boulanger.item;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -68,4 +69,9 @@ public enum BreadType {
                         return BAGUETTE; // fallback
                     }
             );
+
+    public ResourceLocation rl() {
+        return ResourceLocation.fromNamespaceAndPath("boulanger", id);
+    }
+
 }

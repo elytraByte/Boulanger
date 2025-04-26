@@ -2,35 +2,31 @@ package net.boulangermod.boulanger.recipe;
 
 import net.boulangermod.boulanger.Boulanger;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModRecipeSerializers {
-    // Suppress the unchecked cast from Registry<RecipeSerializer<?>>
-    @SuppressWarnings("unchecked")
-    public static final DeferredRegister<RecipeSerializer<RatioRecipe>> SERIALIZERS =
-            DeferredRegister.<RecipeSerializer<RatioRecipe>>create(
-                    (ResourceKey) Registries.RECIPE_SERIALIZER,  // cast away the wildcard
-                    Boulanger.MODID
-            );
 
+    // 1️⃣ Serializers
+    public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS =
+            DeferredRegister.create(Registries.RECIPE_SERIALIZER, Boulanger.MODID);
 
-    public static final DeferredHolder<RecipeSerializer<RatioRecipe>, RatioRecipe.Serializer> RATIO =
-            SERIALIZERS.register("ratio",
-                    () -> new RatioRecipe.Serializer()
-            );
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RatioRecipe>> RATIO_SERIALIZER =
+            RECIPE_SERIALIZERS.register("ratio", RatioRecipe.Serializer::new);
 
+    // 2️⃣ Types
+    public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES =
+            DeferredRegister.create(Registries.RECIPE_TYPE, Boulanger.MODID);
 
+    public static final DeferredHolder<RecipeType<?>, RecipeType<RatioRecipe>> RATIO_TYPE =
+            RECIPE_TYPES.register("ratio", RecipeType::simple);
 
     public static void register(IEventBus bus) {
-        SERIALIZERS.register(bus);
-    }
-
-    public static RecipeSerializer<RatioRecipe> getRatioSerializer() {
-        return RATIO.get();
+        RECIPE_SERIALIZERS.register(bus);
+        RECIPE_TYPES.register(bus);
     }
 }
-

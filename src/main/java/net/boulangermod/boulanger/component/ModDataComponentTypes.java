@@ -15,6 +15,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.RegistryFileCodec;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -100,6 +101,14 @@ public class ModDataComponentTypes {
             UnaryOperator<DataComponentType.Builder<T>> builderOperator
     ) {
         return DATA_COMPONENT_TYPES.register(name, () -> builderOperator.apply(DataComponentType.builder()).build());
+    }
+
+    public static ResourceLocation getKey(DataComponentType<?> type) {
+        return DATA_COMPONENT_TYPES.getEntries().stream()
+                .filter(e -> e.get().equals(type))
+                .map(e -> e.getKey().location())
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No key found for " + type));
     }
 
 

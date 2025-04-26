@@ -103,8 +103,6 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("mixing_block", modLoc("block/mixing_block"));
         withExistingParent("stone_mill_block", modLoc("block/stone_mill_block"));
         withExistingParent("scale_block", modLoc("block/scale_block"));
-
-
     }
 
     private ItemModelBuilder saplingItem(DeferredBlock<Block> item) {
@@ -113,4 +111,6 @@ public class ModItemModelProvider extends ItemModelProvider {
                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
                         "block/" + item.getId().getPath()));
     }
+
+
 }

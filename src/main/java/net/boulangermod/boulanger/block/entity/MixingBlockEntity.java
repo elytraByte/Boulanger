@@ -1,12 +1,12 @@
 package net.boulangermod.boulanger.block.entity;
 
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
-import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.item.FlourItemType;
 import net.boulangermod.boulanger.item.ModItems;
-import net.boulangermod.boulanger.recipe.MixingRecipe;
-import net.boulangermod.boulanger.recipe.ModMixingRecipes;
+import net.boulangermod.boulanger.recipe.MixingContainer;
+import net.boulangermod.boulanger.recipe.RatioRecipe;
+import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.screen.MixingBlockMenu;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.IngredientStack;
@@ -25,6 +25,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -34,13 +35,39 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
-public class MixingBlockEntity extends BlockEntity implements AbstractProcessingBlock.Tickable, MenuProvider {
+/**
+ * Mixer block entity: collects weighed‐ingredient bowls,
+ * builds a list of IngredientStacks, and when started,
+ * compares against all registered RatioRecipe.TYPE recipes.
+ */
+public class MixingBlockEntity extends BlockEntity
+        implements AbstractProcessingBlock.Tickable, MenuProvider {
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static final int INPUT_BOWL   = 0;
     public static final int OUTPUT_BOWL  = 1;
     public static final int OUTPUT_DOUGH = 2;
 
+    private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
+        @Override protected void onContentsChanged(int slot) {
+            setChanged();
+            if (!level.isClientSide) {
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            }
+        }
+    };
+    private final List<IngredientStack> ingredientList = new ArrayList<>();
+    private boolean mixing = false;
+    private int mixProgress = 0;
+
+    private static final int MAX_MIX_TIME     = 100;
+    private static final double TOLERANCE_PCT = 2.0;
+
+    public MixingBlockEntity(BlockPos pos, BlockState state) {
+        super(ModBlockEntities.MIXING_BLOCK_BE.get(), pos, state);
+        // removed ModRatioRecipes.registerDefaults()
+    }
 
     public ItemStackHandler getItemHandler() { return itemHandler; }
     public List<IngredientStack> getIngredientList() { return Collections.unmodifiableList(ingredientList); }
@@ -48,66 +75,45 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
     public boolean isMixing()     { return mixing; }
     public static int getMaxMixTime()  { return MAX_MIX_TIME; }
 
-    private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-            if (!level.isClientSide) {
-                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            }
-        }
-    };
-
-    private final List<IngredientStack> ingredientList = new ArrayList<>();
-    private boolean mixing = false;
-    private int mixProgress = 0;
-    private static final int MAX_MIX_TIME     = 100;
-    private static final double TOLERANCE_PCT = 2.0;
-
-    public MixingBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.MIXING_BLOCK_BE.get(), pos, state);
-        ModMixingRecipes.registerDefaults();
-    }
-
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide) return;
 
-        //LOGGER.debug("Ticking mixer at {}", this.worldPosition);
-
+        // Handle weighed‐ingredient bowl input
         ItemStack in = itemHandler.getStackInSlot(INPUT_BOWL);
         if (!in.isEmpty() && isWeighedIngredient(in)) {
-            LOGGER.debug("Input bowl contains {} grams of category {}",
+            LOGGER.debug("Input bowl: {}g of category {}",
                     in.get(ModDataComponentTypes.INGREDIENT_GRAMS.get()).grams(),
                     in.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get()));
 
             addIngredientFromBowl(in);
-            LOGGER.info("Added ingredient: {} -> {}g",
+            LOGGER.info("Added ingredient {} → {}g",
                     ingredientList.get(ingredientList.size()-1).getCategory(),
                     ingredientList.get(ingredientList.size()-1).getGrams());
 
             itemHandler.setStackInSlot(INPUT_BOWL, ItemStack.EMPTY);
-
-            // spawn empty bowls
-            ItemStack out = itemHandler.getStackInSlot(OUTPUT_BOWL);
-            if (out.isEmpty()) {
-                itemHandler.setStackInSlot(OUTPUT_BOWL, new ItemStack(Items.BOWL));
-            } else if (out.getItem() == Items.BOWL) {
-                out.grow(1);
-                itemHandler.setStackInSlot(OUTPUT_BOWL, out);
-            } else {
-                itemHandler.setStackInSlot(OUTPUT_BOWL, new ItemStack(Items.BOWL));
-            }
+            spawnEmptyBowl();
         }
 
+        // Mixing progress
         if (mixing) {
             mixProgress++;
-            LOGGER.debug("Mixing in progress: {}/{}", mixProgress, MAX_MIX_TIME);
+            LOGGER.debug("Mixing progress: {}/{}", mixProgress, MAX_MIX_TIME);
             if (mixProgress >= MAX_MIX_TIME) {
                 generateDough();
                 mixing = false;
                 mixProgress = 0;
             }
+        }
+    }
+
+    private void spawnEmptyBowl() {
+        ItemStack out = itemHandler.getStackInSlot(OUTPUT_BOWL);
+        if (out.isEmpty() || out.getItem() != Items.BOWL) {
+            itemHandler.setStackInSlot(OUTPUT_BOWL, new ItemStack(Items.BOWL));
+        } else {
+            out.grow(1);
+            itemHandler.setStackInSlot(OUTPUT_BOWL, out);
         }
     }
 
@@ -117,9 +123,8 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
         int flourTotal = 0;
         for (IngredientStack st : ingredients) {
             int g = st.getGrams();
-            IngredientCategory cat = st.getCategory();
-            weightPerCat.merge(cat, g, Integer::sum);
-            if (cat == IngredientCategory.FLOUR) {
+            weightPerCat.merge(st.getCategory(), g, Integer::sum);
+            if (st.getCategory() == IngredientCategory.FLOUR) {
                 flourTotal += g;
             }
         }
@@ -131,205 +136,131 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
 
         // Compute percentages
         Map<IngredientCategory, Double> pct = new EnumMap<>(IngredientCategory.class);
-        for (Map.Entry<IngredientCategory, Integer> e : weightPerCat.entrySet()) {
-            pct.put(e.getKey(), e.getValue() / (double) flourTotal * 100.0);
+        for (Map.Entry<IngredientCategory, Integer> entry : weightPerCat.entrySet()) {
+            double percent = entry.getValue() / (double) flourTotal * 100.0;
+            pct.put(entry.getKey(), percent);
         }
         return pct;
     }
 
-    private Optional<MixingRecipe> findMatchingRecipe() {
-        // 1) compute total grams per category
-        Map<IngredientCategory, Double> actualPercentages = calculateBakersPercentages(ingredientList);
-        LOGGER.info("→ Computed baker’s % from ingredients: {}", actualPercentages);
+    private Optional<RatioRecipe> findMatchingRecipe() {
+        var recipes = level.getRecipeManager()
+                .getAllRecipesFor(ModRecipeSerializers.RATIO_TYPE.get());
+        LOGGER.info("Found {} ratio recipes", recipes.size());
 
-        // 2) try every recipe
-        for (MixingRecipe recipe : ModMixingRecipes.getAll()) {
-            LOGGER.info("  • Testing recipe {} → target: {}", recipe.getId(), recipe.targetPercentages());
-            boolean ok = recipe.matches(ingredientList, actualPercentages);
-            LOGGER.info("    → match? {}", ok);
-            if (ok) {
-                LOGGER.info("    ✓ Matched recipe {}", recipe.getId());
+        // 1) compute baker’s % once:
+        Map<IngredientCategory, Double> actualPct = calculateBakersPercentages(ingredientList);
+        LOGGER.debug("Baker's percentages: {}", actualPct);
+
+        // 2) test each recipe
+        for (var holder : recipes) {
+            RatioRecipe recipe = holder.value();
+            LOGGER.info("Testing recipe: {}", recipe.getId());
+
+            // a) whitelist check
+            if (!recipe.checkAllowedItems(ingredientList)) {
+                LOGGER.info(" → {} failed item‐whitelist", recipe.getId());
+                continue;
+            }
+
+            // b) percentage match
+            if (recipe.matches(actualPct)) {
                 return Optional.of(recipe);
             }
         }
 
-        LOGGER.warn("No recipe matched for computed %: {}", actualPercentages);
+        LOGGER.warn("No recipe matched for current mixer contents");
         return Optional.empty();
     }
 
+
+
     public void startMixing() {
-        LOGGER.info("Start mixing requested. Current ingredients:");
-        for (IngredientStack st : ingredientList) {
-            LOGGER.info(" - {} : {}g", st.getCategory(), st.getGrams());
-        }
+        LOGGER.info("Start mixing. Ingredients:");
+        ingredientList.forEach(st ->
+                LOGGER.info(" - {} : {}g", st.getCategory(), st.getGrams())
+        );
         if (ingredientList.isEmpty()) {
-            LOGGER.warn("Ingredient list empty, crafting debug dough");
-            ModMixingRecipes.getAll().forEach(r -> LOGGER.info("Available recipe: {} -> {}", r.getId(), r.targetPercentages()));
-            Optional<MixingRecipe> debugRec = ModMixingRecipes.getAll().stream()
-                    .filter(r -> r.getId().getPath().equals("whole_wheat_bread"))
-                    .findFirst();
-            debugRec.ifPresent(this::craftDebugDough);
+            LOGGER.warn("No ingredients! Nothing to mix.");
             return;
         }
         mixing = true;
         mixProgress = 0;
     }
 
-    private void craftDebugDough(MixingRecipe recipe) {
-        ItemStack doughStack = new ItemStack(ModItems.DOUGH.get());
-        doughStack.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(), new BakerPctComponent(recipe.targetPercentages()));
-        DoughRecipeComponent dr = new DoughRecipeComponent(recipe.getId().toString(), recipe.targetPercentages(), List.of(), 0);
-        doughStack.set(ModDataComponentTypes.DOUGH_RECIPE.get(), dr);
-        doughStack.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(0));
-        itemHandler.setStackInSlot(OUTPUT_DOUGH, doughStack);
-    }
-
     private void generateDough() {
         LOGGER.debug("Generating dough at {}", worldPosition);
-        Optional<MixingRecipe> opt = matchRecipe();
+        Optional<RatioRecipe> opt = findMatchingRecipe();
         if (opt.isEmpty()) {
-            LOGGER.info("No valid recipe found, clearing ingredients");
+            LOGGER.info("No valid recipe — clearing output.");
             itemHandler.setStackInSlot(OUTPUT_DOUGH, ItemStack.EMPTY);
             ingredientList.clear();
             return;
         }
+        RatioRecipe recipe = opt.get();
+        LOGGER.info("Creating dough for {}", recipe.getId());
 
-        MixingRecipe recipe = opt.get();
-        LOGGER.info("Matched recipe {}", recipe.getId());
-
-        ItemStack doughStack = new ItemStack(ModItems.DOUGH.get());
-        doughStack.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(), new BakerPctComponent(recipe.targetPercentages()));
-
+        // build dough stack and write components
+        ItemStack dough = new ItemStack(ModItems.DOUGH.get());
+        dough.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(),
+                new BakerPctComponent(recipe.getTargets()));
+        // build IngredientInfo list
         List<IngredientInfo> infos = new ArrayList<>();
-        int totalWeight = 0;
-
+        int total = 0;
         for (IngredientStack st : ingredientList) {
-            ItemStack bowl = st.getBowlStack();
-            var ft = bowl.get(ModDataComponentTypes.FLOUR_TYPE.get());
-            String itemId = ft != null ? ft.getId() : BuiltInRegistries.ITEM.getKey(st.getActualItem()).toString();
-
-            // Properly set the category from the IngredientStack itself
-            IngredientCategory category = st.getCategory();
-
+            String itemId = Optional.ofNullable(st.getBowlStack().get(ModDataComponentTypes.FLOUR_TYPE.get()))
+                    .map(ft -> ft.getId())
+                    .orElseGet(() ->
+                            BuiltInRegistries.ITEM.getKey(st.getActualItem()).toString()
+                    );
             int grams = st.getGrams();
-            totalWeight += grams;
-
-            infos.add(new IngredientInfo(itemId, category, grams));
+            total += grams;
+            infos.add(new IngredientInfo(itemId, st.getCategory(), grams));
         }
-
         DoughRecipeComponent dr = new DoughRecipeComponent(
                 recipe.getId().getPath(),
-                recipe.targetPercentages(),
+                recipe.getTargets(),
                 infos,
-                totalWeight
+                total
         );
-        doughStack.set(ModDataComponentTypes.DOUGH_RECIPE.get(), dr);
-        doughStack.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(totalWeight));
+        dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(), dr);
+        dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
+                new WeightComponent(total));
 
-        itemHandler.setStackInSlot(OUTPUT_DOUGH, doughStack);
+        itemHandler.setStackInSlot(OUTPUT_DOUGH, dough);
         ingredientList.clear();
-    }
-
-
-    private Optional<MixingRecipe> matchRecipe() {
-        if (ingredientList.isEmpty()) return Optional.empty();
-
-        LOGGER.debug("---- Mixer @{} contents ----", this.worldPosition);
-        for (IngredientStack st : ingredientList) {
-            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(st.getActualItem());
-            LOGGER.debug("  • {} → {}g (category {})", itemId, st.getGrams(), st.getCategory());
-        }
-
-        Map<IngredientCategory, Integer> weightPerCat = new EnumMap<>(IngredientCategory.class);
-        for (var st : ingredientList) {
-            weightPerCat.merge(st.getCategory(), st.getGrams(), Integer::sum);
-        }
-        LOGGER.debug("  Category totals: {}", weightPerCat);
-
-        double flourWeight = weightPerCat.getOrDefault(IngredientCategory.FLOUR, 0);
-        if (flourWeight <= 0) {
-            LOGGER.warn("  No flour present, cannot match any recipe");
-            return Optional.empty();
-        }
-
-        Map<IngredientCategory, Double> actualPct = new EnumMap<>(IngredientCategory.class);
-        for (var e : weightPerCat.entrySet()) {
-            actualPct.put(e.getKey(), e.getValue() / flourWeight * 100.0);
-        }
-        LOGGER.debug("  Actual baker's %: {}", actualPct);
-
-        for (MixingRecipe recipe : ModMixingRecipes.getAll()) {
-            LOGGER.debug("-- Testing recipe {} targets={} --", recipe.getId(), recipe.targetPercentages());
-            boolean ok = true;
-            for (var tgt : recipe.targetPercentages().entrySet()) {
-                double got = actualPct.getOrDefault(tgt.getKey(), 0.0);
-                if (Math.abs(got - tgt.getValue()) > TOLERANCE_PCT) {
-                    ok = false;
-                    LOGGER.debug("    • {} off by {}%", tgt.getKey(), got - tgt.getValue());
-                    break;
-                }
-            }
-            if (ok && !recipe.getAllowedFlourTypeIds().isEmpty()) {
-                for (IngredientStack st : ingredientList) {
-                    if (st.getCategory() == IngredientCategory.FLOUR) {
-                        String id = st.getFlourType() != null ? st.getFlourType().getId() : "<none>";
-                        if (!recipe.getAllowedFlourTypeIds().contains(id)) {
-                            ok = false;
-                            LOGGER.debug("    • Flour type {} not allowed", id);
-                            break;
-                        }
-                    }
-                }
-            }
-            if (ok) {
-                LOGGER.info("🔗 Mixer matched recipe {}", recipe.getId());
-                return Optional.of(recipe);
-            }
-        }
-
-        LOGGER.warn("⚠ Mixer did not match any recipe for these contents");
-        return Optional.empty();
-    }
-
-    public void addIngredientFromBowl(ItemStack bowl) {
-        // 1) figure out the category & weight
-        IngredientCategory category = bowl.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
-                ? bowl.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
-                : IngredientCategory.getIngredientCategory(bowl);
-        WeightComponent wc = bowl.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-        if (wc == null) return;
-        int grams = (int) wc.grams();
-
-        // 2) pull out the flour‑type if it’s a flour bowl
-        FlourType newFt = bowl.has(ModDataComponentTypes.FLOUR_TYPE.get())
-                ? bowl.get(ModDataComponentTypes.FLOUR_TYPE.get())
-                : null;
-
-        // 3) try to merge into an existing stack
-        for (IngredientStack st : ingredientList) {
-            if (st.getCategory() != category) continue;
-
-            if (category == IngredientCategory.FLOUR) {
-                // only merge flours of the same FlourType
-                FlourType existingFt = st.getFlourType();
-                if (Objects.equals(existingFt, newFt)) {
-                    st.addGrams(grams);
-                    return;
-                }
-            } else {
-                // for non‑flour, merge all of the same category
-                st.addGrams(grams);
-                return;
-            }
-        }
-
-        // 4) no match → start a brand‑new entry
-        ingredientList.add(new IngredientStack(bowl.copy()));
     }
 
     private boolean isWeighedIngredient(ItemStack s) {
         return s.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
                 && s.has(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+    }
+
+    public void addIngredientFromBowl(ItemStack bowl) {
+        IngredientCategory cat = bowl.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
+                ? bowl.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
+                : IngredientCategory.getIngredientCategory(bowl);
+        WeightComponent wc = bowl.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        if (wc == null) return;
+        int grams = (int) wc.grams();
+        FlourType newFt = bowl.has(ModDataComponentTypes.FLOUR_TYPE.get())
+                ? bowl.get(ModDataComponentTypes.FLOUR_TYPE.get())
+                : null;
+
+        // merge or add new
+        for (IngredientStack st : ingredientList) {
+            if (st.getCategory() != cat) continue;
+            if (cat == IngredientCategory.FLOUR) {
+                if (Objects.equals(st.getFlourType(), newFt)) {
+                    st.addGrams(grams);
+                    return;
+                }
+            } else {
+                st.addGrams(grams);
+                return;
+            }
+        }
+        ingredientList.add(new IngredientStack(bowl.copy()));
     }
 
     @Override
@@ -368,11 +299,13 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
         ingredientList.clear();
         for (int i = 0; i < list.size(); i++) {
             CompoundTag t = list.getCompound(i);
-            ResourceLocation id = ResourceLocation.parse(t.getString("Item"));
-            ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(id));
+            ResourceLocation id = ResourceLocation.tryParse(t.getString("Item"));
+            ItemStack stack = new ItemStack(
+                    BuiltInRegistries.ITEM.get(id));
             IngredientCategory cat = IngredientCategory.valueOf(t.getString("Category"));
             int grams = t.getInt("Grams");
-            stack.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(grams));
+            stack.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
+                    new WeightComponent(grams));
             stack.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), cat);
             if (cat == IngredientCategory.FLOUR && t.contains("FlourType")) {
                 var ft = FlourItemType.fromId(t.getString("FlourType")).toFlourType();
@@ -382,8 +315,12 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
         }
     }
 
-    @Override public Component getDisplayName() { return Component.translatable("mixing_block.boulanger"); }
-    @Override public AbstractContainerMenu createMenu(int id, Inventory inv, Player p) { return new MixingBlockMenu(id, inv, this); }
+    @Override public Component getDisplayName() {
+        return Component.translatable("mixing_block.boulanger");
+    }
+    @Override public AbstractContainerMenu createMenu(int id, Inventory inv, Player p) {
+        return new MixingBlockMenu(id, inv, this);
+    }
     @Override public void drops() {
         SimpleContainer c = new SimpleContainer(itemHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) {
@@ -391,5 +328,4 @@ public class MixingBlockEntity extends BlockEntity implements AbstractProcessing
         }
         Containers.dropContents(level, worldPosition, c);
     }
-
 }

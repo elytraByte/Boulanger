@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.datagen;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.MixingBlock;
 import net.boulangermod.boulanger.block.ModBlocks;
+import net.boulangermod.boulanger.block.WoodGasifierBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
@@ -107,6 +108,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
                             .rotationY(yRot)
                             .build();
                 });
+
+        ModelFile gasifierModel = new ModelFile.UncheckedModelFile(
+                modLoc("block/wood_gasifier")
+        );
+
     }
 
     private void leavesBlock(DeferredBlock<Block> block) {
@@ -167,4 +173,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
         ).texture("particle", modLoc("block/diorite_side"));
         simpleBlock(block, model);
     }
+
+
+
+
 }

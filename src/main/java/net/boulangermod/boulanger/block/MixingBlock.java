@@ -2,7 +2,6 @@ package net.boulangermod.boulanger.block;
 
 import com.mojang.serialization.MapCodec;
 import net.boulangermod.boulanger.block.entity.MixingBlockEntity;
-import net.boulangermod.boulanger.recipe.ModMixingRecipes;
 import net.boulangermod.boulanger.screen.MixingBlockMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -71,9 +70,6 @@ public class MixingBlock extends AbstractProcessingBlock implements MenuProvider
         BlockEntity be = player.level().getBlockEntity(player.blockPosition());
         if (be instanceof MixingBlockEntity mixer) {
             LOGGER.info("Opening mixer UI, printing all recipes to console:");
-            ModMixingRecipes.getAll().forEach(r ->
-                    LOGGER.info(" * {} : {}", r.getId(), r.targetPercentages())
-            );
             return new MixingBlockMenu(id, inv, mixer);
         }
         return null;
@@ -101,4 +97,3 @@ public class MixingBlock extends AbstractProcessingBlock implements MenuProvider
     }
 
 }
-

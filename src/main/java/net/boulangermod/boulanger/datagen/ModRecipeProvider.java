@@ -2,16 +2,25 @@ package net.boulangermod.boulanger.datagen;
 
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
+import net.boulangermod.boulanger.datagen.builder.RatioRecipeBuilder;
+import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.ModItems;
+import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
+import static net.boulangermod.boulanger.Boulanger.MODID;
 
 public class ModRecipeProvider extends RecipeProvider implements IConditionBuilder {
     public ModRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
@@ -20,7 +29,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 
     @Override
     protected void buildRecipes(RecipeOutput pRecipeOutput) {
-        // Porcelain Mix → data/boulanger/recipes/decorations/porcelain_mix.json
+        // Existing shaped/shapeless/block recipes
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.PORCELAIN_MIX.get(), 6)
                 .pattern("KKB")
                 .pattern("KKB")
@@ -29,9 +38,8 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('B', ModItems.BONE_ASH.get())
                 .define('G', ModItems.GLASS_DUST.get())
                 .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL.get()))
-                .save(pRecipeOutput);  // ← no second argument
+                .save(pRecipeOutput);
 
-        // Sledgehammer → data/boulanger/recipes/tools/sledgehammer.json
         ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.SLEDGEHAMMER.get())
                 .pattern("  B")
                 .pattern(" S ")
@@ -39,18 +47,11 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('B', Items.IRON_BLOCK)
                 .define('S', Items.STICK)
                 .unlockedBy("has_iron_block", has(Items.IRON_BLOCK))
-                .save(pRecipeOutput);  // ← no second argument
+                .save(pRecipeOutput);
 
-        // Bone → Bone Ash (blast furnace) → data/boulanger/recipes/misc/bone_to_bone_ash_blasting.json
-        SimpleCookingRecipeBuilder.blasting(
-                        Ingredient.of(Items.BONE),
-                        RecipeCategory.MISC,
-                        ModItems.BONE_ASH.get(),
-                        0.35f,
-                        100
-                )
+        SimpleCookingRecipeBuilder.blasting(Ingredient.of(Items.BONE), RecipeCategory.MISC, ModItems.BONE_ASH.get(), 0.35f, 100)
                 .unlockedBy("has_bone", has(Items.BONE))
-                .save(pRecipeOutput);  // ← no second argument
+                .save(pRecipeOutput);
 
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.GLASS_DUST.get(), 2)
                 .requires(Items.GLASS)
@@ -106,15 +107,9 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL))
                 .save(pRecipeOutput);
 
-        SimpleCookingRecipeBuilder.blasting(
-                        Ingredient.of(ModItems.UNFIRED_PORCELAIN_BRICK),
-                        RecipeCategory.MISC,
-                        ModItems.PORCELAIN_BRICK.get(),
-                        0.35f,
-                        100
-                )
+        SimpleCookingRecipeBuilder.blasting(Ingredient.of(ModItems.UNFIRED_PORCELAIN_BRICK), RecipeCategory.MISC, ModItems.PORCELAIN_BRICK.get(), 0.35f, 100)
                 .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL))
-                .save(pRecipeOutput);  // ← no second argument
+                .save(pRecipeOutput);
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.MIXING_BLOCK.get(), 1)
                 .pattern("TCW")
@@ -160,8 +155,66 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_wheat_seeds", has(ModItems.WHEAT_SEED))
                 .save(pRecipeOutput);
 
+        // ✅ Ratio-Based Recipe: Baguette
+        new RatioRecipeBuilder(
+                BreadType.BAGUETTE.rl(),
+                new ItemStack(ModItems.DOUGH.get()),
+                Map.of(
+                        IngredientCategory.FLOUR, 100.0,
+                        IngredientCategory.WATER,  67.0,
+                        IngredientCategory.YEAST,   2.0,
+                        IngredientCategory.SALT,     3.0
+                ),
+                2.0,
+                // ← here’s your allowed_items map:
+                Map.of(
+                        IngredientCategory.FLOUR, List.of(
+                                ResourceLocation.fromNamespaceAndPath(MODID, "bread_flour"),
+                                ResourceLocation.fromNamespaceAndPath(MODID, "high_gluten_flour")
+                        )
+                )
+        ).save(pRecipeOutput);
+
+        // ✅ Ratio-Based Recipe: Whole Wheat Bread
+        new RatioRecipeBuilder(
+                BreadType.WHOLE_WHEAT_BREAD.rl(),
+                new ItemStack(ModItems.DOUGH.get()),
+                Map.of(
+                        IngredientCategory.FLOUR, 100.0,
+                        IngredientCategory.WATER,  75.0,
+                        IngredientCategory.YEAST,   2.0,
+                        IngredientCategory.SALT,     3.0
+                ),
+                2.0,
+                Map.of(
+                        IngredientCategory.FLOUR, List.of(
+                                ResourceLocation.fromNamespaceAndPath(MODID, "whole_wheat_flour")
+                        )
+                )
+        ).save(pRecipeOutput);
+
+// ✅ Ratio-Based Recipe: Bánh Mì
+//        new RatioRecipeBuilder(
+//                BreadType.BANH_MI.rl(),
+//                new ItemStack(ModItems.DOUGH.get()),
+//                Map.of(
+//                        IngredientCategory.FLOUR, 100.0,
+//                        IngredientCategory.WATER,  67.0,
+//                        IngredientCategory.EGG,    15.0,
+//                        IngredientCategory.MILK,   30.0,
+//                        IngredientCategory.FAT,     5.0,   // butter
+//                        IngredientCategory.YEAST,   5.0,
+//                        IngredientCategory.SUGAR,   3.0
+//                ),
+//                2.0,
+//                Map.of(
+//                        IngredientCategory.FLOUR, List.of(
+//                                ResourceLocation.fromNamespaceAndPath(MODID, "bread_flour"),
+//                                ResourceLocation.fromNamespaceAndPath(MODID, "high_gluten_flour")
+//                        )
+//                )
+//        ).save(pRecipeOutput);
+
 
     }
-
-
 }
