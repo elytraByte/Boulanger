@@ -125,8 +125,10 @@ public class MixingBlockEntity extends BlockEntity
             RatioRecipe recipe = holder.value();
 
             // 2) sum of all the recipe's flour-percent entries
-            double sumFlourParts = recipe.getComponents().stream()
+            List<IngredientComponent> flourComps = recipe.getComponents().stream()
                     .filter(c -> c.category() == IngredientCategory.FLOUR)
+                    .toList();
+            double sumFlourParts = flourComps.stream()
                     .mapToDouble(IngredientComponent::targetPercent)
                     .sum();
 
@@ -138,19 +140,16 @@ public class MixingBlockEntity extends BlockEntity
                         .filter(st -> {
                             ResourceLocation actualId;
                             if (comp.category() == IngredientCategory.FLOUR) {
-                                // use the FlourType tag
                                 var ft = st.getFlourType();
                                 if (ft == null) return false;
                                 actualId = ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.getId());
                             } else {
-                                // try the TYPE component, else raw item
                                 var itc = st.getBowlStack().get(ModDataComponentTypes.INGREDIENT_TYPE.get());
                                 actualId = itc != null
                                         ? BuiltInRegistries.ITEM.getKey(itc.item())
                                         : BuiltInRegistries.ITEM.getKey(st.getActualItem());
                             }
-                            return comp.allowedItems().isEmpty()
-                                    || comp.allowedItems().contains(actualId);
+                            return comp.allowedItems().isEmpty() || comp.allowedItems().contains(actualId);
                         })
                         .mapToDouble(IngredientStack::getGrams)
                         .sum();
@@ -158,22 +157,22 @@ public class MixingBlockEntity extends BlockEntity
                 // 4) compute actual vs desired baker’s %
                 double actualPct;
                 double desiredPct;
-                if (comp.category() == IngredientCategory.FLOUR) {
-                    // flour always 100%
+                if (comp.category() == IngredientCategory.FLOUR && flourComps.size() == 1) {
+                    // only one flour component => always 100%
                     actualPct  = 100.0;
                     desiredPct = 100.0;
+                } else if (comp.category() == IngredientCategory.FLOUR) {
+                    // multiple flour components => relative split
+                    actualPct  = foundGrams / sumFlourParts * 100.0;
+                    desiredPct = comp.targetPercent() / sumFlourParts * 100.0;
                 } else {
                     actualPct  = foundGrams / flourTotal * 100.0;
                     desiredPct = comp.targetPercent();
                 }
 
                 LOGGER.info(
-                        "{} → {}: {}g → {}% vs target {}%",
-                        recipe.getId(),
-                        comp.category(),
-                        foundGrams,
-                        String.format("%.1f", actualPct),
-                        String.format("%.1f", desiredPct)
+                        "{} → {}: {}g → {:.1f}% vs target {:.1f}%",
+                        recipe.getId(), comp.category(), foundGrams, actualPct, desiredPct
                 );
 
                 if (Math.abs(actualPct - desiredPct) > recipe.getTolerance()) {
@@ -182,12 +181,12 @@ public class MixingBlockEntity extends BlockEntity
                 }
             }
 
-            // 5) enforce per‐item requirements from your JSON “requirements” field
+            // 5) enforce per‐item requirements
             if (matches) {
                 for (IngredientRequirement req : recipe.getItemRequirements()) {
                     double got = ingredientList.stream()
                             .filter(st -> {
-                                ResourceLocation id = (st.getCategory() == IngredientCategory.FLOUR)
+                                ResourceLocation id = st.getCategory() == IngredientCategory.FLOUR
                                         ? ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, st.getFlourType().getId())
                                         : BuiltInRegistries.ITEM.getKey(st.getActualItem());
                                 return id.equals(req.getItemId());
@@ -208,6 +207,7 @@ public class MixingBlockEntity extends BlockEntity
 
         return Optional.empty();
     }
+
 
 
 

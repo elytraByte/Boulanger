@@ -312,18 +312,22 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran")
                         )
                 )
-                // Enforce the *actual grams* you’ll be inserting:
-                .addItemRequirement(
-                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"),
-                        113.0    // not 75.0% – you’re actually feeding 113 g
+                .addComponent(
+                        IngredientCategory.FLOUR,
+                        70.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(MODID, "whole_wheat_flour"))
                 )
-                .addItemRequirement(
-                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"),
-                        37.7     // the ~37.7 g you measured
+                // 25% high-gluten flour
+                .addComponent(
+                        IngredientCategory.FLOUR,
+                        25.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(MODID, "high_gluten_flour"))
                 )
-                .addItemRequirement(
-                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran"),
-                        7.5      // the ~7.5 g you measured
+                //  5% wheat bran
+                .addComponent(
+                        IngredientCategory.FLOUR,
+                        5.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(MODID, "wheat_bran"))
                 )
                 // 10% brown sugar
                 .addComponent(
@@ -354,6 +358,25 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                         IngredientCategory.WATER,
                         72.0,
                         List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
+                )
+                .save(pRecipeOutput);
+
+        new RatioRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "debug_flour_split"),
+                new ItemStack(ModItems.DOUGH.get()),
+                2.0D   // tight 0.5% tolerance for testing
+        )
+                // 95% bread flour
+                .addComponent(
+                        IngredientCategory.FLOUR,
+                        95.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "bread_flour"))
+                )
+                //  5% semolina flour
+                .addComponent(
+                        IngredientCategory.FLOUR,
+                        5.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "semolina_flour"))
                 )
                 .save(pRecipeOutput);
 
