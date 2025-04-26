@@ -18,12 +18,9 @@ public class ModItems {
             () -> new FlourItem(new Item.Properties()));
 
     public static final DeferredItem<Item> KAOLINITE_CLAY_BALL = ITEMS.registerSimpleItem("kaolinite_clay_ball");
-    public static final DeferredItem<Item> FANCY_EGG = ITEMS.registerSimpleItem("fancy_egg");
     public static final DeferredItem<Item> WOODEN_BUCKET = ITEMS.registerSimpleItem("wooden_bucket");
     public static final DeferredItem<Item> WOODEN_BUCKET_OF_SHELL_EGG = ITEMS.registerSimpleItem("wooden_shell_egg_bucket");
     public static final DeferredItem<Item> WOODEN_BUCKET_OF_WHOLE_MILK = ITEMS.registerSimpleItem("wooden_milk_bucket");
-    public static final DeferredItem<Item> BROWN_SUGAR = ITEMS.registerSimpleItem("brown_sugar");
-    public static final DeferredItem<Item> WHOLE_MILK = ITEMS.registerSimpleItem("whole_milk");
     public static final DeferredItem<Item> BONE_ASH = ITEMS.registerSimpleItem("bone_ash");
     public static final DeferredItem<Item> GLASS_DUST = ITEMS.registerSimpleItem("glass_dust");
     public static final DeferredItem<Item> PORCELAIN_MIX = ITEMS.registerSimpleItem("porcelain_mix");
@@ -57,11 +54,47 @@ public class ModItems {
     public static final DeferredItem<Item> SAF_GOLD =
             ITEMS.register("saf_gold", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.SAF_GOLD_YEAST));
 
+    public static final DeferredItem<Item> BREWERS_YEAST =
+            ITEMS.register("brewers_yeast", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.BREWERS_YEAST));
+
     public static final DeferredItem<Item> FLEISCHMANN =
             ITEMS.register("fleischmann", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.FLEISCHMANNS_YEAST));
 
+    public static final DeferredItem<Item> SOURDOUGH_STARTER =
+            ITEMS.register("sourdough_starter", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.SOURDOUGH_STARTER));
+
+    public static final DeferredItem<Item> RYE_SOUR_STARTER =
+            ITEMS.register("rye_sour", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.RYE_SOUR_STARTER));
+
+    public static final DeferredItem<Item> CANOLA_OIL =
+            ITEMS.register("canola_oil", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.CANOLA_OIL));
+
+    public static final DeferredItem<Item> SOYBEAN_OIL =
+            ITEMS.register("soybean_oil", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.SOYBEAN_OIL));
+
     public static final DeferredItem<Item> FRESH_YEAST =
             ITEMS.register("fresh_yeast", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.FRESH_YEAST));
+
+    public static final DeferredItem<Item> MOLASSES =
+            ITEMS.register("molasses", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.MOLASSES));
+
+    public static final DeferredItem<Item> POWDERED_SUGAR =
+            ITEMS.register("powdered_sugar", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.POWDERED_SUGAR));
+
+    public static final DeferredItem<Item> EGG_YOLK =
+            ITEMS.register("egg_yolk", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.EGG_YOLK));
+
+    public static final DeferredItem<Item> EGG_WHITE =
+            ITEMS.register("egg_white", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.EGG_WHITE));
+
+    public static final DeferredItem<Item> FANCY_EGG =
+            ITEMS.register("fancy_egg", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.FANCY_EGG));
+
+    public static final DeferredItem<Item> BROWN_SUGAR =
+            ITEMS.register("brown_sugar", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.BROWN_SUGAR));
+
+    public static final DeferredItem<Item> WHOLE_MILK =
+            ITEMS.register("whole_milk", () -> new FoodAdditiveItem(new Item.Properties().stacksTo(16), FoodAdditiveType.WHOLE_MILK));
 
     // Other additives (Food Additives)
     public static final DeferredItem<Item> SALT_KOSHER =

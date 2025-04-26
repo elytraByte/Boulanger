@@ -29,8 +29,12 @@ public class ModCreativeModeTabs {
 
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BROWN_SUGAR.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.POWDERED_SUGAR.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.MOLASSES.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WHOLE_MILK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.FANCY_EGG.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.EGG_YOLK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.EGG_WHITE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get(), 1));
@@ -39,10 +43,15 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER_BLEND.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.CANOLA_OIL.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SOYBEAN_OIL.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SAF_RED.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SAF_GOLD.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BREWERS_YEAST.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.FLEISCHMANN.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.RYE_SOUR_STARTER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SOURDOUGH_STARTER.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.STONE_MILL_BLOCK.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));

@@ -57,21 +57,27 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .end();
         }
 
-
-
-
-
         basicItem(ModItems.BUTTER.get());
         basicItem(ModItems.FANCY_EGG.get());
         basicItem(ModItems.WOODEN_BUCKET.get());
         basicItem(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get());
         basicItem(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get());
         basicItem(ModItems.BROWN_SUGAR.get());
+        basicItem(ModItems.SALT_KOSHER.get());
+        basicItem(ModItems.SOURDOUGH_STARTER.get());
+        basicItem(ModItems.RYE_SOUR_STARTER.get());
+        basicItem(ModItems.SOYBEAN_OIL.get());
+        basicItem(ModItems.CANOLA_OIL.get());
+        basicItem(ModItems.MOLASSES.get());
+        basicItem(ModItems.POWDERED_SUGAR.get());
+        basicItem(ModItems.EGG_YOLK.get());
+        basicItem(ModItems.EGG_WHITE.get());
         basicItem(ModItems.WHOLE_MILK.get());
         basicItem(ModItems.EURO_BUTTER.get());
         basicItem(ModItems.EURO_BUTTER_BLEND.get());
         basicItem(ModItems.SAF_RED.get());
         basicItem(ModItems.SAF_GOLD.get());
+        basicItem(ModItems.BREWERS_YEAST.get());
         basicItem(ModItems.FLEISCHMANN.get());
         basicItem(ModItems.FRESH_YEAST.get());
         basicItem(ModItems.WHEAT_BERRIES.get());
