@@ -1,5 +1,7 @@
 package net.boulangermod.boulanger.block;
 
+import net.boulangermod.boulanger.block.entity.EnergyCableBlockEntity;
+import net.boulangermod.boulanger.block.entity.InternalCombustionEngineBlockEntity;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -7,8 +9,11 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.WoodType;
+import net.minecraft.world.level.levelgen.structure.structures.StrongholdPieces;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -20,6 +25,8 @@ import net.boulangermod.boulanger.worldgen.tree.ModTreeGrowers;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+
+import static net.boulangermod.boulanger.block.entity.ModBlockEntities.BLOCK_ENTITIES;
 
 
 public class ModBlocks {
@@ -46,9 +53,6 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> STONE_MILL_BLOCK = registerBlock("stone_mill_block",
             () -> new StoneMillBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
-
-//    public static final DeferredBlock<Block> MIXING_BLOCK = registerBlock("mixing_block",
-//            () -> new MixingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
     public static final DeferredBlock<Block> KAOLINITE_CLAY = registerBlock("kaolinite_clay",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CLAY)));
@@ -89,14 +93,40 @@ public class ModBlocks {
     public static final DeferredBlock<Block> WILD_WHEAT = registerBlock("wild_wheat",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS).offsetType(BlockBehaviour.OffsetType.XZ)));
 
-    public static final DeferredBlock<Block> PINE_LOG = registerBlock("pine_log",
-            () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
 
     public static final DeferredBlock<Block> PINE_WOOD = registerBlock("pine_wood",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_WOOD)));
 
     public static final DeferredBlock<Block> STRIPPED_PINE_LOG = registerBlock("stripped_pine_log",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_OAK_LOG)));
+    public static final DeferredBlock<Block> PINE_LOG = registerBlock("pine_log",
+            () -> new PineResinLogBlock(BlockBehaviour.Properties
+                    .ofFullCopy(Blocks.OAK_LOG)
+                    .strength(2.0f))
+    );
+
+    public static final DeferredBlock<EnergyStorageBlock> BATTERY =
+            registerBlock("battery",
+                    () -> new EnergyStorageBlock(Block.Properties.of().strength(3f))
+            );
+
+    // CABLE
+    public static final DeferredBlock<EnergyCableBlock> ENERGY_CABLE =
+            registerBlock("energy_cable",
+                    () -> new EnergyCableBlock(Block.Properties.of().strength(1f).noOcclusion())
+            );
+
+    public static final DeferredBlock<WoodGasPipe> WOODGAS_PIPE =
+            registerBlock("woodgas_pipe",
+                    () -> new WoodGasPipe(Block.Properties.of().strength(1f).noOcclusion())
+            );
+
+    public static final DeferredBlock<InternalCombustionEngineBlock> INTERAL_COMUSTION_ENGINE =
+            registerBlock("internal_combustion_engine",
+                    () -> new InternalCombustionEngineBlock(Block.Properties.of().strength(1f).noOcclusion())
+            );
+
+
 
     public static final DeferredBlock<Block> STRIPPED_PINE_WOOD = registerBlock("stripped_pine_wood",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_OAK_WOOD)));
@@ -120,6 +150,23 @@ public class ModBlocks {
                 }
             });
 
+    public static final DeferredBlock<Block> TREE_TAP =
+            registerBlock("tree_tap",
+                    () -> new TreeTapBlock(Block.Properties.of().strength(1f).noOcclusion()));
+
+    public static final DeferredBlock<Block> PINE_STAIRS = registerBlock("pine_stairs",
+        () -> new StairBlock(ModBlocks.PINE_PLANKS.get().defaultBlockState(),
+        BlockBehaviour.Properties.of().strength(2f).requiresCorrectToolForDrops()));
+
+    public static final DeferredBlock<Block> PINE_SLAB = registerBlock("pine_slab",
+            () -> new SlabBlock(BlockBehaviour.Properties.of().strength(2f).requiresCorrectToolForDrops()));
+
+    public static final DeferredBlock<Block> PINE_FENCE = registerBlock("pine_fence",
+            () -> new FenceBlock(BlockBehaviour.Properties.of().strength(2f).requiresCorrectToolForDrops()));
+
+    public static final DeferredBlock<Block> PINE_FENCE_GATE = registerBlock("pine_fence_gate",
+            () -> new FenceGateBlock(WoodType.OAK, BlockBehaviour.Properties.ofFullCopy(ModBlocks.PINE_PLANKS.get())));
+
     public static final DeferredBlock<Block> PINE_LEAVES = registerBlock("pine_leaves",
             () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SPRUCE_LEAVES)) {
                 @Override
@@ -141,9 +188,12 @@ public class ModBlocks {
     public static final DeferredBlock<Block> PINE_SAPLING = registerBlock("pine_sapling",
             () -> new ModSaplingBlock(ModTreeGrowers.PINE, BlockBehaviour.Properties.ofFullCopy(Blocks.SPRUCE_SAPLING), Blocks.GRASS_BLOCK));
 
+
+
     private static <T extends Block> void registerBlockItem(String name, DeferredBlock<T> block) {
         ModItems.ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
     }
+
 
     public static void register(IEventBus eventBus) {
         BLOCKS.register(eventBus);

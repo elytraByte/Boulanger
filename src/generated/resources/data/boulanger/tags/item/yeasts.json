@@ -2,6 +2,8 @@
   "values": [
     "boulanger:saf_red",
     "boulanger:saf_gold",
-    "boulanger:fresh_yeast"
+    "boulanger:fresh_yeast",
+    "boulanger:brewers_yeast",
+    "boulanger:fleischmann"
   ]
 }

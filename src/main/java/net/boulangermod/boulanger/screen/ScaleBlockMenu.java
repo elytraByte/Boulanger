@@ -23,10 +23,10 @@ public class ScaleBlockMenu extends AbstractContainerMenu {
         super(ModMenuTypes.SCALE_BLOCK_MENU.get(), id);
         this.blockEntity = (ScaleBlockEntity) entity;
 
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 134, 18)); // First slot (Input - empty bowl)
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 26, 18)); // Second slot (Bulk ingredient)
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 134, 54)); // Third slot (Output)
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 3, 26, 54));
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 26, 17));
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 62, 17));
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 62, 53));
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 3, 26, 53));
 
 
         // Player inventory

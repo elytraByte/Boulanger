@@ -2,6 +2,7 @@ package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.entity.ModEntities;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.bus.api.IEventBus;
@@ -30,12 +31,15 @@ public class ModItems {
     public static final DeferredItem<Item> BRICK_MOLD = ITEMS.registerSimpleItem("brick_mold");
     public static final DeferredItem<Item> DIORITE_PLATE = ITEMS.registerSimpleItem("diorite_plate");
     public static final DeferredItem<Item> PINE_RESIN = ITEMS.registerSimpleItem("pine_resin");
+    public static final DeferredItem<Item> COPPER_CHANNEL = ITEMS.registerSimpleItem("copper_channel");
     public static final DeferredItem<Item> PCB = ITEMS.registerSimpleItem("pcb");
     public static final DeferredItem<Item> GILDED_PCB = ITEMS.registerSimpleItem("gilded_pcb");
     public static final DeferredItem<Item> REINFORCED_DIORITE_PLATE = ITEMS.registerSimpleItem("reinforced_diorite_plate");
     public static final DeferredItem<Item> DIORITE_BRICK = ITEMS.registerSimpleItem("diorite_brick");
     public static final DeferredItem<Item> FILLED_BOWL_ITEM = ITEMS.register("filled_bowl",
             () -> new FilledBowlItem(new Item.Properties()));
+    public static final DeferredItem<Item> WOOD_GAS_BUCKET = ITEMS.registerSimpleItem("wood_gas_bucket");
+
 
     // Dairy and Eggs (Food Additives)
     public static final DeferredItem<Item> BUTTER =
@@ -142,6 +146,13 @@ public class ModItems {
             )
     );
 
+    // ModItems.java
+    public static final DeferredItem<Item> GASIFIER_FILTER =
+            ITEMS.register("filter_canister",
+                    () -> new Item(new Item.Properties()
+                            .durability(1000)
+                    )
+            );
 
 
     public static void register(IEventBus eventBus) {

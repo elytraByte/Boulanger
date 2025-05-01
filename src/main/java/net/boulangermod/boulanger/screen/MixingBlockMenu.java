@@ -35,9 +35,9 @@ public class MixingBlockMenu extends AbstractContainerMenu {
         this.blockEntity = mixer;
 
         // --- TileEntity slots ---
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), INPUT_SLOT,  44, 36)); // input bowl
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), FUEL_SLOT,   24, 36)); // output bowl
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), OUTPUT_SLOT,116, 36)); // dough
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), INPUT_SLOT,  44, 35)); // input bowl
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), FUEL_SLOT,   17, 35)); // output bowl
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), OUTPUT_SLOT,116, 35)); // dough
 
         // --- Player inventory slots ---
         // main inventory, 3 rows × 9 cols

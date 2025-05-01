@@ -9,18 +9,21 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class ScaleBlockScreen extends AbstractContainerScreen<ScaleBlockMenu> {
     private static final ResourceLocation GUI_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/scale1.png");
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/scale.png");
+
     private EditBox weightInput;
 
-    public ScaleBlockScreen(ScaleBlockMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title);
+    public ScaleBlockScreen(ScaleBlockMenu menu, Inventory playerInv, Component title) {
+        super(menu, playerInv, title);
+        // standard 176×166 GUI
+        this.imageWidth  = 176;
+        this.imageHeight = 166;
     }
 
     @Override
@@ -28,100 +31,74 @@ public class ScaleBlockScreen extends AbstractContainerScreen<ScaleBlockMenu> {
         super.init();
 
         // center the title
-        this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
-        this.inventoryLabelY = 72;
+        this.titleLabelX    = (this.imageWidth - this.font.width(this.title)) / 2;
+        this.inventoryLabelY = this.imageHeight - 94;
 
-        // compute the width/height of our widgets
         int tfW = 70, tfH = 20;
         int btnW = 50, btnH = 20;
 
-        // center the text field at the top, say 10px down from the top edge
-        int textFieldX = this.leftPos + (this.imageWidth - tfW) / 2;
-        int textFieldY = this.topPos + 23;
-
+        // position widgets in right-hand margin
+        int textFieldX = this.leftPos + this.imageWidth - tfW - 8;
+        int textFieldY = this.topPos + 20;
         this.weightInput = new EditBox(
-                this.font,
-                textFieldX, textFieldY,
-                tfW, tfH,
+                this.font, textFieldX, textFieldY, tfW, tfH,
                 Component.literal("Weight")
         );
         this.weightInput.setMaxLength(9);
         this.weightInput.setValue("");
         addRenderableWidget(this.weightInput);
 
-        // place the Measure button directly under the text field, with a small gap
-        int buttonX = this.leftPos + (this.imageWidth - btnW) / 2;
-        int buttonY = textFieldY + tfH + 5;
-
+        int buttonX = textFieldX + (tfW - btnW) / 2;
+        int buttonY = textFieldY + tfH + 6;
         Button measureButton = Button.builder(Component.literal("Measure"), btn -> {
                     String text = weightInput.getValue();
-                    int weight;
                     try {
-                        weight = Integer.parseInt(text);
+                        int weight = Integer.parseInt(text);
+                        BoulangerNetwork.sendToServer(
+                                new MeasureData(weight, menu.getBlockEntity().getBlockPos())
+                        );
                     } catch (NumberFormatException e) {
-                        this.minecraft.player.sendSystemMessage(Component.literal("Invalid weight: “" + text + "”"));
-                        return;
+                        this.minecraft.player.sendSystemMessage(
+                                Component.literal("Invalid weight: “" + text + "”"));
                     }
-                    BoulangerNetwork.sendToServer(new MeasureData(weight, menu.getBlockEntity().getBlockPos()));
                 })
                 .pos(buttonX, buttonY)
                 .size(btnW, btnH)
                 .build();
-        this.addRenderableWidget(measureButton);
-
+        addRenderableWidget(measureButton);
     }
 
-
-
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics gui, float pt, int mx, int my) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, GUI_TEXTURE);
-
-        int x = (this.width - this.imageWidth) / 2;
-        int y = (this.height - this.imageHeight) / 2;
-
-        guiGraphics.pose().pushPose();
-        // Apply a scale transformation if needed (using 0.25 here to match your background's design).
-        guiGraphics.pose().translate(x, y, 0);
-        guiGraphics.pose().scale(0.25f, 0.25f, 1.0f);
-
-        // Render the main GUI background.
-        guiGraphics.blit(GUI_TEXTURE, 0, 0, 0.0f, 0.0f, 1024, 1024, 1024, 1024);
-        guiGraphics.pose().popPose();
+        gui.blit(GUI_TEXTURE, this.leftPos, this.topPos,
+                0, 0, this.imageWidth, this.imageHeight);
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        renderBackground(guiGraphics, mouseX, mouseY, delta);
-        super.render(guiGraphics, mouseX, mouseY, delta);
-        renderTooltip(guiGraphics, mouseX, mouseY);
-        // Render the EditBox on top of the GUI.
-        this.weightInput.render(guiGraphics, mouseX, mouseY, delta);
+    public void render(GuiGraphics gui, int mx, int my, float delta) {
+        renderBackground(gui, mx, my, delta);
+        super.render(gui, mx, my, delta);
+        renderTooltip(gui, mx, my);
+        this.weightInput.render(gui, mx, my, delta);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0x404040, false);
-        guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, 72, 0x404040, false);
+    protected void renderLabels(GuiGraphics gui, int mx, int my) {
+        gui.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0x404040, false);
+        gui.drawString(this.font, this.playerInventoryTitle, 8, this.inventoryLabelY, 0x404040, false);
     }
 
-    // Let the EditBox process key input.
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.weightInput.keyPressed(keyCode, scanCode, modifiers)) {
-            return true;
-        }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(int keyCode, int scanCode, int mods) {
+        if (this.weightInput.keyPressed(keyCode, scanCode, mods)) return true;
+        return super.keyPressed(keyCode, scanCode, mods);
     }
 
-    // Let the EditBox process character typing.
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        if (this.weightInput.charTyped(codePoint, modifiers)) {
-            return true;
-        }
-        return super.charTyped(codePoint, modifiers);
+    public boolean charTyped(char codePoint, int mods) {
+        if (this.weightInput.charTyped(codePoint, mods)) return true;
+        return super.charTyped(codePoint, mods);
     }
 }

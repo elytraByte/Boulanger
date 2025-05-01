@@ -10,7 +10,7 @@ public enum FoodAdditiveType {
 //    SALTED_BUTTER("butter_salted", 454f, IngredientCategory.FAT),
     EUROPEAN_BUTTER    ("european_butter", 454f, IngredientCategory.FAT),
 //    SALTED_EUROPEAN_BUTTER ("european_butter_salted", 454f, IngredientCategory.FAT),
-    EUROPEAN_BUTTER_BLEND ("butter", 454.0f, IngredientCategory.FAT),
+    EUROPEAN_BUTTER_BLEND ("european_butter_blend", 454.0f, IngredientCategory.FAT),
 //    SALTED_EUROPEAN_BUTTER_BLEND ("butter", 454.0f, IngredientCategory.FAT),
     WHOLE_MILK         ("whole_milk", 3900f, IngredientCategory.DAIRY),
     HEAVY_CREAM        ("heavy_cream", 3900f, IngredientCategory.DAIRY),

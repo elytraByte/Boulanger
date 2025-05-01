@@ -1,108 +1,114 @@
 package net.boulangermod.boulanger.block;
 
 import com.mojang.serialization.MapCodec;
+import net.boulangermod.boulanger.block.entity.ModBlockEntities;
+import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.Containers;
-import net.minecraft.world.InteractionHand;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
-import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 
-public class WoodGasifierBlock extends BaseEntityBlock {
+public class WoodGasifierBlock extends BaseEntityBlock implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final MapCodec<WoodGasifierBlock> CODEC = simpleCodec(WoodGasifierBlock::new);
+    public static final BooleanProperty    LIT     = BlockStateProperties.LIT;
 
-    protected WoodGasifierBlock(Properties properties) {
-        super(properties);
+    public WoodGasifierBlock(Properties props) {
+        super(props.lightLevel(s -> s.getValue(LIT) ? 13 : 0));
+        this.registerDefaultState(this.stateDefinition.any()
+                .setValue(FACING, Direction.NORTH)
+                .setValue(LIT, false)
+        );
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> b) {
+        b.add(FACING, LIT);
+    }
+
+    @Override
+    public @Nullable BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        return defaultBlockState()
+                .setValue(FACING, ctx.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public BlockState rotate(BlockState st, Rotation rot) {
+        return st.setValue(FACING, rot.rotate(st.getValue(FACING)));
+    }
+
+    @Override
+    public BlockState mirror(BlockState st, Mirror mirror) {
+        return st.rotate(mirror.getRotation(st.getValue(FACING)));
+    }
+
+    @Override
+    public RenderShape getRenderShape(BlockState st) {
+        return RenderShape.MODEL;
     }
 
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
-    }
-    @Override
-    protected RenderShape getRenderShape(BlockState pState) {
-        return RenderShape.MODEL;
+        return null;
     }
 
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState st) {
+        return new WoodGasifierBlockEntity(pos, st);
+    }
+
+    @Override
     @Nullable
-    @Override
-    public BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {
-        return new WoodGasifierBlockEntity(blockPos, blockState);
+    public MenuProvider getMenuProvider(BlockState st, Level lvl, BlockPos pos) {
+        return lvl.getBlockEntity(pos) instanceof WoodGasifierBlockEntity be
+                ? be
+                : null;
     }
 
     @Override
-    public BlockState getStateForPlacement(BlockPlaceContext pContext) {
-        return this.defaultBlockState().setValue(FACING, pContext.getHorizontalDirection().getOpposite());
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+            Level lvl, BlockState st, BlockEntityType<T> type
+    ) {
+        // **only** return a ticker on the server side
+        if (lvl.isClientSide) return null;
+
+        return createTickerHelper(
+                type,
+                ModBlockEntities.WOOD_GASIFIER_BE.get(),
+                WoodGasifierBlockEntity::ticker
+        );
     }
 
     @Override
-    public BlockState rotate(BlockState pState, Rotation pRotation) {
-        return pState.setValue(FACING, pRotation.rotate(pState.getValue(FACING)));
-    }
-
-    @Override
-    public BlockState mirror(BlockState pState, Mirror pMirror) {
-        return pState.rotate(pMirror.getRotation(pState.getValue(FACING)));
-    }
-
-    @Override
-    protected void onRemove(BlockState pState, Level pLevel, BlockPos pPos,
-                            BlockState pNewState, boolean pMovedByPiston) {
-        if(pState.getBlock() != pNewState.getBlock()) {
-            if(pLevel.getBlockEntity(pPos) instanceof WoodGasifierBlockEntity woodGasifierBlockEntity) {
-                Containers.dropContents(pLevel, pPos, woodGasifierBlockEntity);
-                pLevel.updateNeighbourForOutputSignal(pPos, this);
-            }
+    public void onRemove(BlockState old, Level world, BlockPos pos,
+                         BlockState fresh, boolean moved) {
+        if (old.getBlock() != fresh.getBlock()) {
+            super.onRemove(old, world, pos, fresh, moved);
         }
-        super.onRemove(pState, pLevel, pPos, pNewState, pMovedByPiston);
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack pStack, BlockState pState, Level pLevel, BlockPos pPos,
-                                              Player pPlayer, InteractionHand pHand, BlockHitResult pHitResult) {
-        if(pLevel.getBlockEntity(pPos) instanceof WoodGasifierBlockEntity woodGasifierBlockEntity) {
-            if(woodGasifierBlockEntity.isEmpty() && !pStack.isEmpty()) {
-                woodGasifierBlockEntity.setItem(0, pStack);
-                pStack.shrink(1);
-                pLevel.playSound(pPlayer, pPos, SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, 1f, 2f);
-            } else if(pStack.isEmpty()) {
-                ItemStack stackOnPedestal = woodGasifierBlockEntity.getItem(0);
-                pPlayer.setItemInHand(InteractionHand.MAIN_HAND, stackOnPedestal);
-                woodGasifierBlockEntity.clearContent();
-                pLevel.playSound(pPlayer, pPos, SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, 1f, 1f);
-
-            }
-
+    protected InteractionResult useWithoutItem(BlockState st,
+                                               Level lvl,
+                                               BlockPos pos,
+                                               Player player,
+                                               BlockHitResult hit) {
+        if (!lvl.isClientSide && player instanceof ServerPlayer server) {
+            server.openMenu(
+                    st.getMenuProvider(lvl, pos),
+                    buf -> buf.writeBlockPos(pos)
+            );
         }
-        return ItemInteractionResult.SUCCESS;
-
+        return InteractionResult.sidedSuccess(lvl.isClientSide);
     }
-
-    @Override
-    protected InteractionResult useWithoutItem(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, BlockHitResult pHitResult) {
-
-        return InteractionResult.SUCCESS;
-    }
-
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
-    }
-
 }
-

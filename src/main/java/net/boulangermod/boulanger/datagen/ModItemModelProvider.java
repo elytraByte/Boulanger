@@ -90,6 +90,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.DIORITE_BRICK.get());
         basicItem(ModItems.DIORITE_PLATE.get());
         basicItem(ModItems.PINE_RESIN.get());
+        basicItem(ModItems.COPPER_CHANNEL.get());
         basicItem(ModItems.PCB.get());
         basicItem(ModItems.GILDED_PCB.get());
         basicItem(ModItems.REINFORCED_DIORITE_PLATE.get());
@@ -104,6 +105,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.HEN_SPAWN_EGG.get());
         basicItem(ModItems.FILLED_BOWL_ITEM.get());
         saplingItem(ModBlocks.PINE_SAPLING);
+        fenceItem(ModBlocks.PINE_FENCE, ModBlocks.PINE_PLANKS);
+
 
         withExistingParent("wood_oven", modLoc("block/wood_oven_off"));
         withExistingParent("mixing_block", modLoc("block/mixing_block"));
@@ -116,6 +119,12 @@ public class ModItemModelProvider extends ItemModelProvider {
                 ResourceLocation.parse("item/generated")).texture("layer0",
                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
                         "block/" + item.getId().getPath()));
+    }
+
+    public void fenceItem(DeferredBlock<Block> block, DeferredBlock<Block> baseBlock) {
+        this.withExistingParent(block.getId().getPath(), mcLoc("block/fence_inventory"))
+                .texture("texture",  ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
+                        "block/" + baseBlock.getId().getPath()));
     }
 
 

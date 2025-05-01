@@ -7,6 +7,7 @@ import net.boulangermod.boulanger.util.IngredientTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -53,9 +54,9 @@ public class ModItemTagProvider extends ItemTagsProvider {
         tag(IngredientTags.EGGS)
                 .add(
                         Items.EGG,
-                        ModItems.FANCY_EGG.get()
-//                        ModItems.EGG_YOLK.get(),
-//                        ModItems.EGG_WHITE.get()
+                        ModItems.FANCY_EGG.get(),
+                        ModItems.EGG_YOLK.get(),
+                        ModItems.EGG_WHITE.get()
                 );
 
         // --- Salts ---
@@ -67,23 +68,26 @@ public class ModItemTagProvider extends ItemTagsProvider {
                 .add(
                         ModItems.SAF_RED.get(),
                         ModItems.SAF_GOLD.get(),
-                        ModItems.FRESH_YEAST.get()
+                        ModItems.FRESH_YEAST.get(),
+                        ModItems.BREWERS_YEAST.get(),
+                        ModItems.FLEISCHMANN.get()
                 );
 
         // --- Fats / oils ---
         tag(IngredientTags.FATS)
                 .add(
                         ModItems.BUTTER.get(),
-                        ModItems.EURO_BUTTER.get()
+                        ModItems.EURO_BUTTER.get(),
+                        ModItems.EURO_BUTTER_BLEND.get()
                 );
 
         // --- Sugars ---
         tag(IngredientTags.SUGARS)
                 .add(
                         Items.SUGAR,
-                        ModItems.BROWN_SUGAR.get()
-//                        ModItems.POWDERED_SUGAR.get(),
-//                        ModItems.MOLASSES.get()
+                        ModItems.BROWN_SUGAR.get(),
+                        ModItems.POWDERED_SUGAR.get(),
+                        ModItems.MOLASSES.get()
                 );
 
         // --- General additives (e.g. colorants, enzymes) ---
@@ -97,6 +101,7 @@ public class ModItemTagProvider extends ItemTagsProvider {
         // --- Enrichments (e.g. milk powder) ---
 //        tag(IngredientTags.ENRICHMENTS)
 //                .add(ModItems.MILK_POWDER.get());
+
     }
 
     @Override

@@ -37,7 +37,7 @@
       "upper_size": 5
     },
     "trunk_placer": {
-      "type": "minecraft:straight_trunk_placer",
+      "type": "boulanger:resin_pine_trunk_placer",
       "base_height": 8,
       "height_rand_a": 5,
       "height_rand_b": 5
@@ -47,7 +47,9 @@
       "state": {
         "Name": "boulanger:pine_log",
         "Properties": {
-          "axis": "y"
+          "axis": "y",
+          "has_resin": "false",
+          "resin_remaining": "5"
         }
       }
     }

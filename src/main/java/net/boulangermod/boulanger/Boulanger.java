@@ -4,10 +4,12 @@ import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
+import net.boulangermod.boulanger.fluid.ModFluids;
 import net.boulangermod.boulanger.item.ModCreativeModeTabs;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.screen.*;
 import net.boulangermod.boulanger.util.MyModLootFunctions;
+import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Blocks;
@@ -28,6 +30,7 @@ import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.item.ModItems;
+import org.jline.utils.Log;
 import org.slf4j.Logger;
 
 @Mod(Boulanger.MODID)
@@ -46,6 +49,10 @@ public class Boulanger {
         ModRecipeSerializers.register(modEventBus);
         MyModLootFunctions.register(modEventBus);
         ModEntities.register(modEventBus);
+        ModTrunkPlacers.TRUNK_PLACERS.register(modEventBus);
+        ModFluids.register(modEventBus);
+        ModAttachments.ATTACHMENTS.register(modEventBus);
+
 
         NeoForge.EVENT_BUS.register(this);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -85,6 +92,8 @@ public class Boulanger {
             event.register(ModMenuTypes.MIXING_BLOCK_MENU.get(), MixingBlockScreen::new);
             event.register(ModMenuTypes.SCALE_BLOCK_MENU.get(), ScaleBlockScreen::new);
             event.register(ModMenuTypes.STONE_MILL_BLOCK_MENU.get(), StoneMillBlockScreen::new);
+            event.register(ModMenuTypes.WOOD_GASIFIER_MENU.get(), WoodGasifierScreen::new);
+
         }
     }
 }

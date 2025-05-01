@@ -1,6 +1,8 @@
 {
   "values": [
     "minecraft:sugar",
-    "boulanger:brown_sugar"
+    "boulanger:brown_sugar",
+    "boulanger:powdered_sugar",
+    "boulanger:molasses"
   ]
 }

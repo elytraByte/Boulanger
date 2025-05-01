@@ -21,65 +21,46 @@ public class ModCreativeModeTabs {
 
     public static final Supplier<CreativeModeTab> BOULANGER_MAIN =
             CREATIVE_MODE_TABS.register("boulanger_main", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.boulanger.boulanger_tab")) //translate !
+                    .title(Component.translatable("itemGroup.boulanger.boulanger_tab.main")) //translate !
                     .icon(() -> new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get()))
                     .displayItems((pParameters, pOutput) ->
 
                     {
-
-                        pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.BROWN_SUGAR.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.POWDERED_SUGAR.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.MOLASSES.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.WHOLE_MILK.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.FANCY_EGG.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.EGG_YOLK.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.EGG_WHITE.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.BREAD.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.EURO_BUTTER_BLEND.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.CANOLA_OIL.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.SOYBEAN_OIL.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.SAF_RED.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.SAF_GOLD.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.BREWERS_YEAST.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.FLEISCHMANN.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.RYE_SOUR_STARTER.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.SOURDOUGH_STARTER.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.STONE_MILL_BLOCK.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.SCALE_BLOCK.get(), 1));
+                        //PINE VARIANTS
                         pOutput.accept(new ItemStack(ModBlocks.PINE_LOG.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_LOG.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_WOOD.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_WOOD.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_PLANKS.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_STAIRS.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_SLAB.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_FENCE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_FENCE_GATE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_LEAVES.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_SAPLING.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SPLIT_PINE_LOGS.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.IRON_WEDGE.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.SLEDGEHAMMER.get(), 1));
+
+                        //TOOLS, BLOCKS AND MICROCRAFTING
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.KAOLINITE_CLAY.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.KAOLINITE_CLAY_BALL.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PORCELAIN_MIX.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BRICK_MOLD.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.DIORITE_BRICK.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.DIORITE_PLATE.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.REINFORCED_DIORITE_PLATE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.UNFIRED_PORCELAIN_BRICK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PORCELAIN_BRICK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PCB.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.GILDED_PCB.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.DIORITE_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.DIORITE_PLATE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.REINFORCED_DIORITE_PLATE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.COPPER_CHANNEL.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PINE_RESIN.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BONE_ASH.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.GLASS_DUST.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.IRON_WEDGE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SLEDGEHAMMER.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.L3E_TILE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.BLUE_TILE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.DARK_BLUE_TILE.get(), 1));
@@ -87,13 +68,30 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.BLACK_TILE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WHITE_TILE.get(), 1));
 
+                        // TILE ENTITIES
+                        pOutput.accept(new ItemStack(ModBlocks.TREE_TAP.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.STONE_MILL_BLOCK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.SCALE_BLOCK.get(), 1));
+// drop the explicit count; the 1-arg ctor also yields count==1
+                        pOutput.accept(new ItemStack(ModBlocks.BATTERY .get()));
+                        pOutput.accept(new ItemStack(ModBlocks.ENERGY_CABLE.get()));
+                        pOutput.accept(new ItemStack(ModItems.GASIFIER_FILTER.get()));
+
+
+                        //SPAWN EGGS
+                        pOutput.accept(new ItemStack(ModItems.HEN_SPAWN_EGG.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.HOLSTEIN_FRIESIAN_COW_SPAWN_EGG.get(), 1));
+
 
 
                     }).build());
 
-    public static final Supplier<CreativeModeTab> BOULANGER_FLOUR =
-            CREATIVE_MODE_TABS.register("boulanger_flour", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.boulanger.boulanger_tab")) //translate !
+    public static final Supplier<CreativeModeTab> BOULANGER_INGREDIENTS_BAKING =
+            CREATIVE_MODE_TABS.register("boulanger_ingredients_baking", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.boulanger.boulanger_tab.ingredients_baking")) //translate !
                     .icon(() -> {
                         // Create an item stack of your FLOUR_ITEM
                         ItemStack iconStack = new ItemStack(ModItems.FLOUR_ITEM.get());
@@ -119,8 +117,28 @@ public class ModCreativeModeTabs {
 
                         pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WHEAT_BERRIES.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.HEN_SPAWN_EGG.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.HOLSTEIN_FRIESIAN_COW_SPAWN_EGG.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BROWN_SUGAR.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.POWDERED_SUGAR.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.MOLASSES.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WHOLE_MILK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.FANCY_EGG.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.EGG_YOLK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.EGG_WHITE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BREAD.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.EURO_BUTTER_BLEND.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.CANOLA_OIL.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SOYBEAN_OIL.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SAF_RED.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SAF_GOLD.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BREWERS_YEAST.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.FLEISCHMANN.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.RYE_SOUR_STARTER.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.SOURDOUGH_STARTER.get(), 1));
 
 
                     }).build());

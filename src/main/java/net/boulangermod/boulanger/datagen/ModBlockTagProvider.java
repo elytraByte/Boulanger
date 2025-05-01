@@ -32,5 +32,8 @@ public class ModBlockTagProvider extends BlockTagsProvider {
                 .add(ModBlocks.STRIPPED_PINE_LOG.get())
                 .add(ModBlocks.STRIPPED_PINE_WOOD.get());
 
+        tag(BlockTags.FENCES).add(ModBlocks.PINE_FENCE.get());
+        tag(BlockTags.FENCE_GATES).add(ModBlocks.PINE_FENCE_GATE.get());
+
     }
 }
