@@ -1,8 +1,6 @@
 package net.boulangermod.boulanger.block.entity;
 
 import com.mojang.logging.LogUtils;
-import net.boulangermod.boulanger.block.entity.ModBlockEntities;
-import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -59,14 +57,15 @@ public class WoodGasPipeBlockEntity extends BlockEntity {
             LOGGER.debug("  {} → handler? {}", np, ngh != null);
         }
 
-        // push logic
         int remaining = Math.min(200, be.tank.getFluidAmount());
+
+        // Phase 1: push into external machines
         for (Direction d : Direction.values()) {
             if (remaining <= 0) break;
-
             BlockPos nbrPos = pos.relative(d);
-            // avoid pushing back into gasifier
-            if (world.getBlockEntity(nbrPos) instanceof WoodGasifierBlockEntity) {
+            // skip pipes and gasifier
+            if (world.getBlockEntity(nbrPos) instanceof WoodGasPipeBlockEntity ||
+                    world.getBlockEntity(nbrPos) instanceof WoodGasifierBlockEntity) {
                 continue;
             }
 
@@ -85,11 +84,42 @@ public class WoodGasPipeBlockEntity extends BlockEntity {
             if (filled > 0) {
                 be.tank.drain(filled, IFluidHandler.FluidAction.EXECUTE);
                 remaining -= filled;
-                LOGGER.debug("[Pipe] pushed {} mB from pipe at {}", filled, pos);
+                LOGGER.debug("[Pipe] pushed {} mB to machine at {}", filled, nbrPos);
             }
         }
-        LOGGER.debug("[Pipe] tick @ {}: tank={}/{}mB",
-                pos, be.tank.getFluidAmount(), be.tank.getCapacity());
+
+        // Phase 2: forward through adjacent pipes, avoid backflow
+        for (Direction d : Direction.values()) {
+            if (remaining <= 0) break;
+            BlockPos nbrPos = pos.relative(d);
+            BlockEntity nbrBE = world.getBlockEntity(nbrPos);
+            if (!(nbrBE instanceof WoodGasPipeBlockEntity)) continue;
+
+            WoodGasPipeBlockEntity nbrPipe = (WoodGasPipeBlockEntity) nbrBE;
+            // only forward if this pipe has more fluid than neighbor
+            if (nbrPipe.tank.getFluidAmount() >= be.tank.getFluidAmount()) continue;
+
+            IFluidHandler target = world.getCapability(
+                    Capabilities.FluidHandler.BLOCK,
+                    nbrPos,
+                    d.getOpposite()
+            );
+            if (target == null) continue;
+
+            int toDrain = Math.min(remaining, be.tank.getFluidAmount());
+            int filled = target.fill(
+                    be.tank.drain(toDrain, IFluidHandler.FluidAction.SIMULATE),
+                    IFluidHandler.FluidAction.EXECUTE
+            );
+            if (filled > 0) {
+                be.tank.drain(filled, IFluidHandler.FluidAction.EXECUTE);
+                remaining -= filled;
+                LOGGER.debug("[Pipe] forwarded {} mB to pipe at {}", filled, nbrPos);
+            }
+        }
+
+        // Final state
+        LOGGER.debug("[Pipe] tick @ {}: tank={}/{}mB", pos, be.tank.getFluidAmount(), be.tank.getCapacity());
     }
 
     // ─── CLIENT–SERVER SYNCHRONIZATION ─────────────────────────────────

@@ -114,34 +114,35 @@ public class MixingBlockEntity extends BlockEntity
         var recipes = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.RATIO_TYPE.get());
 
-        // 1) total flour in the mixer
-        double flourTotal = ingredientList.stream()
+        // Step 1: Total flour in mixer (all types)
+        double totalFlour = ingredientList.stream()
                 .filter(st -> st.getCategory() == IngredientCategory.FLOUR)
                 .mapToDouble(IngredientStack::getGrams)
                 .sum();
-        if (flourTotal <= 0) return Optional.empty();
+        if (totalFlour <= 0) return Optional.empty();
 
+        LOGGER.debug("→ Total flour in mixer: {}g", totalFlour);
+
+        // Step 2: Try each recipe
         for (var holder : recipes) {
             RatioRecipe recipe = holder.value();
-
-            // 2) sum of all the recipe's flour-percent entries
-            List<IngredientComponent> flourComps = recipe.getComponents().stream()
-                    .filter(c -> c.category() == IngredientCategory.FLOUR)
-                    .toList();
-            double sumFlourParts = flourComps.stream()
-                    .mapToDouble(IngredientComponent::targetPercent)
-                    .sum();
-
             boolean matches = true;
-            // 3) check each component’s ratio
+
+            LOGGER.debug("→ Checking recipe: {}", recipe.getId());
+
+            // Step 3: Check each component against total flour weight
             for (IngredientComponent comp : recipe.getComponents()) {
                 double foundGrams = ingredientList.stream()
                         .filter(st -> st.getCategory() == comp.category())
                         .filter(st -> {
                             ResourceLocation actualId;
+
                             if (comp.category() == IngredientCategory.FLOUR) {
                                 var ft = st.getFlourType();
-                                if (ft == null) return false;
+                                if (ft == null) {
+                                    LOGGER.debug("   ✗ Skipping flour: no FlourType");
+                                    return false;
+                                }
                                 actualId = ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.getId());
                             } else {
                                 var itc = st.getBowlStack().get(ModDataComponentTypes.INGREDIENT_TYPE.get());
@@ -149,39 +150,34 @@ public class MixingBlockEntity extends BlockEntity
                                         ? BuiltInRegistries.ITEM.getKey(itc.item())
                                         : BuiltInRegistries.ITEM.getKey(st.getActualItem());
                             }
-                            return comp.allowedItems().isEmpty() || comp.allowedItems().contains(actualId);
+
+                            boolean allowed = comp.allowedItems().isEmpty() || comp.allowedItems().contains(actualId);
+                            LOGGER.debug("   → Matching {} for {}: allowed = {}",
+                                    actualId, comp.category(), allowed);
+                            return allowed;
                         })
                         .mapToDouble(IngredientStack::getGrams)
                         .sum();
 
-                // 4) compute actual vs desired baker’s %
-                double actualPct;
-                double desiredPct;
-                if (comp.category() == IngredientCategory.FLOUR && flourComps.size() == 1) {
-                    // only one flour component => always 100%
-                    actualPct  = 100.0;
-                    desiredPct = 100.0;
-                } else if (comp.category() == IngredientCategory.FLOUR) {
-                    // multiple flour components => relative split
-                    actualPct  = foundGrams / sumFlourParts * 100.0;
-                    desiredPct = comp.targetPercent() / sumFlourParts * 100.0;
-                } else {
-                    actualPct  = foundGrams / flourTotal * 100.0;
-                    desiredPct = comp.targetPercent();
-                }
-
+                double actualPct = (foundGrams / totalFlour) * 100.0;
+                double targetPct = comp.targetPercent();
+                double tolerance = recipe.getTolerance();
                 LOGGER.info(
-                        "{} → {}: {}g → {:.1f}% vs target {:.1f}%",
-                        recipe.getId(), comp.category(), foundGrams, actualPct, desiredPct
+                        String.format(
+                                "%s → %s: %.1fg → %.1f%% vs target %.1f%% (±%.1f%%)",
+                                recipe.getId(), comp.category(), foundGrams, actualPct, targetPct, tolerance
+                        )
                 );
 
-                if (Math.abs(actualPct - desiredPct) > recipe.getTolerance()) {
+
+                if (Math.abs(actualPct - targetPct) > tolerance) {
+                    LOGGER.debug("   ✗ Component {} outside tolerance", comp.category());
                     matches = false;
                     break;
                 }
             }
 
-            // 5) enforce per‐item requirements
+            // Step 4: Check any specific item requirements (e.g., minimum gluten)
             if (matches) {
                 for (IngredientRequirement req : recipe.getItemRequirements()) {
                     double got = ingredientList.stream()
@@ -193,22 +189,28 @@ public class MixingBlockEntity extends BlockEntity
                             })
                             .mapToDouble(IngredientStack::getGrams)
                             .sum();
+
+                    LOGGER.debug("   → Requirement {} needs {}g, found {}g",
+                            req.getItemId(), req.getAmount(), got);
+
                     if (got < req.getAmount()) {
+                        LOGGER.debug("   ✗ Requirement not met: {}", req.getItemId());
                         matches = false;
                         break;
                     }
                 }
             }
 
+            // Step 5: Return if all checks passed
             if (matches) {
+                LOGGER.debug("✓ Recipe {} matched!", recipe.getId());
                 return Optional.of(recipe);
             }
         }
 
+        LOGGER.debug("→ No valid recipe matched.");
         return Optional.empty();
     }
-
-
 
 
 

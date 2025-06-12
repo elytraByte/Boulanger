@@ -54,6 +54,7 @@ public class Boulanger {
         ModAttachments.ATTACHMENTS.register(modEventBus);
 
 
+
         NeoForge.EVENT_BUS.register(this);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

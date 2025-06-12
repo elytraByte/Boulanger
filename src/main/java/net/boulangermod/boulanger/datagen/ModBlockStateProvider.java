@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
@@ -21,6 +22,7 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ModBlockStateProvider extends BlockStateProvider {
@@ -217,19 +219,111 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
         ResourceLocation coalTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/coal_block");
 
-// Wood Gas Pipe
-        ModelFile woodGasPipeModel = models().cubeAll("wood_gas_pipe", coalTex);
-        simpleBlockWithItem(
-                ModBlocks.WOODGAS_PIPE.get(),
-                woodGasPipeModel
-        );
+// Models
+        ModelFile endModel      = models().getExistingFile(modLoc("block/woodgas_pipe_end"));
+        ModelFile straightModel = models().getExistingFile(modLoc("block/woodgas_pipe_straight"));
+        ModelFile cornerModel   = models().getExistingFile(modLoc("block/woodgas_pipe_north_bend"));
+        ModelFile tModel        = models().getExistingFile(modLoc("block/woodgas_pipe_t"));
+        ModelFile crossModel    = models().getExistingFile(modLoc("block/woodgas_pipe_cross"));
 
-// Internal Combustion Engine
+        var pipe = getMultipartBuilder(ModBlocks.WOODGAS_PIPE.get());
+
+        // 4-way “+”
+        pipe.part()
+                .modelFile(crossModel)
+                .addModel()
+                .condition(WoodGasPipe.NORTH, true)
+                .condition(WoodGasPipe.SOUTH, true)
+                .condition(WoodGasPipe.EAST,  true)
+                .condition(WoodGasPipe.WEST,  true)
+                .end();
+
+        // 3-way Ts
+        int[] tsY = {0, 90, 180, 270};
+        BooleanProperty[][] tsConds = {
+                {WoodGasPipe.NORTH, WoodGasPipe.SOUTH, WoodGasPipe.EAST},
+                {WoodGasPipe.SOUTH, WoodGasPipe.EAST,  WoodGasPipe.WEST},
+                {WoodGasPipe.EAST,  WoodGasPipe.WEST,  WoodGasPipe.NORTH},
+                {WoodGasPipe.WEST,  WoodGasPipe.NORTH, WoodGasPipe.SOUTH}
+        };
+        for (int i = 0; i < 4; i++) {
+            pipe.part()
+                    .modelFile(tModel).rotationY(tsY[i])
+                    .addModel()
+                    .condition(tsConds[i][0], true)
+                    .condition(tsConds[i][1], true)
+                    .condition(tsConds[i][2], true)
+                    .end();
+        }
+
+        // 2-way straights
+        pipe.part()
+                .modelFile(straightModel)
+                .addModel()
+                .condition(WoodGasPipe.NORTH, true)
+                .condition(WoodGasPipe.SOUTH, true)
+                .end();
+        pipe.part()
+                .modelFile(straightModel).rotationY(90)
+                .addModel()
+                .condition(WoodGasPipe.EAST, true)
+                .condition(WoodGasPipe.WEST, true)
+                .end();
+
+        // 2-way corners
+        int[] crY = {0, 90, 180, 270};
+        BooleanProperty[][] crConds = {
+                {WoodGasPipe.NORTH, WoodGasPipe.EAST},
+                {WoodGasPipe.EAST,  WoodGasPipe.SOUTH},
+                {WoodGasPipe.SOUTH, WoodGasPipe.WEST},
+                {WoodGasPipe.WEST,  WoodGasPipe.NORTH}
+        };
+        for (int i = 0; i < 4; i++) {
+            pipe.part()
+                    .modelFile(cornerModel).rotationY(crY[i])
+                    .addModel()
+                    .condition(crConds[i][0], true)
+                    .condition(crConds[i][1], true)
+                    .end();
+        }
+
+        // 1-way ends
+        Direction[] ends = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST, Direction.UP, Direction.DOWN};
+        int[] rotY =    {0, 90,  180,    270,    0,   0};
+        int[] rotX =    {0, 0,    0,      0,     90, 270};
+        for (int i = 0; i < ends.length; i++) {
+            pipe.part()
+                    .modelFile(endModel)
+                    .rotationY(rotY[i])
+                    .rotationX(rotX[i])
+                    .addModel()
+                    .condition(getProp(ends[i]), true)
+                    .end();
+        }
+
+        // Default item model
+        simpleBlockItem(ModBlocks.WOODGAS_PIPE.get(),
+                models().getExistingFile(modLoc("block/woodgas_pipe_straight")));
+
+        // Internal Combustion Engine
         ModelFile engineModel = models().cubeAll("internal_combustion_engine", coalTex);
         simpleBlockWithItem(
                 ModBlocks.INTERAL_COMUSTION_ENGINE.get(),
                 engineModel
         );
+        }
+
+
+    private static BooleanProperty getProp(Direction dir) {
+        return switch (dir) {
+            case NORTH -> WoodGasPipe.NORTH;
+            case EAST  -> WoodGasPipe.EAST;
+            case SOUTH -> WoodGasPipe.SOUTH;
+            case WEST  -> WoodGasPipe.WEST;
+            case UP    -> WoodGasPipe.UP;
+            case DOWN  -> WoodGasPipe.DOWN;
+        };
+
     }
     private void leavesBlock(DeferredBlock<Block> block) {
         simpleBlockWithItem(block.get(),

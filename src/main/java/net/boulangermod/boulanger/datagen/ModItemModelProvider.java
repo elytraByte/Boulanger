@@ -104,6 +104,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.HOLSTEIN_FRIESIAN_COW_SPAWN_EGG.get());
         basicItem(ModItems.HEN_SPAWN_EGG.get());
         basicItem(ModItems.FILLED_BOWL_ITEM.get());
+        basicItem(ModItems.GASIFIER_FILTER.get());
         saplingItem(ModBlocks.PINE_SAPLING);
         fenceItem(ModBlocks.PINE_FENCE, ModBlocks.PINE_PLANKS);
 

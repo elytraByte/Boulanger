@@ -182,7 +182,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 // 100% bread flour
                 .addComponent(
                         IngredientCategory.FLOUR,
-                        100.0,
+                        95.0,
                         List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "bread_flour"))
                 )
                 // 5% vital wheat gluten

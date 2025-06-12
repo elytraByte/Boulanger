@@ -42,7 +42,7 @@ public class ModFluids {
                     () -> new FluidType(
                             FluidType.Properties.create()
                                     .density(1000)
-                                    .viscosity(1000)
+                                    .viscosity(250)
                                     .rarity(Rarity.UNCOMMON)
                                     .sound(SoundActions.BUCKET_FILL, SoundEvents.BUCKET_FILL)
                                     .sound(SoundActions.BUCKET_EMPTY, SoundEvents.BUCKET_EMPTY)

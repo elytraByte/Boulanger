@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.recipe;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.StreamCodecsCompat;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
@@ -91,6 +92,13 @@ public class RatioRecipe implements Recipe<MixingContainer> {
     public IngredientRequirement[] getItemRequirements() {
         return new IngredientRequirement[0];
     }
+
+    public boolean hasOnlyOneFlour() {
+        return components.stream()
+                .filter(c -> c.category() == IngredientCategory.FLOUR)
+                .count() == 1;
+    }
+
 
     // -------------------------------------------------------------
     // SERIALIZER
