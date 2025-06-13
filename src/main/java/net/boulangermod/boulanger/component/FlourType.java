@@ -47,4 +47,10 @@ public record FlourType(String type, float ash, float protein, int modelIndex, f
         return  weight;
     }
 
+    public FlourType withWeight(float newWeight) {
+        return new FlourType(type, ash, protein, modelIndex, newWeight);
+    }
+
+
+
 }

@@ -14,8 +14,10 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.levelgen.structure.structures.StrongholdPieces;
+import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.crops.HardRedSpringWheatCrop;
@@ -77,6 +79,15 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> IRON_WEDGE = BLOCKS.register("iron_wedge",
             () -> new IronWedgeBlock(BlockBehaviour.Properties.of().strength(2f).noOcclusion()));
+
+//    public static final DeferredBlock<Block> PROOFING_BOX =
+//            BLOCKS.register("proofing_box", () -> new ProofingBoxBlock(BlockBehaviour.Properties.of()
+//                    .strength(2.0f)
+//                    .sound(SoundType.WOOD)));
+
+    public static final DeferredBlock<Block> PROOFING_BOX = registerBlock("proofing_block",
+            () -> new ProofingBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
 
 
 

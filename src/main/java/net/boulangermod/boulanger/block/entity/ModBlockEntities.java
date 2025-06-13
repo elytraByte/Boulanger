@@ -67,8 +67,11 @@ public class ModBlockEntities {
                     ModBlocks.INTERAL_COMUSTION_ENGINE.get()
             ).build(null));
 
-
-
+    public static final Supplier<BlockEntityType<ProofingBoxBlockEntity>> PROOFING_BOX =
+            BLOCK_ENTITIES.register("proofing_box", () -> BlockEntityType.Builder.of(
+                    ProofingBoxBlockEntity::new,
+                    ModBlocks.PROOFING_BOX.get()
+            ).build(null));
 
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);

@@ -208,72 +208,30 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                         IngredientCategory.YEAST,
                         4.0,
                         List.of()
-                )
+                ).servingWeight(454)
                 .save(pRecipeOutput);
 
-        // ——— Whole Wheat Bread ———
+// ——— Whole Wheat Bread ———
         new RatioRecipeBuilder(
                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_bread"),
                 new ItemStack(ModItems.DOUGH.get()),
                 2.0D // tolerance %
         )
-                // 100% total FLOUR (any combination of the three sub-types)
-                .addComponent(
-                        IngredientCategory.FLOUR,
-                        100.0,
-                        List.of(
-                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"),
-                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"),
-                                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran")
-                        )
-                )
-                .addComponent(
-                        IngredientCategory.FLOUR,
-                        70.0,
-                        List.of(ResourceLocation.fromNamespaceAndPath(MODID, "whole_wheat_flour"))
-                )
-                // 25% high-gluten flour
-                .addComponent(
-                        IngredientCategory.FLOUR,
-                        25.0,
-                        List.of(ResourceLocation.fromNamespaceAndPath(MODID, "high_gluten_flour"))
-                )
-                //  5% wheat bran
-                .addComponent(
-                        IngredientCategory.FLOUR,
-                        5.0,
-                        List.of(ResourceLocation.fromNamespaceAndPath(MODID, "wheat_bran"))
-                )
-                // 10% brown sugar
-                .addComponent(
-                        IngredientCategory.SUGAR,
-                        10.0,
-                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brown_sugar"))
-                )
-                // 6% salt
-                .addComponent(
-                        IngredientCategory.SALT,
-                        6.0,
-                        List.of()
-                )
-                // 8% yeast
-                .addComponent(
-                        IngredientCategory.YEAST,
-                        8.0,
-                        List.of()
-                )
-                // 10% eggs
-                .addComponent(
-                        IngredientCategory.EGGS,
-                        10.0,
-                        List.of(ResourceLocation.fromNamespaceAndPath("boulanger", "fancy_egg"))
-                )
-                // 72% water
-                .addComponent(
-                        IngredientCategory.WATER,
-                        72.0,
-                        List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
-                )
+                .addComponent(IngredientCategory.FLOUR, 100.0, List.of(
+                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"),
+                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"),
+                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran")
+                ))
+                .addComponent(IngredientCategory.FLOUR, 70.0, List.of(ResourceLocation.fromNamespaceAndPath(MODID, "whole_wheat_flour")))
+                .addComponent(IngredientCategory.FLOUR, 25.0, List.of(ResourceLocation.fromNamespaceAndPath(MODID, "high_gluten_flour")))
+                .addComponent(IngredientCategory.FLOUR, 5.0, List.of(ResourceLocation.fromNamespaceAndPath(MODID, "wheat_bran")))
+                .addComponent(IngredientCategory.SUGAR, 10.0, List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brown_sugar")))
+                .addComponent(IngredientCategory.SALT, 6.0, List.of())
+                .addComponent(IngredientCategory.YEAST, 8.0, List.of())
+                .addComponent(IngredientCategory.EGGS, 10.0, List.of(ResourceLocation.fromNamespaceAndPath("boulanger", "fancy_egg")))
+                .addComponent(IngredientCategory.WATER, 72.0, List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket")))
+                .servingWeight(680.0)
                 .save(pRecipeOutput);
+
     }
 }

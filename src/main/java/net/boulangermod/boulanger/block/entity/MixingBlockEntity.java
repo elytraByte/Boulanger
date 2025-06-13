@@ -114,94 +114,18 @@ public class MixingBlockEntity extends BlockEntity
         var recipes = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.RATIO_TYPE.get());
 
-        // Step 1: Total flour in mixer (all types)
-        double totalFlour = ingredientList.stream()
-                .filter(st -> st.getCategory() == IngredientCategory.FLOUR)
-                .mapToDouble(IngredientStack::getGrams)
-                .sum();
+        double totalFlour = calculateTotalFlour();
         if (totalFlour <= 0) return Optional.empty();
-
         LOGGER.debug("→ Total flour in mixer: {}g", totalFlour);
 
-        // Step 2: Try each recipe
         for (var holder : recipes) {
             RatioRecipe recipe = holder.value();
-            boolean matches = true;
-
             LOGGER.debug("→ Checking recipe: {}", recipe.getId());
 
-            // Step 3: Check each component against total flour weight
-            for (IngredientComponent comp : recipe.getComponents()) {
-                double foundGrams = ingredientList.stream()
-                        .filter(st -> st.getCategory() == comp.category())
-                        .filter(st -> {
-                            ResourceLocation actualId;
+            boolean matches = matchesIngredientComponents(recipe, totalFlour)
+                    && hasEnoughTotalWeight(recipe)
+                    && meetsItemRequirements(recipe);
 
-                            if (comp.category() == IngredientCategory.FLOUR) {
-                                var ft = st.getFlourType();
-                                if (ft == null) {
-                                    LOGGER.debug("   ✗ Skipping flour: no FlourType");
-                                    return false;
-                                }
-                                actualId = ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.getId());
-                            } else {
-                                var itc = st.getBowlStack().get(ModDataComponentTypes.INGREDIENT_TYPE.get());
-                                actualId = itc != null
-                                        ? BuiltInRegistries.ITEM.getKey(itc.item())
-                                        : BuiltInRegistries.ITEM.getKey(st.getActualItem());
-                            }
-
-                            boolean allowed = comp.allowedItems().isEmpty() || comp.allowedItems().contains(actualId);
-                            LOGGER.debug("   → Matching {} for {}: allowed = {}",
-                                    actualId, comp.category(), allowed);
-                            return allowed;
-                        })
-                        .mapToDouble(IngredientStack::getGrams)
-                        .sum();
-
-                double actualPct = (foundGrams / totalFlour) * 100.0;
-                double targetPct = comp.targetPercent();
-                double tolerance = recipe.getTolerance();
-                LOGGER.info(
-                        String.format(
-                                "%s → %s: %.1fg → %.1f%% vs target %.1f%% (±%.1f%%)",
-                                recipe.getId(), comp.category(), foundGrams, actualPct, targetPct, tolerance
-                        )
-                );
-
-
-                if (Math.abs(actualPct - targetPct) > tolerance) {
-                    LOGGER.debug("   ✗ Component {} outside tolerance", comp.category());
-                    matches = false;
-                    break;
-                }
-            }
-
-            // Step 4: Check any specific item requirements (e.g., minimum gluten)
-            if (matches) {
-                for (IngredientRequirement req : recipe.getItemRequirements()) {
-                    double got = ingredientList.stream()
-                            .filter(st -> {
-                                ResourceLocation id = st.getCategory() == IngredientCategory.FLOUR
-                                        ? ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, st.getFlourType().getId())
-                                        : BuiltInRegistries.ITEM.getKey(st.getActualItem());
-                                return id.equals(req.getItemId());
-                            })
-                            .mapToDouble(IngredientStack::getGrams)
-                            .sum();
-
-                    LOGGER.debug("   → Requirement {} needs {}g, found {}g",
-                            req.getItemId(), req.getAmount(), got);
-
-                    if (got < req.getAmount()) {
-                        LOGGER.debug("   ✗ Requirement not met: {}", req.getItemId());
-                        matches = false;
-                        break;
-                    }
-                }
-            }
-
-            // Step 5: Return if all checks passed
             if (matches) {
                 LOGGER.debug("✓ Recipe {} matched!", recipe.getId());
                 return Optional.of(recipe);
@@ -211,6 +135,101 @@ public class MixingBlockEntity extends BlockEntity
         LOGGER.debug("→ No valid recipe matched.");
         return Optional.empty();
     }
+
+
+    private double calculateTotalFlour() {
+        return ingredientList.stream()
+                .filter(st -> st.getCategory() == IngredientCategory.FLOUR)
+                .mapToDouble(IngredientStack::getGrams)
+                .sum();
+    }
+
+    private boolean matchesIngredientComponents(RatioRecipe recipe, double totalFlour) {
+        for (IngredientComponent comp : recipe.getComponents()) {
+            double foundGrams = ingredientList.stream()
+                    .filter(st -> st.getCategory() == comp.category())
+                    .filter(st -> isAllowedItem(st, comp))
+                    .mapToDouble(IngredientStack::getGrams)
+                    .sum();
+
+            double actualPct = (foundGrams / totalFlour) * 100.0;
+            double targetPct = comp.targetPercent();
+            double tolerance = recipe.getTolerance();
+
+            LOGGER.info(String.format(
+                    "%s → %s: %.1fg → %.1f%% vs target %.1f%% (±%.1f%%)",
+                    recipe.getId(), comp.category(), foundGrams, actualPct, targetPct, tolerance
+            ));
+
+            if (Math.abs(actualPct - targetPct) > tolerance) {
+                LOGGER.debug("   ✗ Component {} outside tolerance", comp.category());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean hasEnoughTotalWeight(RatioRecipe recipe) {
+        double totalWeight = ingredientList.stream()
+                .mapToDouble(IngredientStack::getGrams)
+                .sum();
+        return totalWeight >= recipe.getServingWeight();
+    }
+
+    private boolean meetsItemRequirements(RatioRecipe recipe) {
+        for (IngredientRequirement req : recipe.getItemRequirements()) {
+            double got = ingredientList.stream()
+                    .filter(st -> resolveIngredientId(st).equals(req.getItemId()))
+                    .mapToDouble(IngredientStack::getGrams)
+                    .sum();
+
+            if (got < req.getAmount()) {
+                LOGGER.debug("   ✗ Requirement not met: {}", req.getItemId());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isAllowedItem(IngredientStack st, IngredientComponent comp) {
+        ResourceLocation matchId = getMatchId(st, comp.category());
+        boolean allowed = comp.allowedItems().isEmpty() || comp.allowedItems().contains(matchId);
+        LOGGER.debug("   → Matching {} for {}: allowed = {}", matchId, comp.category(), allowed);
+        return allowed;
+    }
+
+    private ResourceLocation getMatchId(IngredientStack st, IngredientCategory category) {
+        if (category == IngredientCategory.FLOUR) {
+            var flourType = st.getFlourType();
+            return flourType != null
+                    ? ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, flourType.type())
+                    : BuiltInRegistries.ITEM.getKey(st.getActualItem());
+        } else {
+            return resolveIngredientId(st);
+        }
+    }
+
+
+
+    private ResourceLocation resolveIngredientId(IngredientStack st) {
+        if (st.getCategory() == IngredientCategory.FLOUR) {
+            var ft = st.getFlourType();
+            if (ft != null) {
+                return ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.getId());
+            }
+            LOGGER.debug("⚠ Missing FlourType for flour ingredient stack: {}", st);
+            return ResourceLocation.fromNamespaceAndPath("minecraft", "air");
+            // fallback to invalid
+        }
+
+        var itc = st.getBowlStack().get(ModDataComponentTypes.INGREDIENT_TYPE.get());
+        if (itc != null) {
+            return BuiltInRegistries.ITEM.getKey(itc.item());
+        }
+
+        return BuiltInRegistries.ITEM.getKey(st.getActualItem());
+    }
+
 
 
 
@@ -275,6 +294,8 @@ public class MixingBlockEntity extends BlockEntity
         dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(), dr);
         dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
                 new WeightComponent(total));
+        dough.set(ModDataComponentTypes.PROOFING_STATE.get(), new ProofingStateComponent(false, 0));
+
 
         itemHandler.setStackInSlot(OUTPUT_DOUGH, dough);
         ingredientList.clear();

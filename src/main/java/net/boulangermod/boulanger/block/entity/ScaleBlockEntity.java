@@ -4,6 +4,7 @@ import net.boulangermod.boulanger.component.FlourType;
 import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.WeightComponent;
+import net.boulangermod.boulanger.item.FiftyPoundBagItem;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.screen.ScaleBlockMenu;
 import net.boulangermod.boulanger.util.IngredientCategory;
@@ -15,18 +16,22 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
     public static final int SLOT_BULK         = 0;
     public static final int SLOT_BOWL_IN      = 1;
     public static final int SLOT_BOWL_OUT     = 2;
     public static final int SLOT_RESIDUAL     = 3;
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ItemStackHandler items = new ItemStackHandler(4) {
         @Override
@@ -63,39 +68,41 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
-        // --- Water bucket branch: treat as 4000g of water ---
+        // Prevent transfer if residual slot is occupied
+        if (!items.getStackInSlot(SLOT_RESIDUAL).isEmpty()) {
+            LOGGER.warn("Residual slot is not empty — cannot transfer remaining bulk item.");
+            return;
+        }
+
+        // --- Water bucket special-case: treat as 4000g of water ---
         if (bulk.getItem() == Items.WATER_BUCKET) {
             int toTransfer = Math.min(4000, weightToTransfer);
 
-            // Build the filled-bowl
             ItemStack filled = new ItemStack(ModItems.FILLED_BOWL_ITEM.get());
             filled.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(toTransfer));
             filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.WATER);
             filled.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(Items.WATER_BUCKET));
             items.setStackInSlot(SLOT_BOWL_OUT, filled);
 
-            // Give back the empty bucket
             items.setStackInSlot(SLOT_RESIDUAL, new ItemStack(Items.BUCKET));
-
-            // Clear the bulk slot
             items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
 
-            // *** Instead of wiping all bowls, just remove one ***
             bowlIn.shrink(1);
-            if (bowlIn.isEmpty()) {
-                items.setStackInSlot(SLOT_BOWL_IN, ItemStack.EMPTY);
-            } else {
-                items.setStackInSlot(SLOT_BOWL_IN, bowlIn);
-            }
-            weightToTransfer = 0;
+            items.setStackInSlot(SLOT_BOWL_IN, bowlIn.isEmpty() ? ItemStack.EMPTY : bowlIn);
 
+            weightToTransfer = 0;
             setChanged();
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
             return;
         }
 
-        // --- Original flour/ingredient logic ---
-        FlourType flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
+        // === General ingredient logic (flour, additives, etc.) ===
+
+        // Determine weight per item or per bag
+        FlourType flourType = null;
+        flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
+
+
         float perUnit = flourType != null
                 ? flourType.getWeight()
                 : bulk.has(ModDataComponentTypes.INGREDIENT_GRAMS.get())
@@ -104,24 +111,48 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
                 ? bulk.get(ModDataComponentTypes.FOOD_ADDITIVE.get()).getWeight()
                 : 113f;
 
-        float totalAvailable = bulk.getCount() * perUnit;
+        float totalAvailable;
+        boolean isBulkBag = bulk.getItem() instanceof FiftyPoundBagItem &&
+                bulk.has(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+
+        if (isBulkBag) {
+            totalAvailable = bulk.get(ModDataComponentTypes.INGREDIENT_GRAMS.get()).grams();
+            perUnit = totalAvailable;
+        } else {
+            totalAvailable = bulk.getCount() * perUnit;
+        }
+
         int toTransfer = Math.min((int) totalAvailable, weightToTransfer);
 
-        // Build the filled-bowl
+        // Build the filled bowl
         ItemStack filled = new ItemStack(ModItems.FILLED_BOWL_ITEM.get());
         filled.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(toTransfer));
         filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.getIngredientCategory(bulk));
-        filled.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(bulk.getItem()));
+
+        Item ingredientItem = bulk.getItem() instanceof FiftyPoundBagItem
+                ? ModItems.FLOUR_ITEM.get()
+                : bulk.getItem();
+        filled.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(ingredientItem));
+
         if (flourType != null) {
             filled.set(ModDataComponentTypes.FLOUR_TYPE.get(), flourType);
         }
+
         items.setStackInSlot(SLOT_BOWL_OUT, filled);
 
-        // Compute remainder and refill bulk + residual...
+        // Handle leftovers
         float remaining = totalAvailable - toTransfer;
-        if (remaining < 0.1f) {
-            items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
-            items.setStackInSlot(SLOT_RESIDUAL, ItemStack.EMPTY);
+
+        if (isBulkBag) {
+            if (remaining <= 0f) {
+                items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
+                items.setStackInSlot(SLOT_RESIDUAL, ItemStack.EMPTY);
+            } else {
+                ItemStack updatedBag = bulk.copy();
+                updatedBag.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(remaining));
+                items.setStackInSlot(SLOT_BULK, ItemStack.EMPTY);
+                items.setStackInSlot(SLOT_RESIDUAL, updatedBag);
+            }
         } else {
             int fullRemain = (int)(remaining / perUnit);
             float partialRemain = remaining - fullRemain * perUnit;
@@ -135,28 +166,26 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
             }
 
             if (partialRemain > 0f) {
-                ItemStack res = bulk.copy();
-                res.setCount(1);
-                res.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(partialRemain));
-                items.setStackInSlot(SLOT_RESIDUAL, res);
+                ItemStack residual = bulk.copy();
+                residual.setCount(1);
+                residual.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(partialRemain));
+                items.setStackInSlot(SLOT_RESIDUAL, residual);
             } else {
                 items.setStackInSlot(SLOT_RESIDUAL, ItemStack.EMPTY);
             }
         }
 
-        // *** Again, only remove one empty bowl ***
+        // Use up one empty bowl
         bowlIn.shrink(1);
-        if (bowlIn.isEmpty()) {
-            items.setStackInSlot(SLOT_BOWL_IN, ItemStack.EMPTY);
-        } else {
-            items.setStackInSlot(SLOT_BOWL_IN, bowlIn);
-        }
-        weightToTransfer = 0;
+        items.setStackInSlot(SLOT_BOWL_IN, bowlIn.isEmpty() ? ItemStack.EMPTY : bowlIn);
 
+        LOGGER.debug("Transferred {}g from {} to bowl. Remaining: {}g",
+                toTransfer, bulk.getItem(), remaining);
+
+        weightToTransfer = 0;
         setChanged();
         level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
     }
-
 
 
     public ItemStackHandler getItemHandler() {

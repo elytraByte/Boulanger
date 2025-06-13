@@ -1,10 +1,18 @@
 package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.block.ModBlocks;
+import net.boulangermod.boulanger.component.IngredientTypeComponent;
+import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.entity.ModEntities;
+import net.boulangermod.boulanger.util.IngredientCategory;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.component.CustomModelData;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -153,6 +161,25 @@ public class ModItems {
                             .durability(1000)
                     )
             );
+
+    public static final DeferredItem<Item> FIFTY_POUND_BAG =
+            ITEMS.register("fifty_pound_bag", () -> new FiftyPoundBagItem(new Item.Properties()));
+
+    public static ItemStack createFlourBag(FiftyPoundBagType type) {
+        ItemStack bag = new ItemStack(ModItems.FIFTY_POUND_BAG.get());
+
+        bag.set(ModDataComponentTypes.FLOUR_TYPE.get(), type.toFlourType());
+        bag.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(FiftyPoundBagItem.MAX_GRAMS));
+        bag.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(ModItems.FLOUR_ITEM.get()));
+        bag.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.FLOUR);
+        bag.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(type.getModelIndex()));
+        bag.set(DataComponents.CUSTOM_NAME, Component.translatable("item.boulanger.fifty_pound_bag." + type.getId()));
+
+        return bag;
+    }
+
+
+
 
 
     public static void register(IEventBus eventBus) {

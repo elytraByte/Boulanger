@@ -84,6 +84,22 @@
     "itemGroup.boulanger.boulanger_tab.main": "Boulanger",
     "itemGroup.boulanger.boulanger_tab.ingredients_baking": "Boulanger Baking Ingredients",
     "item.boulanger.tree_tap": "Tree Tap",
-    "item.boulanger.copper_channel": "Copper Channel"
+    "item.boulanger.copper_channel": "Copper Channel",
+    "item.boulanger.fifty_pound_bag.ap": "50 lb Bag of All-Purpose Flour",
+    "item.boulanger.fifty_pound_bag.b": "50 lb Bag of Bread Flour",
+    "item.boulanger.fifty_pound_bag.hg": "50 lb Bag of High-Gluten Flour",
+    "item.boulanger.fifty_pound_bag.vwg": "50 lb Bag of Vital Wheat Gluten",
+    "item.boulanger.fifty_pound_bag.s": "50 lb Bag of Semolina Flour",
+    "item.boulanger.fifty_pound_bag.rye": "50 lb Bag of Rye Flour",
+    "item.boulanger.fifty_pound_bag.ww": "50 lb Bag of Whole Wheat Flour",
+    "item.boulanger.flour.ap": "All Purpose",
+    "item.boulanger.flour.b": "Bread",
+    "item.boulanger.flour.hg": "High Gluten",
+    "item.boulanger.flour.rye": "Rye",
+    "item.boulanger.flour.ww": "Whole Wheat",
+    "item.boulanger.flour.s": "Semolina",
+    "item.boulanger.flour.vwg": "Vital Wheat Gluten"
+
+
 
 }

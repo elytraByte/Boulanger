@@ -1,20 +1,29 @@
 package net.boulangermod.boulanger.item;
 
+import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.WeightComponent;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.function.Supplier;
 
 public class ModCreativeModeTabs {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Boulanger.MODID);
@@ -139,10 +148,14 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.FRESH_YEAST.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.RYE_SOUR_STARTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SOURDOUGH_STARTER.get(), 1));
+                        for (FiftyPoundBagType type : FiftyPoundBagType.values()) {
+                            pOutput.accept(ModItems.createFlourBag(type));
+
+                        }
+
 
 
                     }).build());
-
 
     public static void register(IEventBus eventBus) {
         CREATIVE_MODE_TABS.register(eventBus);

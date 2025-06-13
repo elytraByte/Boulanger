@@ -28,15 +28,18 @@ public class RatioRecipe implements Recipe<MixingContainer> {
     private final List<IngredientComponent> components;
     private final double tolerance;
     private final ItemStack result;
+    private final double servingWeight;
 
     public RatioRecipe(ResourceLocation id,
                        List<IngredientComponent> components,
                        double tolerance,
-                       ItemStack result) {
-        this.id         = Objects.requireNonNull(id);
+                       ItemStack result,
+                       double servingWeight) {
+        this.id = Objects.requireNonNull(id);
         this.components = List.copyOf(Objects.requireNonNull(components));
-        this.tolerance  = tolerance;
-        this.result     = Objects.requireNonNull(result);
+        this.tolerance = tolerance;
+        this.result = Objects.requireNonNull(result);
+        this.servingWeight = servingWeight;
     }
 
     /** We match in MixingBlockEntity; this stays unimplemented. */
@@ -74,7 +77,6 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         return id;
     }
 
-    /** Exposed so your mixer can loop over each slot‐component. */
     public List<IngredientComponent> getComponents() {
         return components;
     }
@@ -83,7 +85,10 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         return tolerance;
     }
 
-    /** We don’t track per‐item requirements in this design. */
+    public double getServingWeight() {
+        return servingWeight;
+    }
+
     @Override
     public NonNullList<ItemStack> getRemainingItems(MixingContainer inv) {
         return Recipe.super.getRemainingItems(inv);
@@ -98,7 +103,6 @@ public class RatioRecipe implements Recipe<MixingContainer> {
                 .filter(c -> c.category() == IngredientCategory.FLOUR)
                 .count() == 1;
     }
-
 
     // -------------------------------------------------------------
     // SERIALIZER
@@ -120,9 +124,13 @@ public class RatioRecipe implements Recipe<MixingContainer> {
 
                 ItemStack.CODEC
                         .fieldOf("result")
-                        .forGetter(r -> r.result)
+                        .forGetter(r -> r.result),
 
-        ).apply(inst, RatioRecipe::new));
+                Codec.DOUBLE
+                        .fieldOf("serving_weight")
+                        .forGetter(RatioRecipe::getServingWeight)
+
+        ).apply(inst, RatioRecipe::new)); // ← Fix: add this missing semicolon
 
         @Override
         public MapCodec<RatioRecipe> codec() {
@@ -131,11 +139,11 @@ public class RatioRecipe implements Recipe<MixingContainer> {
 
         public static final StreamCodec<RegistryFriendlyByteBuf, RatioRecipe> STREAM_CODEC =
                 StreamCodec.composite(
-                        ResourceLocation.STREAM_CODEC,            RatioRecipe::getId,
-                        StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC),
-                        RatioRecipe::getComponents,
+                        ResourceLocation.STREAM_CODEC,           RatioRecipe::getId,
+                        StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC), RatioRecipe::getComponents,
                         StreamCodecsCompat.DOUBLE,               RatioRecipe::getTolerance,
                         ItemStack.STREAM_CODEC,                  r -> r.result,
+                        StreamCodecsCompat.DOUBLE,               RatioRecipe::getServingWeight,
                         RatioRecipe::new
                 );
 

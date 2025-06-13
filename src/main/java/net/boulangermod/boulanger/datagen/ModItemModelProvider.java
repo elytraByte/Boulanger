@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger.datagen;
 
 import net.boulangermod.boulanger.item.BreadType;
+import net.boulangermod.boulanger.item.FiftyPoundBagType;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -56,6 +57,25 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .model(overrideModel)
                     .end();
         }
+
+        // --- Fifty Pound Bags ---
+        ItemModelBuilder fiftyBag = withExistingParent("fifty_pound_bag", mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/blank_fifty_pound_bag")); // default / fallback
+
+        for (FiftyPoundBagType type : FiftyPoundBagType.values()) {
+            String id = type.getId() + "_fifty_pound_bag"; // e.g., ap_fifty_pound_bag
+            int modelIndex = type.getModelIndex(); // e.g., 101, 102...
+
+            ItemModelBuilder overrideModel = withExistingParent(id, mcLoc("item/generated"))
+                    .texture("layer0", modLoc("item/" + id)); // match your PNG name
+
+            fiftyBag.override()
+                    .predicate(mcLoc("custom_model_data"), modelIndex)
+                    .model(overrideModel)
+                    .end();
+        }
+
+
 
         basicItem(ModItems.BUTTER.get());
         basicItem(ModItems.FANCY_EGG.get());
@@ -113,6 +133,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("mixing_block", modLoc("block/mixing_block"));
         withExistingParent("stone_mill_block", modLoc("block/stone_mill_block"));
         withExistingParent("scale_block", modLoc("block/scale_block"));
+        withExistingParent("proofing_box", modLoc("block/proofing_block"));
     }
 
     private ItemModelBuilder saplingItem(DeferredBlock<Block> item) {

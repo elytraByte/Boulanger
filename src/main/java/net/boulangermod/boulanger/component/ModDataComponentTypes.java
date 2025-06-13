@@ -92,6 +92,13 @@ public class ModDataComponentTypes {
                     .networkSynchronized(BreadType.STREAM_CODEC)
             );
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ProofingStateComponent>> PROOFING_STATE =
+            register("proofing_state", builder -> builder
+                    .persistent(ProofingStateComponent.CODEC)
+                    .networkSynchronized(ProofingStateComponent.STREAM_CODEC)
+            );
+
+
 
 
 

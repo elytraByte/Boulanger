@@ -3,12 +3,16 @@ package net.boulangermod.boulanger.item;
 import net.boulangermod.boulanger.component.DoughRecipeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.IngredientInfo;
+import net.boulangermod.boulanger.component.ProofingStateComponent;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
 
 import java.util.List;
 
@@ -83,4 +87,25 @@ public class DoughItem extends Item {
                         .withStyle(ChatFormatting.AQUA)
         );
     }
+
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        Player player = context.getPlayer();
+        if (player == null || !player.isShiftKeyDown()) return InteractionResult.PASS;
+
+        ItemStack stack = context.getItemInHand();
+        ProofingStateComponent state = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
+
+        if (state != null && state.proofed()) {
+            int punches = state.punchCount();
+            // Optionally check against recipe max punches
+            stack.set(ModDataComponentTypes.PROOFING_STATE.get(),
+                    new ProofingStateComponent(true, punches + 1));
+            player.displayClientMessage(Component.literal("Punched down dough!"), true);
+            return InteractionResult.SUCCESS;
+        }
+
+        return InteractionResult.PASS;
+    }
+
 }

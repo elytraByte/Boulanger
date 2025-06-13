@@ -94,6 +94,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 models().getExistingFile(modLoc("block/iron_wedge"))
         );
 
+
+        blockWithItem(ModBlocks.PROOFING_BOX);
+
+
+
         // ─── STONE MILL & TILES ───────────────────────────────────────────────
         blockWithItem(ModBlocks.STONE_MILL_BLOCK);
         blockWithItem(ModBlocks.KAOLINITE_CLAY);

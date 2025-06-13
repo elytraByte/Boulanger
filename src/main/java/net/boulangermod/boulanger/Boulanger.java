@@ -94,6 +94,7 @@ public class Boulanger {
             event.register(ModMenuTypes.SCALE_BLOCK_MENU.get(), ScaleBlockScreen::new);
             event.register(ModMenuTypes.STONE_MILL_BLOCK_MENU.get(), StoneMillBlockScreen::new);
             event.register(ModMenuTypes.WOOD_GASIFIER_MENU.get(), WoodGasifierScreen::new);
+            event.register(ModMenuTypes.PROOFING_BOX_MENU.get(), ProofingBoxScreen::new);
 
         }
     }

@@ -68,5 +68,6 @@
     "count": 1,
     "id": "boulanger:generic_dough"
   },
+  "serving_weight": 680.0,
   "tolerance": 2.0
 }

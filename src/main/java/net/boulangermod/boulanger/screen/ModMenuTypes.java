@@ -29,6 +29,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<WoodGasifierMenu>> WOOD_GASIFIER_MENU =
             registerMenuType("wood_gasifier_menu", WoodGasifierMenu::new);
 
+    public static final DeferredHolder<MenuType<?>, MenuType<ProofingBoxMenu>> PROOFING_BOX_MENU =
+            registerMenuType("proofing_box_menu", ProofingBoxMenu::new);
+
     private static <T extends AbstractContainerMenu>DeferredHolder<MenuType<?>,
             MenuType<T>> registerMenuType(String name, IContainerFactory<T> factory) {
         return MENUS.register(name, () -> IMenuTypeExtension.create(factory));
