@@ -152,6 +152,7 @@ public class ModCreativeModeTabs {
                             pOutput.accept(ModItems.createFlourBag(type));
 
                         }
+                        pOutput.accept((new ItemStack(ModItems.PAN.get())));
 
 
 

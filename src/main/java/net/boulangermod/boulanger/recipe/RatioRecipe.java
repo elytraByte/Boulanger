@@ -40,6 +40,26 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         this.tolerance = tolerance;
         this.result = Objects.requireNonNull(result);
         this.servingWeight = servingWeight;
+
+        // ---------- Advanced Logging ----------
+        LOG.info("🔧 Loaded RatioRecipe: {}", id);
+        LOG.info("   → Result: {} ({}g)", result.getItem(), servingWeight);
+        LOG.info("   → Tolerance: {} ({}%)", tolerance, tolerance * 100.0);
+
+        if (tolerance > 1.0) {
+            LOG.warn("⚠ Recipe {} has an unusually high tolerance (>100%): {}!", id, tolerance);
+        } else if (tolerance > 0.5) {
+            LOG.warn("⚠ Recipe {} has a high tolerance: {} ({}%)", id, tolerance, tolerance * 100.0);
+        }
+
+        for (IngredientComponent comp : components) {
+            String allowed = comp.allowedItems().isEmpty()
+                    ? "any"
+                    : comp.allowedItems().toString();
+            LOG.info("   → {}: {}% (allowed: {})",
+                    comp.category(), comp.targetPercent(), allowed);
+        }
+        LOG.info("----------------------------------------");
     }
 
     /** We match in MixingBlockEntity; this stays unimplemented. */
@@ -122,6 +142,7 @@ public class RatioRecipe implements Recipe<MixingContainer> {
                         .fieldOf("tolerance")
                         .forGetter(RatioRecipe::getTolerance),
 
+
                 ItemStack.CODEC
                         .fieldOf("result")
                         .forGetter(r -> r.result),
@@ -130,7 +151,7 @@ public class RatioRecipe implements Recipe<MixingContainer> {
                         .fieldOf("serving_weight")
                         .forGetter(RatioRecipe::getServingWeight)
 
-        ).apply(inst, RatioRecipe::new)); // ← Fix: add this missing semicolon
+        ).apply(inst, RatioRecipe::new));
 
         @Override
         public MapCodec<RatioRecipe> codec() {
@@ -151,5 +172,6 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         public StreamCodec<RegistryFriendlyByteBuf, RatioRecipe> streamCodec() {
             return STREAM_CODEC;
         }
+
     }
 }

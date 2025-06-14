@@ -178,6 +178,12 @@ public class ModItems {
         return bag;
     }
 
+    public static final DeferredItem<Item> PAN = ITEMS.register("pan", () ->
+            new PanItem(new Item.Properties()));
+
+
+
+
 
 
 

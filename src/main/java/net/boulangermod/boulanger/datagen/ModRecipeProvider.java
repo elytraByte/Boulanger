@@ -2,9 +2,11 @@ package net.boulangermod.boulanger.datagen;
 
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
+import net.boulangermod.boulanger.datagen.builder.DoughProcessRecipeBuilder;
 import net.boulangermod.boulanger.datagen.builder.RatioRecipeBuilder;
 import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.ModItems;
+import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -177,7 +179,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         new RatioRecipeBuilder(
                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "baguette"),
                 new ItemStack(ModItems.DOUGH.get()),
-                2.0D // tolerance %
+                0.05D // tolerance %
         )
                 // 100% bread flour
                 .addComponent(
@@ -231,6 +233,36 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .addComponent(IngredientCategory.EGGS, 10.0, List.of(ResourceLocation.fromNamespaceAndPath("boulanger", "fancy_egg")))
                 .addComponent(IngredientCategory.WATER, 72.0, List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket")))
                 .servingWeight(680.0)
+                .save(pRecipeOutput);
+
+//        // ——— Debug Hydrated Dough ———
+//        new RatioRecipeBuilder(
+//                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "debug_hydrated_dough"),
+//                new ItemStack(ModItems.DOUGH.get()),
+//                2.0D // tolerance %
+//        )
+//                .addComponent(
+//                        IngredientCategory.FLOUR,
+//                        100.0,
+//                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"))
+//                )
+//                .addComponent(
+//                        IngredientCategory.WATER,
+//                        100.0,
+//                        List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
+//                )
+//                .servingWeight(200.0)
+//                .save(pRecipeOutput);
+
+        new DoughProcessRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath("boulanger", "dough_process/baguette"), // ID for the *recipe file*
+                ResourceLocation.fromNamespaceAndPath("boulanger", "baguette") // dough type (linked to RatioRecipe)
+        )
+                .addStep(StepType.PROOF, 1600)
+                .addStep(StepType.PUNCHDOWN)
+                .addStep(StepType.PROOF, 1600)
+                .addStep(StepType.PUNCHDOWN)
+                .addStep(StepType.SHAPE)
                 .save(pRecipeOutput);
 
     }

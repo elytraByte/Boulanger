@@ -73,6 +73,12 @@ public class ModBlockEntities {
                     ModBlocks.PROOFING_BOX.get()
             ).build(null));
 
+    public static final Supplier<BlockEntityType<BakersTableBlockEntity>> BAKERS_TABLE =
+            BLOCK_ENTITIES.register("bakers_table", () -> BlockEntityType.Builder.of(
+                    BakersTableBlockEntity::new,
+                    ModBlocks.BAKERS_TABLE.get()
+            ).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

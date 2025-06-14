@@ -20,6 +20,11 @@ public enum BreadType {
         this.id = id;
     }
 
+    public static Optional<BreadType> fromRecipeId(ResourceLocation recipeId) {
+        return byId(recipeId.getPath());
+    }
+
+
     public int getModelIndex() {
         return modelIndex;
     }

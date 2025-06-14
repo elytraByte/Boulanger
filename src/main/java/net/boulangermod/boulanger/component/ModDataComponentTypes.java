@@ -1,28 +1,16 @@
 package net.boulangermod.boulanger.component;
 
 
-import com.mojang.serialization.Codec;
-import net.boulangermod.boulanger.item.BakeryAdditiveType;
 import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.WheatVariety;
 import net.boulangermod.boulanger.util.IngredientCategory;
-import net.boulangermod.boulanger.util.IngredientStack;
-import net.boulangermod.boulanger.util.StreamCodecsCompat;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.RegistryFileCodec;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
 
-import java.util.Map;
 import java.util.function.UnaryOperator;
 
 public class ModDataComponentTypes {
@@ -97,6 +85,22 @@ public class ModDataComponentTypes {
                     .persistent(ProofingStateComponent.CODEC)
                     .networkSynchronized(ProofingStateComponent.STREAM_CODEC)
             );
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ResourceLocation>> DOUGH_PROCESS_TYPE =
+            register("dough_process_id", builder -> builder
+                    .persistent(ResourceLocation.CODEC)
+                    .networkSynchronized(ResourceLocation.STREAM_CODEC)
+            );
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<PanTypeComponent>> PAN_TYPE =
+            register("pan_type", builder -> builder
+                    .persistent(PanTypeComponent.CODEC)
+                    .networkSynchronized(PanTypeComponent.STREAM_CODEC)
+            );
+
+
+
+
 
 
 

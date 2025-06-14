@@ -34,6 +34,9 @@ public class StreamCodecsCompat {
     public static final StreamCodec<RegistryFriendlyByteBuf, Double> DOUBLE =
             StreamCodec.of(RegistryFriendlyByteBuf::writeDouble, RegistryFriendlyByteBuf::readDouble);
 
+    public static final StreamCodec<RegistryFriendlyByteBuf, Boolean> BOOL =
+            StreamCodec.of(RegistryFriendlyByteBuf::writeBoolean, RegistryFriendlyByteBuf::readBoolean);
+
 
 
 

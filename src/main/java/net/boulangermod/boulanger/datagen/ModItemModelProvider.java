@@ -1,7 +1,6 @@
 package net.boulangermod.boulanger.datagen;
 
-import net.boulangermod.boulanger.item.BreadType;
-import net.boulangermod.boulanger.item.FiftyPoundBagType;
+import net.boulangermod.boulanger.item.*;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -11,8 +10,6 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
-import net.boulangermod.boulanger.item.ModItems;
-import net.boulangermod.boulanger.item.FlourItemType;
 
 public class ModItemModelProvider extends ItemModelProvider {
     public ModItemModelProvider(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
@@ -74,6 +71,25 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .model(overrideModel)
                     .end();
         }
+
+        ItemModelBuilder pan = withExistingParent("pan", mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/loaf_pan")); // fallback texture
+
+        for (PanType type : PanType.values()) {
+            String id = type.getId();              // e.g. "loaf"
+            int modelIndex = type.getModelIndex(); // e.g. 1
+
+            // Override model with block texture
+            ItemModelBuilder overrideModel = withExistingParent("pan/" + id, mcLoc("item/generated"))
+                    .texture("layer0", modLoc("item/" + id + "_pan")); // → block/loaf_pan.png
+
+            pan.override()
+                    .predicate(mcLoc("custom_model_data"), modelIndex)
+                    .model(overrideModel)
+                    .end();
+        }
+
+
 
 
 

@@ -2,20 +2,21 @@
 package net.boulangermod.boulanger.block.entity;
 
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
-import net.boulangermod.boulanger.component.BakerPctComponent;
-import net.boulangermod.boulanger.component.DoughRecipeComponent;
-import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.WeightComponent;
+import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.ModItems;
+import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
+import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.screen.WoodOvenMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -23,6 +24,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -30,6 +32,11 @@ import net.minecraft.world.Containers;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Optional;
+
+import static net.minecraft.commands.arguments.ResourceLocationArgument.getRecipe;
 
 public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessingBlock.Tickable, MenuProvider {
     public static final int SLOT_INPUT  = 0;
@@ -64,74 +71,167 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
         if (level.isClientSide) return;
 
         boolean wasBurning = isBurning();
-        if (burnTime > 0) burnTime--;
 
-        boolean canSmelt    = canCook();
+        if (burnTime > 0) {
+            burnTime--;
+        }
+
+        boolean canSmelt = canCook(); // Check if there is valid input
         ItemStack fuelStack = itemHandler.getStackInSlot(SLOT_FUEL);
 
+        // Consume fuel if needed
         if (burnTime == 0 && canSmelt && fuelStack.getItem() == ModItems.SPLIT_PINE_LOGS.get()) {
-            burnTime    = (int)(160 * 1.5f);
+            burnTime = (int)(160 * 1.5f); // burn time multiplier
             maxBurnTime = burnTime;
             fuelStack.shrink(1);
         }
 
+        // Bake item if burning and valid input exists
         if (isBurning() && canSmelt) {
             cookTime++;
             if (cookTime >= MAX_COOK_TIME) {
                 cookTime = 0;
-                cook();
+                tryBake(); // new baking logic
             }
         } else {
             cookTime = 0;
         }
 
         if (wasBurning != isBurning()) {
-            setChanged();
+            setChanged(); // triggers blockstate update for flame animation
         }
     }
 
     private boolean canCook() {
-        ItemStack in  = itemHandler.getStackInSlot(SLOT_INPUT);
-        ItemStack out = itemHandler.getStackInSlot(SLOT_OUTPUT);
-        if (in.isEmpty() || in.getItem() != ModItems.DOUGH.get()) return false;
-        if (out.isEmpty()) return true;
-        if (out.getItem() != ModItems.BREAD.get()) return false;
-        return out.getCount() < out.getMaxStackSize();
+        ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
+
+        if (input.is(ModItems.PAN.get()) &&
+                input.has(ModDataComponentTypes.PROOFING_STATE.get()) &&
+                input.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) {
+
+            ProofingStateComponent proof = input.get(ModDataComponentTypes.PROOFING_STATE.get());
+            ResourceLocation recipeId = input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+
+            return getRecipe(recipeId)
+                    .map(recipe -> proof.stepIndex() >= recipe.getSteps().size())
+                    .orElse(false);
+        }
+
+        return input.is(ModItems.DOUGH.get());
     }
 
-    private void cook() {
-        if (!canCook()) return;
+    private Optional<DoughProcessRecipe> getRecipe(ResourceLocation recipeId) {
+        if (level == null) return Optional.empty();
 
-        ItemStack input  = itemHandler.getStackInSlot(SLOT_INPUT);
-        ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
+        return level.getRecipeManager()
+                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .map(RecipeHolder::value)
+                .filter(r -> r.getDoughType().equals(recipeId))
+                .findFirst();
+    }
 
-        BakerPctComponent    bakerPct    = input.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
-        DoughRecipeComponent doughRecipe = input.get(ModDataComponentTypes.DOUGH_RECIPE.get());
-        WeightComponent      weightComp  = input.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+    private ItemStack bakeBreadFromPan(ItemStack panDough) {
+        ItemStack bread = new ItemStack(ModItems.BREAD.get());
 
-        ItemStack breadStack;
-        if (output.isEmpty()) {
-            breadStack = new ItemStack(ModItems.BREAD.get());
-        } else {
-            breadStack = output.copy();
-            breadStack.grow(1);
+        for (DataComponentType<?> component : List.of(
+                ModDataComponentTypes.DOUGH_RECIPE.get(),
+                ModDataComponentTypes.INGREDIENT_GRAMS.get(),
+                ModDataComponentTypes.BAKER_PERCENTAGES.get()
+        )) {
+            if (panDough.has(component)) {
+                bread.set((DataComponentType<Object>) component, panDough.get(component));
+            }
         }
 
-        if (bakerPct    != null) breadStack.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(), bakerPct);
-        if (doughRecipe != null) breadStack.set(ModDataComponentTypes.DOUGH_RECIPE.get(),      doughRecipe);
-        if (weightComp  != null) breadStack.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),  weightComp);
+        if (panDough.has(ModDataComponentTypes.PAN_TYPE.get())) {
+            bread.set(ModDataComponentTypes.PAN_TYPE.get(), panDough.get(ModDataComponentTypes.PAN_TYPE.get()));
+        }
+
+        if (panDough.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) {
+            ResourceLocation recipeId = panDough.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+            BreadType.fromRecipeId(recipeId).ifPresent(breadType -> {
+                bread.set(ModDataComponentTypes.BREAD_TYPE.get(), breadType);
+                bread.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(breadType.getModelIndex()));
+            });
+        }
+
+        return bread;
+    }
+
+    private ItemStack bakeBreadFromPlainDough(ItemStack dough) {
+        ItemStack bread = new ItemStack(ModItems.BREAD.get());
+
+        var bakerPct = dough.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
+        var doughRecipe = dough.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        var weight = dough.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+
+        if (bakerPct != null)
+            bread.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(), bakerPct);
 
         if (doughRecipe != null) {
-            String recipeName = doughRecipe.recipeName();
-            BreadType type = BreadType.byId(recipeName).orElse(BreadType.BAGUETTE);
-            breadStack.set(ModDataComponentTypes.BREAD_TYPE.get(), type);
+            bread.set(ModDataComponentTypes.DOUGH_RECIPE.get(), doughRecipe);
 
-            // ← write the custom_model_data component
-            breadStack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(type.getModelIndex()));
+            // Convert recipeName to BreadType
+            String recipeName = doughRecipe.recipeName();
+            BreadType breadType = BreadType.byId(recipeName).orElse(BreadType.BAGUETTE);
+            bread.set(ModDataComponentTypes.BREAD_TYPE.get(), breadType);
+            bread.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(breadType.getModelIndex()));
         }
 
-        itemHandler.setStackInSlot(SLOT_OUTPUT, breadStack);
-        input.shrink(1);
+        if (weight != null)
+            bread.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), weight);
+
+        return bread;
+    }
+
+    private boolean tryBake() {
+        ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
+        if (input.isEmpty()) return false;
+
+        ItemStack result;
+
+        // 🔍 CASE 1: fully proofed panned dough
+        if (input.is(ModItems.PAN.get()) &&
+                input.has(ModDataComponentTypes.PROOFING_STATE.get()) &&
+                input.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) {
+
+            var proof = input.get(ModDataComponentTypes.PROOFING_STATE.get());
+            var processId = input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+
+            var recipe = getRecipe(processId);
+            if (recipe.isPresent()) {
+                var steps = recipe.get().getSteps();
+                if (proof.stepIndex() >= steps.size()) {
+                    // ✔ Fully proofed and ready
+                    result = bakeBreadFromPan(input);
+
+                    // Insert result
+                    itemHandler.setStackInSlot(SLOT_OUTPUT, result);
+
+                    // Optional: return the empty pan
+                    ItemStack panReturn = new ItemStack(ModItems.PAN.get());
+                    panReturn.set(ModDataComponentTypes.PAN_TYPE.get(), input.get(ModDataComponentTypes.PAN_TYPE.get()));
+                    Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), panReturn);
+
+                    // Consume input
+                    itemHandler.setStackInSlot(SLOT_INPUT, ItemStack.EMPTY);
+                    setChanged();
+                    return true;
+                }
+            }
+        }
+
+        // 🔍 CASE 2: legacy/unpanned dough
+        if (input.is(ModItems.DOUGH.get())) {
+            result = bakeBreadFromPlainDough(input); // you'd implement similarly
+
+            itemHandler.setStackInSlot(SLOT_OUTPUT, result);
+            itemHandler.setStackInSlot(SLOT_INPUT, ItemStack.EMPTY);
+            setChanged();
+            return true;
+        }
+
+        return false;
     }
 
     private boolean isBurning() {

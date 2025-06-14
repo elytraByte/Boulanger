@@ -18,12 +18,23 @@ public class ModRecipeSerializers {
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RatioRecipe>> RATIO_SERIALIZER =
             RECIPE_SERIALIZERS.register("ratio", RatioRecipe.Serializer::new);
 
+
     // 2️⃣ Types
     public static final DeferredRegister<RecipeType<?>> RECIPE_TYPES =
             DeferredRegister.create(Registries.RECIPE_TYPE, Boulanger.MODID);
 
     public static final DeferredHolder<RecipeType<?>, RecipeType<RatioRecipe>> RATIO_TYPE =
             RECIPE_TYPES.register("ratio", RecipeType::simple);
+
+
+
+
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<DoughProcessRecipe>> DOUGH_PROCESS_SERIALIZER =
+            RECIPE_SERIALIZERS.register("dough_process", DoughProcessRecipe.Serializer::new);
+
+    public static final DeferredHolder<RecipeType<?>, RecipeType<DoughProcessRecipe>> DOUGH_PROCESS_TYPE =
+            RECIPE_TYPES.register("dough_process", () -> new RecipeType<>() {});
+
 
     public static void register(IEventBus bus) {
         RECIPE_SERIALIZERS.register(bus);

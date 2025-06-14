@@ -25,6 +25,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -136,7 +137,6 @@ public class MixingBlockEntity extends BlockEntity
         return Optional.empty();
     }
 
-
     private double calculateTotalFlour() {
         return ingredientList.stream()
                 .filter(st -> st.getCategory() == IngredientCategory.FLOUR)
@@ -145,29 +145,43 @@ public class MixingBlockEntity extends BlockEntity
     }
 
     private boolean matchesIngredientComponents(RatioRecipe recipe, double totalFlour) {
+        if (totalFlour <= 0) return false;
+
         for (IngredientComponent comp : recipe.getComponents()) {
-            double foundGrams = ingredientList.stream()
+            List<IngredientStack> matchingStacks = ingredientList.stream()
                     .filter(st -> st.getCategory() == comp.category())
                     .filter(st -> isAllowedItem(st, comp))
+                    .toList();
+
+            if (matchingStacks.isEmpty()) {
+                LOGGER.debug("   ✗ No matching items found for category {}", comp.category());
+                return false;
+            }
+
+            double foundGrams = matchingStacks.stream()
                     .mapToDouble(IngredientStack::getGrams)
                     .sum();
 
-            double actualPct = (foundGrams / totalFlour) * 100.0;
-            double targetPct = comp.targetPercent();
-            double tolerance = recipe.getTolerance();
+            double expectedGrams = (comp.targetPercent() / 100.0) * totalFlour;
+            double toleranceRatio = recipe.getTolerance(); // e.g., 0.05 for 5%
+            double toleranceGrams = expectedGrams * toleranceRatio;
 
             LOGGER.info(String.format(
-                    "%s → %s: %.1fg → %.1f%% vs target %.1f%% (±%.1f%%)",
-                    recipe.getId(), comp.category(), foundGrams, actualPct, targetPct, tolerance
+                    "%s → %s: %.1fg in bowl vs expected %.1fg (±%.2fg @ %.2f%%)",
+                    recipe.getId(), comp.category(), foundGrams, expectedGrams,
+                    toleranceGrams, toleranceRatio * 100.0
             ));
 
-            if (Math.abs(actualPct - targetPct) > tolerance) {
+            if (Math.abs(foundGrams - expectedGrams) > toleranceGrams) {
                 LOGGER.debug("   ✗ Component {} outside tolerance", comp.category());
                 return false;
             }
         }
+
         return true;
     }
+
+
 
     private boolean hasEnoughTotalWeight(RatioRecipe recipe) {
         double totalWeight = ingredientList.stream()
@@ -209,8 +223,6 @@ public class MixingBlockEntity extends BlockEntity
         }
     }
 
-
-
     private ResourceLocation resolveIngredientId(IngredientStack st) {
         if (st.getCategory() == IngredientCategory.FLOUR) {
             var ft = st.getFlourType();
@@ -229,9 +241,6 @@ public class MixingBlockEntity extends BlockEntity
 
         return BuiltInRegistries.ITEM.getKey(st.getActualItem());
     }
-
-
-
 
     public void startMixing() {
         LOGGER.info("Start mixing. Ingredients:");
@@ -255,46 +264,52 @@ public class MixingBlockEntity extends BlockEntity
             ingredientList.clear();
             return;
         }
+
         RatioRecipe recipe = opt.get();
         LOGGER.info("Creating dough for {}", recipe.getId());
 
-        // rebuild a category→percent map by grouping & summing (no duplicate-key crash)
         Map<IngredientCategory, Double> targetMap = recipe.getComponents().stream()
                 .collect(Collectors.groupingBy(
                         IngredientComponent::category,
                         Collectors.summingDouble(IngredientComponent::targetPercent)
                 ));
 
-        // build dough stack and write BakerPctComponent
         ItemStack dough = new ItemStack(ModItems.DOUGH.get());
         dough.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(),
                 new BakerPctComponent(targetMap));
 
-        // build IngredientInfo list
         List<IngredientInfo> infos = new ArrayList<>();
         int total = 0;
         for (IngredientStack st : ingredientList) {
-            String itemId = Optional.ofNullable(
-                            st.getBowlStack().get(ModDataComponentTypes.FLOUR_TYPE.get()))
-                    .map(ft -> ft.getId())
-                    .orElseGet(() ->
-                            BuiltInRegistries.ITEM.getKey(st.getActualItem()).toString()
-                    );
+            String itemId = Optional.ofNullable(st.getBowlStack().get(ModDataComponentTypes.FLOUR_TYPE.get()))
+                    .map(FlourType::getId)
+                    .orElse(BuiltInRegistries.ITEM.getKey(st.getActualItem()).toString());
             int grams = st.getGrams();
             total += grams;
             infos.add(new IngredientInfo(itemId, st.getCategory(), grams));
         }
 
-        DoughRecipeComponent dr = new DoughRecipeComponent(
+        dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(), new DoughRecipeComponent(
                 recipe.getId().getPath(),
                 targetMap,
                 infos,
                 total
-        );
-        dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(), dr);
-        dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
-                new WeightComponent(total));
-        dough.set(ModDataComponentTypes.PROOFING_STATE.get(), new ProofingStateComponent(false, 0));
+        ));
+        dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(total));
+        dough.set(ModDataComponentTypes.PROOFING_STATE.get(), new ProofingStateComponent(0, 0, false));
+
+        Optional<DoughProcessRecipe> process = level.getRecipeManager()
+                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .map(RecipeHolder::value)
+                .filter(p -> p.getDoughType().equals(recipe.getId()))
+                .findFirst();
+
+        if (process.isPresent()) {
+            ResourceLocation doughTypeId = process.get().getDoughType();
+            dough.set(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(), doughTypeId);
+        } else {
+            LOGGER.warn("⚠ No DoughProcessRecipe found for dough type: {}", recipe.getId());
+        }
 
 
         itemHandler.setStackInSlot(OUTPUT_DOUGH, dough);

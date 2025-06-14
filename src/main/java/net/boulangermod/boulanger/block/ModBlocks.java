@@ -88,6 +88,9 @@ public class ModBlocks {
     public static final DeferredBlock<Block> PROOFING_BOX = registerBlock("proofing_block",
             () -> new ProofingBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
+    public static final DeferredBlock<Block> BAKERS_TABLE = registerBlock("bakers_table",
+            () -> new BakersTableBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
 
 
 
