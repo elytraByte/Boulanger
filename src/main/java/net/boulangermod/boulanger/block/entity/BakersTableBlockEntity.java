@@ -11,6 +11,7 @@ import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.screen.BakersTableMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
@@ -81,6 +82,11 @@ public class BakersTableBlockEntity extends BlockEntity implements MenuProvider 
         if (!dough.has(ModDataComponentTypes.PROOFING_STATE.get()) ||
                 !dough.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) return false;
 
+        // ✅ Ensure only valid pan items can be used
+        if (!pan.getItem().getDefaultInstance().has(ModDataComponentTypes.PAN_TYPE.get())) {
+            return false;
+        }
+
         ProofingStateComponent stateComp = dough.get(ModDataComponentTypes.PROOFING_STATE.get());
         ResourceLocation recipeId = dough.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
 
@@ -110,9 +116,14 @@ public class BakersTableBlockEntity extends BlockEntity implements MenuProvider 
                 stateComp.stepIndex() + 1, 0, true
         ));
 
-        // Set pan type using the pan's item registry key
-        filledPan.set(ModDataComponentTypes.PAN_TYPE.get(),
-                new PanTypeComponent(pan.getItem().builtInRegistryHolder().key().location().toString()));
+        // Set pan type using the pan's PAN_TYPE component directly
+        PanTypeComponent panType = pan.get(ModDataComponentTypes.PAN_TYPE.get());
+        filledPan.set(ModDataComponentTypes.PAN_TYPE.get(), panType);
+
+        // ✅ Copy CustomModelData from the input pan if it has it
+        if (pan.has(DataComponents.CUSTOM_MODEL_DATA)) {
+            filledPan.set(DataComponents.CUSTOM_MODEL_DATA, pan.get(DataComponents.CUSTOM_MODEL_DATA));
+        }
 
         // Place result and consume inputs
         itemHandler.setStackInSlot(2, filledPan);
@@ -122,6 +133,8 @@ public class BakersTableBlockEntity extends BlockEntity implements MenuProvider 
         setChanged();
         return true;
     }
+
+
 
     public ItemStackHandler getItemHandler() {
         return itemHandler;

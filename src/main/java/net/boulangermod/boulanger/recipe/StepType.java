@@ -9,6 +9,7 @@ public enum StepType {
     PROOF,
     PUNCHDOWN,
     SHAPE,
+    DIVIDE,
     FINAL_PROOF,
     BAKE;
 

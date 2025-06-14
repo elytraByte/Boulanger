@@ -45,6 +45,9 @@ public class MixingBlockEntity extends BlockEntity
     public static final int OUTPUT_BOWL  = 1;
     public static final int OUTPUT_DOUGH = 2;
 
+    private static final double MAX_DOUGH_WEIGHT_GRAMS = 20000.0; // 20 kg default for basic mixer
+
+
     private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
         @Override protected void onContentsChanged(int slot) {
             setChanged();
@@ -145,16 +148,63 @@ public class MixingBlockEntity extends BlockEntity
     }
 
     private boolean matchesIngredientComponents(RatioRecipe recipe, double totalFlour) {
-        if (totalFlour <= 0) return false;
+        double totalWeight = ingredientList.stream()
+                .mapToDouble(IngredientStack::getGrams)
+                .sum();
+        if (totalWeight <= 0) return false;
 
+        double percentSum = recipe.getComponents().stream()
+                .mapToDouble(IngredientComponent::targetPercent)
+                .sum();
+
+        double flourPercent = recipe.getComponents().stream()
+                .filter(c -> c.category() == IngredientCategory.FLOUR)
+                .mapToDouble(IngredientComponent::targetPercent)
+                .sum();
+
+        double gramsPerPercent = recipe.getServingWeight() / percentSum;
+
+        double totalFlourInMixer = ingredientList.stream()
+                .filter(st -> st.getCategory() == IngredientCategory.FLOUR)
+                .mapToDouble(IngredientStack::getGrams)
+                .sum();
+
+        if (totalFlourInMixer <= 0) return false;
+
+        double servings = totalFlourInMixer / (flourPercent * gramsPerPercent);
+        servings = Math.floor(servings * 100) / 100.0;
+
+        double expectedTotal = servings * recipe.getServingWeight();
+        if (Math.abs(totalWeight - expectedTotal) > recipe.getServingWeight() * 0.03) {
+            LOGGER.debug("   ✗ Total dough weight mismatch: {}g vs expected {}g", totalWeight, expectedTotal);
+            return false;
+        }
+
+        LOGGER.debug("→ totalFlour={}g → servings={} based on flourPercent={} and GPP={}",
+                totalFlourInMixer, servings, flourPercent, gramsPerPercent);
+
+        if (servings < 0.5) {
+            LOGGER.debug("   ✗ Too little total mass for even 1/2 batch.");
+            return false;
+        }
+
+        // === Group expected % by category
+        Map<IngredientCategory, Double> expectedPctPerCategory = new EnumMap<>(IngredientCategory.class);
         for (IngredientComponent comp : recipe.getComponents()) {
+            expectedPctPerCategory.merge(comp.category(), comp.targetPercent(), Double::sum);
+        }
+
+        for (IngredientCategory category : expectedPctPerCategory.keySet()) {
             List<IngredientStack> matchingStacks = ingredientList.stream()
-                    .filter(st -> st.getCategory() == comp.category())
-                    .filter(st -> isAllowedItem(st, comp))
+                    .filter(st -> st.getCategory() == category)
+                    .filter(st -> recipe.getComponents().stream()
+                            .filter(c -> c.category() == category)
+                            .anyMatch(c -> isAllowedItem(st, c))
+                    )
                     .toList();
 
             if (matchingStacks.isEmpty()) {
-                LOGGER.debug("   ✗ No matching items found for category {}", comp.category());
+                LOGGER.debug("   ✗ No matching items found for category {}", category);
                 return false;
             }
 
@@ -162,26 +212,24 @@ public class MixingBlockEntity extends BlockEntity
                     .mapToDouble(IngredientStack::getGrams)
                     .sum();
 
-            double expectedGrams = (comp.targetPercent() / 100.0) * totalFlour;
-            double toleranceRatio = recipe.getTolerance(); // e.g., 0.05 for 5%
-            double toleranceGrams = expectedGrams * toleranceRatio;
+            double expectedGrams = expectedPctPerCategory.get(category) * gramsPerPercent * servings;
+            double toleranceGrams = expectedGrams * recipe.getTolerance();
 
             LOGGER.info(String.format(
-                    "%s → %s: %.1fg in bowl vs expected %.1fg (±%.2fg @ %.2f%%)",
-                    recipe.getId(), comp.category(), foundGrams, expectedGrams,
-                    toleranceGrams, toleranceRatio * 100.0
+                    "%s → [%s] total: %.1fg in bowl vs expected %.1fg (±%.2fg @ %.2f%%) [%d matching items]",
+                    recipe.getId(), category, foundGrams, expectedGrams,
+                    toleranceGrams, recipe.getTolerance() * 100.0,
+                    matchingStacks.size()
             ));
 
             if (Math.abs(foundGrams - expectedGrams) > toleranceGrams) {
-                LOGGER.debug("   ✗ Component {} outside tolerance", comp.category());
+                LOGGER.debug("   ✗ Component {} outside tolerance", category);
                 return false;
             }
         }
 
         return true;
     }
-
-
 
     private boolean hasEnoughTotalWeight(RatioRecipe recipe) {
         double totalWeight = ingredientList.stream()
@@ -290,7 +338,7 @@ public class MixingBlockEntity extends BlockEntity
         }
 
         dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(), new DoughRecipeComponent(
-                recipe.getId().getPath(),
+                recipe.getId(),
                 targetMap,
                 infos,
                 total
@@ -309,6 +357,15 @@ public class MixingBlockEntity extends BlockEntity
             dough.set(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(), doughTypeId);
         } else {
             LOGGER.warn("⚠ No DoughProcessRecipe found for dough type: {}", recipe.getId());
+        }
+
+        double totalWeight = ingredientList.stream()
+                .mapToDouble(IngredientStack::getGrams)
+                .sum();
+
+        if (totalWeight > MAX_DOUGH_WEIGHT_GRAMS) {
+            LOGGER.warn("Mixing exceeds maximum allowed dough size ({}g > {}g)", totalWeight, MAX_DOUGH_WEIGHT_GRAMS);
+            return; // Or set an error flag for GUI display
         }
 
 

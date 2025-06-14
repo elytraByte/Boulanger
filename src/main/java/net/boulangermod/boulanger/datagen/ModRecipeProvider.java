@@ -255,15 +255,16 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 //                .save(pRecipeOutput);
 
         new DoughProcessRecipeBuilder(
-                ResourceLocation.fromNamespaceAndPath("boulanger", "dough_process/baguette"), // ID for the *recipe file*
-                ResourceLocation.fromNamespaceAndPath("boulanger", "baguette") // dough type (linked to RatioRecipe)
+                ResourceLocation.fromNamespaceAndPath("boulanger", "dough_process/baguette"),
+                ResourceLocation.fromNamespaceAndPath("boulanger", "baguette")
         )
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.SHAPE)
+                .addStep(StepType.PROOF, 1600)       // First proof (e.g., 80 seconds @ 20 tps)
+                .addStep(StepType.PUNCHDOWN)         // Degas
+                .addStep(StepType.PROOF, 1600)       // Second proof
+                .addStep(StepType.PUNCHDOWN)         // Optional degas before divide
+                .addStep(StepType.DIVIDE)            // → Used by DoughDividerBlockEntity
+                .setServingWeight(454.0)             // ← Defines portion size post-divide
+                .addStep(StepType.SHAPE)             // Shape dough into pan or free-form
                 .save(pRecipeOutput);
-
     }
 }

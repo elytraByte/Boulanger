@@ -23,6 +23,7 @@ public class DoughProcessRecipeBuilder {
     private final ResourceLocation id;
     private final ResourceLocation doughType;
     private final List<ProcessingStep> steps = new ArrayList<>();
+    private double servingWeightGrams = 0.0; // Optional
 
     public DoughProcessRecipeBuilder(ResourceLocation id, ResourceLocation doughType) {
         this.id = Objects.requireNonNull(id);
@@ -36,6 +37,11 @@ public class DoughProcessRecipeBuilder {
 
     public DoughProcessRecipeBuilder addStep(StepType type) {
         return addStep(type, 0);
+    }
+
+    public DoughProcessRecipeBuilder setServingWeight(double grams) {
+        this.servingWeightGrams = grams;
+        return this;
     }
 
     public void save(RecipeOutput output) {
@@ -56,12 +62,15 @@ public class DoughProcessRecipeBuilder {
 
         json.add("steps", stepArray);
 
+        if (servingWeightGrams > 0.0) {
+            json.addProperty("serving_weight_grams", servingWeightGrams);
+        }
+
         LOGGER.debug("Generated dough process recipe JSON for {}: {}", id, json);
 
         // Use codec to convert the JsonObject into a DoughProcessRecipe instance
         DataResult<DoughProcessRecipe> parsed = CODEC.codec().parse(JsonOps.INSTANCE, json);
         DoughProcessRecipe recipe = parsed.getOrThrow();
-
 
         output.accept(id, recipe, null);
     }

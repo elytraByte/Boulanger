@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.item;
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.PanTypeComponent;
 import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.entity.ModEntities;
 import net.boulangermod.boulanger.util.IngredientCategory;
@@ -17,6 +18,9 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Boulanger.MODID);
@@ -178,17 +182,17 @@ public class ModItems {
         return bag;
     }
 
-    public static final DeferredItem<Item> PAN = ITEMS.register("pan", () ->
-            new PanItem(new Item.Properties()));
-
-
-
-
-
-
-
-
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
+    }
+
+    public static final DeferredItem<Item> PAN =
+            ITEMS.register("pan", () -> new PanItem(new Item.Properties(), PanType.LOAF));
+
+
+    public static ItemStack createPan(PanType type) {
+        ItemStack stack = new ItemStack(ModItems.PAN.get());
+        stack.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(type.getId()));
+        return stack;
     }
 }

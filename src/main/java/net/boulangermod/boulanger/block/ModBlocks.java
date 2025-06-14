@@ -91,6 +91,9 @@ public class ModBlocks {
     public static final DeferredBlock<Block> BAKERS_TABLE = registerBlock("bakers_table",
             () -> new BakersTableBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
+    public static final DeferredBlock<Block> DOUGH_DIVIDER = registerBlock("dough_divider",
+            () -> new DoughDividerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
 
 
 

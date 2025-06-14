@@ -97,6 +97,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
         blockWithItem(ModBlocks.PROOFING_BOX);
         blockWithItem(ModBlocks.BAKERS_TABLE);
+        blockWithItem(ModBlocks.DOUGH_DIVIDER);
 
 
 

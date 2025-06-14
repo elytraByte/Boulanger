@@ -50,7 +50,7 @@ public class DoughItem extends Item {
 
         // Header
         tooltipComponents.add(
-                Component.literal("Recipe: " + dr.recipeName())
+                Component.literal("Recipe: " + dr.recipeId().toString())
                         .withStyle(ChatFormatting.GOLD)
         );
         tooltipComponents.add(

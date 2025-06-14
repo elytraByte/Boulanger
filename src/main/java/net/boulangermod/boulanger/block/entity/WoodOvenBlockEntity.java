@@ -172,8 +172,8 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
             bread.set(ModDataComponentTypes.DOUGH_RECIPE.get(), doughRecipe);
 
             // Convert recipeName to BreadType
-            String recipeName = doughRecipe.recipeName();
-            BreadType breadType = BreadType.byId(recipeName).orElse(BreadType.BAGUETTE);
+            ResourceLocation recipeId = doughRecipe.recipeId();
+            BreadType breadType = BreadType.byId(recipeId.getPath()).orElse(BreadType.BAGUETTE);
             bread.set(ModDataComponentTypes.BREAD_TYPE.get(), breadType);
             bread.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(breadType.getModelIndex()));
         }

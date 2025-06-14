@@ -20,6 +20,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -106,6 +107,15 @@ public abstract class AbstractProcessingBlockEntity extends BlockEntity implemen
 
         if (dirty) setChanged();
     }
+
+    public static <T extends BlockEntity> BlockEntityTicker<T> createTickerHelper(
+            BlockEntityType<T> actualType,
+            BlockEntityType<? extends T> expectedType,
+            BlockEntityTicker<? super T> ticker
+    ) {
+        return actualType == expectedType ? (BlockEntityTicker<T>) ticker : null;
+    }
+
 
     protected abstract boolean canProcess();
     protected abstract void processItem();

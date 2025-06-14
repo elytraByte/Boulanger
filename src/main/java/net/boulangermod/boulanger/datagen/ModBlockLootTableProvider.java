@@ -102,6 +102,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.STONE_MILL_BLOCK.get());
         dropSelf(ModBlocks.PROOFING_BOX.get());
         dropSelf(ModBlocks.BAKERS_TABLE.get());
+        dropSelf(ModBlocks.DOUGH_DIVIDER.get());
         dropSelf(ModBlocks.BLACK_TILE.get());
         dropSelf(ModBlocks.BLUE_TILE.get());
         dropSelf(ModBlocks.DARK_BLUE_TILE.get());

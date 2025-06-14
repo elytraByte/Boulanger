@@ -6,13 +6,19 @@ import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.boulangermod.boulanger.util.StreamCodecsCompat;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.*;
 
-public record DoughRecipeComponent(String recipeName,
+public record DoughRecipeComponent(ResourceLocation recipeId,
                                    Map<IngredientCategory, Double> targetPercentages,
                                    List<IngredientInfo> ingredients,
                                    int totalWeight) {
+
+    public ResourceLocation id() {
+        return recipeId;
+    }
+
 
     /**
      * Helper method to extract the map keys as a list.
@@ -30,7 +36,7 @@ public record DoughRecipeComponent(String recipeName,
 
     public static final Codec<DoughRecipeComponent> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
-                    Codec.STRING.fieldOf("recipeName").forGetter(DoughRecipeComponent::recipeName),
+                    ResourceLocation.CODEC.fieldOf("recipeId").forGetter(DoughRecipeComponent::recipeId),
                     // Encode the map as two parallel lists.
                     Codec.STRING.listOf().fieldOf("targetPercentagesKeys").forGetter(
                             comp -> {
@@ -44,12 +50,12 @@ public record DoughRecipeComponent(String recipeName,
                     Codec.DOUBLE.listOf().fieldOf("targetPercentagesValues").forGetter(DoughRecipeComponent::targetPercentagesValues),
                     IngredientInfo.CODEC.listOf().fieldOf("ingredients").forGetter(DoughRecipeComponent::ingredients),
                     Codec.INT.fieldOf("totalWeight").forGetter(DoughRecipeComponent::totalWeight)
-            ).apply(instance, (recipeName, keyNames, values, ingredients, totalWeight) -> {
+            ).apply(instance, (recipeId, keyNames, values, ingredients, totalWeight) -> {
                 Map<IngredientCategory, Double> percentages = new EnumMap<>(IngredientCategory.class);
                 for (int i = 0; i < keyNames.size(); i++) {
                     percentages.put(IngredientCategory.valueOf(keyNames.get(i)), values.get(i));
                 }
-                return new DoughRecipeComponent(recipeName, percentages, ingredients, totalWeight);
+                return new DoughRecipeComponent(recipeId, percentages, ingredients, totalWeight);
             })
     );
 
@@ -160,8 +166,8 @@ public record DoughRecipeComponent(String recipeName,
             new StreamCodec<>() {
                 @Override
                 public void encode(RegistryFriendlyByteBuf buffer, DoughRecipeComponent doughRecipe) {
-                    // Encode recipeName
-                    STRING_STREAM_CODEC.encode(buffer, doughRecipe.recipeName());
+                    // Encode recipeId as ResourceLocation
+                    ResourceLocation.STREAM_CODEC.encode(buffer, doughRecipe.recipeId());
 
                     // Encode targetPercentages as two parallel lists.
                     List<IngredientCategory> keyList = new ArrayList<>(doughRecipe.targetPercentages().keySet());
@@ -178,20 +184,24 @@ public record DoughRecipeComponent(String recipeName,
 
                 @Override
                 public DoughRecipeComponent decode(RegistryFriendlyByteBuf buffer) {
-                    String recipeName = STRING_STREAM_CODEC.decode(buffer);
+                    ResourceLocation recipeId = ResourceLocation.STREAM_CODEC.decode(buffer);
                     List<IngredientCategory> keyList = INGREDIENT_CATEGORY_LIST_CODEC.decode(buffer);
                     List<Double> valueList = DOUBLE_LIST_STREAM_CODEC.decode(buffer);
+
                     Map<IngredientCategory, Double> targetPercentages = new EnumMap<>(IngredientCategory.class);
                     Iterator<IngredientCategory> keyIter = keyList.iterator();
                     Iterator<Double> valueIter = valueList.iterator();
                     while (keyIter.hasNext() && valueIter.hasNext()) {
                         targetPercentages.put(keyIter.next(), valueIter.next());
                     }
+
                     List<IngredientInfo> ingredients = INGREDIENT_INFO_LIST.decode(buffer);
                     int totalWeight = INT_STREAM_CODEC.decode(buffer);
-                    return new DoughRecipeComponent(recipeName, targetPercentages, ingredients, totalWeight);
+
+                    return new DoughRecipeComponent(recipeId, targetPercentages, ingredients, totalWeight);
                 }
             };
+
 }
 
 

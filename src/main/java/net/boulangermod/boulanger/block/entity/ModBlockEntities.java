@@ -79,6 +79,13 @@ public class ModBlockEntities {
                     ModBlocks.BAKERS_TABLE.get()
             ).build(null));
 
+    public static final Supplier<BlockEntityType<DoughDividerBlockEntity>> DOUGH_DIVIDER =
+            BLOCK_ENTITIES.register("dough_divider", () -> BlockEntityType.Builder.of(
+                    DoughDividerBlockEntity::new,
+                    ModBlocks.DOUGH_DIVIDER.get()
+            ).build(null));
+
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

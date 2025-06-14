@@ -96,6 +96,7 @@ public class Boulanger {
             event.register(ModMenuTypes.WOOD_GASIFIER_MENU.get(), WoodGasifierScreen::new);
             event.register(ModMenuTypes.PROOFING_BOX_MENU.get(), ProofingBoxScreen::new);
             event.register(ModMenuTypes.BAKERS_TABLE_MENU.get(), BakersTableScreen::new);
+            event.register(ModMenuTypes.DOUGH_DIVIDER_MENU.get(), DoughDividerScreen::new);
 
         }
     }

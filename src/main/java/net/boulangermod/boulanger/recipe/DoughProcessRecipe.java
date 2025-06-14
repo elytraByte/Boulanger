@@ -3,6 +3,8 @@ package net.boulangermod.boulanger.recipe;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.util.StreamCodecsCompat;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -22,14 +24,14 @@ public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
     private final ResourceLocation id;
     private final ResourceLocation doughType;
     private final List<ProcessingStep> steps;
+    private final double servingWeightGrams;
 
-    public DoughProcessRecipe(ResourceLocation id, ResourceLocation doughType, List<ProcessingStep> steps) {
+    public DoughProcessRecipe(ResourceLocation id, ResourceLocation doughType, List<ProcessingStep> steps, double servingWeightGrams) {
         this.id = Objects.requireNonNull(id);
         this.doughType = Objects.requireNonNull(doughType);
         this.steps = List.copyOf(Objects.requireNonNull(steps));
+        this.servingWeightGrams = servingWeightGrams;
     }
-
-
 
     public ResourceLocation getDoughType() {
         return doughType;
@@ -39,7 +41,19 @@ public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
         return steps;
     }
 
-        public ResourceLocation getId() {
+    public double getServingWeightGrams() {
+        return servingWeightGrams;
+    }
+
+    public boolean canSkipStep(ItemStack dough, ProcessingStep step) {
+        if (step.type() == StepType.DIVIDE) {
+            WeightComponent weight = dough.get(ModDataComponentTypes.INGREDIENT_GRAMS);
+            return weight != null && weight.grams() <= servingWeightGrams;
+        }
+        return false;
+    }
+
+    public ResourceLocation getId() {
         return id;
     }
 
@@ -53,10 +67,25 @@ public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
         return ItemStack.EMPTY;
     }
 
-    @Override public boolean canCraftInDimensions(int width, int height) { return false; }
-    @Override public ItemStack getResultItem(HolderLookup.Provider ctx) { return ItemStack.EMPTY; }
-    @Override public RecipeSerializer<?> getSerializer() { return DOUGH_PROCESS_SERIALIZER.get(); }
-    @Override public RecipeType<?> getType() { return DOUGH_PROCESS_TYPE.get(); }
+    @Override
+    public boolean canCraftInDimensions(int width, int height) {
+        return false;
+    }
+
+    @Override
+    public ItemStack getResultItem(HolderLookup.Provider ctx) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public RecipeSerializer<?> getSerializer() {
+        return DOUGH_PROCESS_SERIALIZER.get();
+    }
+
+    @Override
+    public RecipeType<?> getType() {
+        return DOUGH_PROCESS_TYPE.get();
+    }
 
     // ------------------------------------------------------------------
     // SERIALIZER
@@ -65,23 +94,27 @@ public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
         public static final MapCodec<DoughProcessRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 ResourceLocation.CODEC.fieldOf("id").forGetter(DoughProcessRecipe::getId),
                 ResourceLocation.CODEC.fieldOf("dough_type").forGetter(DoughProcessRecipe::getDoughType),
-                ProcessingStep.CODEC.listOf().fieldOf("steps").forGetter(DoughProcessRecipe::getSteps)
+                ProcessingStep.CODEC.listOf().fieldOf("steps").forGetter(DoughProcessRecipe::getSteps),
+                Codec.DOUBLE.fieldOf("serving_weight_grams").forGetter(DoughProcessRecipe::getServingWeightGrams)
         ).apply(instance, DoughProcessRecipe::new));
 
-        @Override public MapCodec<DoughProcessRecipe> codec() { return CODEC; }
+        @Override
+        public MapCodec<DoughProcessRecipe> codec() {
+            return CODEC;
+        }
 
         public static final StreamCodec<RegistryFriendlyByteBuf, DoughProcessRecipe> STREAM_CODEC =
                 StreamCodec.composite(
                         ResourceLocation.STREAM_CODEC, DoughProcessRecipe::getId,
                         ResourceLocation.STREAM_CODEC, DoughProcessRecipe::getDoughType,
                         StreamCodecsCompat.list(ProcessingStep.STREAM_CODEC), DoughProcessRecipe::getSteps,
+                        StreamCodecsCompat.DOUBLE, DoughProcessRecipe::getServingWeightGrams,
                         DoughProcessRecipe::new
                 );
 
-
-        @Override public StreamCodec<RegistryFriendlyByteBuf, DoughProcessRecipe> streamCodec() {
+        @Override
+        public StreamCodec<RegistryFriendlyByteBuf, DoughProcessRecipe> streamCodec() {
             return STREAM_CODEC;
         }
     }
-
 }

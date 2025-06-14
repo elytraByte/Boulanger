@@ -35,6 +35,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<BakersTableMenu>> BAKERS_TABLE_MENU =
             registerMenuType("bakers_table_menu", BakersTableMenu::new);
 
+    public static final DeferredHolder<MenuType<?>, MenuType<DoughDividerMenu>> DOUGH_DIVIDER_MENU =
+            registerMenuType("dough_divider_menu", DoughDividerMenu::new);
+
     private static <T extends AbstractContainerMenu>DeferredHolder<MenuType<?>,
             MenuType<T>> registerMenuType(String name, IContainerFactory<T> factory) {
         return MENUS.register(name, () -> IMenuTypeExtension.create(factory));
