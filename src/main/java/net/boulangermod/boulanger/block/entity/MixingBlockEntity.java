@@ -45,7 +45,7 @@ public class MixingBlockEntity extends BlockEntity
     public static final int OUTPUT_BOWL  = 1;
     public static final int OUTPUT_DOUGH = 2;
 
-    private static final double MAX_DOUGH_WEIGHT_GRAMS = 20000.0; // 20 kg default for basic mixer
+    private static final double MAX_DOUGH_WEIGHT_GRAMS = 22680.0; // 20 kg default for basic mixer
 
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(3) {

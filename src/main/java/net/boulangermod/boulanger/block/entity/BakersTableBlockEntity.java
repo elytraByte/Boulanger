@@ -74,58 +74,45 @@ public class BakersTableBlockEntity extends BlockEntity implements MenuProvider 
 
     public boolean tryShape() {
         ItemStack dough = itemHandler.getStackInSlot(0);
-        ItemStack pan = itemHandler.getStackInSlot(1);
-        ItemStack output = itemHandler.getStackInSlot(2);
+        ItemStack pan   = itemHandler.getStackInSlot(1);
+        ItemStack output= itemHandler.getStackInSlot(2);
 
         if (dough.isEmpty() || pan.isEmpty() || !output.isEmpty()) return false;
 
-        if (!dough.has(ModDataComponentTypes.PROOFING_STATE.get()) ||
-                !dough.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) return false;
+        // 1) Check proofing state & recipe
+        if (!dough.has(ModDataComponentTypes.PROOFING_STATE.get())
+                || !dough.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) return false;
 
-        // ✅ Ensure only valid pan items can be used
-        if (!pan.getItem().getDefaultInstance().has(ModDataComponentTypes.PAN_TYPE.get())) {
+        // 2) Ensure this exact pan stack has a PanType component
+        if (!pan.has(ModDataComponentTypes.PAN_TYPE.get())) {
             return false;
         }
 
+        // 3) Lookup the shaping step
         ProofingStateComponent stateComp = dough.get(ModDataComponentTypes.PROOFING_STATE.get());
-        ResourceLocation recipeId = dough.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
-
-        Optional<DoughProcessRecipe> opt = getLevel().getRecipeManager()
+        ResourceLocation recipeId         = dough.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+        Optional<DoughProcessRecipe> opt  = getLevel().getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
                 .map(RecipeHolder::value)
                 .filter(r -> r.getDoughType().equals(recipeId))
                 .findFirst();
-
         if (opt.isEmpty()) return false;
         DoughProcessRecipe recipe = opt.get();
-        List<ProcessingStep> steps = recipe.getSteps();
-
-        if (stateComp.stepIndex() >= steps.size()) return false;
-        ProcessingStep step = steps.get(stateComp.stepIndex());
-
+        ProcessingStep step       = recipe.getSteps().get(stateComp.stepIndex());
         if (step.type() != StepType.SHAPE) return false;
 
-        // Create new panned dough
-        ItemStack filledPan = new ItemStack(ModItems.PAN.get());
+        // 4) Create a copy of the pan so we keep its item, model-data, etc.
+        ItemStack filledPan = pan.copy();
 
-        // Copy all important dough components
+        // 5) Copy the dough components into that pan
         copyKnownDoughComponents(dough, filledPan);
 
-        // Advance proofing step (and mark shaped = true)
-        filledPan.set(ModDataComponentTypes.PROOFING_STATE.get(), new ProofingStateComponent(
-                stateComp.stepIndex() + 1, 0, true
-        ));
+        // 6) Advance proofing step
+        filledPan.set(ModDataComponentTypes.PROOFING_STATE.get(),
+                new ProofingStateComponent(stateComp.stepIndex() + 1, 0, true)
+        );
 
-        // Set pan type using the pan's PAN_TYPE component directly
-        PanTypeComponent panType = pan.get(ModDataComponentTypes.PAN_TYPE.get());
-        filledPan.set(ModDataComponentTypes.PAN_TYPE.get(), panType);
-
-        // ✅ Copy CustomModelData from the input pan if it has it
-        if (pan.has(DataComponents.CUSTOM_MODEL_DATA)) {
-            filledPan.set(DataComponents.CUSTOM_MODEL_DATA, pan.get(DataComponents.CUSTOM_MODEL_DATA));
-        }
-
-        // Place result and consume inputs
+        // 7) Consume inputs & set result
         itemHandler.setStackInSlot(2, filledPan);
         itemHandler.setStackInSlot(0, ItemStack.EMPTY);
         itemHandler.setStackInSlot(1, ItemStack.EMPTY);
@@ -133,6 +120,7 @@ public class BakersTableBlockEntity extends BlockEntity implements MenuProvider 
         setChanged();
         return true;
     }
+
 
 
 

@@ -5,21 +5,14 @@ import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.recipe.ProcessingStep;
-import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.screen.DoughDividerMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.TypedDataComponent;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
@@ -30,13 +23,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static net.boulangermod.boulanger.block.entity.BakersTableBlockEntity.copyKnownDoughComponents;
 
 public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
 
@@ -70,18 +59,18 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide) return;
-
-        LOGGER.debug("Tick at {}: Checking process condition", pos);
+        if (level.isClientSide) {
+            return;
+        }
 
         if (canProcess()) {
             LOGGER.debug("→ Can process. Attempting to divide dough.");
             processItem();
-
         } else {
             LOGGER.debug("→ Cannot process: Input conditions not met.");
         }
     }
+
 
     @Override
     protected boolean canProcess() {
@@ -136,98 +125,95 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
 
     @Override
     protected void processItem() {
-        // 1) pull the input stack
+        // 1) Pull the input dough
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
         if (input.isEmpty() || !input.has(ModDataComponentTypes.INGREDIENT_GRAMS.get())) {
             return;
         }
 
-        // 2) find recipe & serving size
+        // 2) Lookup recipe & serving size
         DoughProcessRecipe recipe = findRecipeFor(input);
-        if (recipe == null) return;
-        double servingSize = recipe.getServingWeightGrams();
-
-        // 3) read original weight & proof state & dough-recipe component
-        WeightComponent wc           = input.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-        double          totalWeight  = wc.grams();
-        ProofingStateComponent proof = input.get(ModDataComponentTypes.PROOFING_STATE.get());
-        DoughRecipeComponent  origRec= input.get(ModDataComponentTypes.DOUGH_RECIPE.get());
-
-        int   currStep = proof.stepIndex();
-        int   nextStep = currStep + 1;
-        boolean shaped = proof.shaped();
-        int   ticks    = proof.ticksInStep();
-
-        // 4) how many full servings?
-        int portions = (int)(totalWeight / servingSize);
-
-        // — If exactly 1 serving, auto-advance divide/proof instead of splitting —
-        if (portions == 1) {
-            ProcessingStep currentStep = recipe.getSteps().get(currStep);
-            if (recipe.canSkipStep(input, currentStep)) {
-                input.set(
-                        ModDataComponentTypes.PROOFING_STATE.get(),
-                        new ProofingStateComponent(nextStep, ticks, shaped)
-                );
-                itemHandler.setStackInSlot(INPUT_SLOT, input);
-                LOGGER.debug("→ Auto-skipped divide for min-size dough, advanced to step {}", nextStep);
-            }
+        if (recipe == null) {
+            LOGGER.warn("→ no recipe for {}", input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get()));
             return;
         }
+        double servingWeight = recipe.getServingWeightGrams();
 
-        // — If fewer than 1 serving, nothing to do —
+        // 3) Read total grams
+        WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        double totalWeight = (wc != null ? wc.grams() : 0.0);
+
+        // 4) Compute number of full portions
+        int portions = (int) Math.floor(totalWeight / servingWeight);
+        // Skip if fewer than 2 portions
         if (portions < 2) {
+            LOGGER.debug("→ Only {} portion(s) possible; not dividing.", portions);
             return;
         }
 
-        // 5) consume the input (we’ll recreate it in portions)
-        itemHandler.setStackInSlot(INPUT_SLOT, ItemStack.EMPTY);
+        // 5) Compute exact per‐portion weight
+        double portionWeight = totalWeight / portions;
 
-        // 6) loop & emit each portion
-        for (int i = 0; i < portions; i++) {
-            // clone *all* metadata & NBT
-            ItemStack portion = input.copy();
-            portion.setCount(1);
-
-            // a) override weight
-            portion.set(
-                    ModDataComponentTypes.INGREDIENT_GRAMS.get(),
-                    new WeightComponent((float) servingSize)
-            );
-
-            // b) advance proof
-            portion.set(
-                    ModDataComponentTypes.PROOFING_STATE.get(),
-                    new ProofingStateComponent(nextStep, ticks, shaped)
-            );
-
-            // c) rebuild the DoughRecipeComponent
-            List<IngredientInfo> scaledIngredients = origRec.ingredients().stream()
+        // 6) Build a scaled‐down DoughRecipeComponent
+        DoughRecipeComponent oldRec = input.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        DoughRecipeComponent newRec = null;
+        if (oldRec != null) {
+            double scale = portionWeight / oldRec.totalWeight();
+            List<IngredientInfo> scaledIngredients = oldRec.ingredients().stream()
                     .map(info -> new IngredientInfo(
                             info.itemId(),
                             info.category(),
-                            (int)Math.round(info.weight() / (double)portions)
+                            (int) Math.round(info.weight() * scale)
                     ))
                     .collect(Collectors.toList());
 
-            DoughRecipeComponent newRec = new DoughRecipeComponent(
-                    origRec.recipeId(),
-                    origRec.targetPercentages(),
+            newRec = new DoughRecipeComponent(
+                    oldRec.recipeId(),
+                    oldRec.targetPercentages(),
                     scaledIngredients,
-                    (int) servingSize
+                    (int) portionWeight
             );
-            portion.set(ModDataComponentTypes.DOUGH_RECIPE.get(), newRec);
-
-            // emit it
-            itemHandler.insertItem(OUTPUT_SLOT, portion, false);
         }
 
-        LOGGER.debug("→ Split {}g into {}×{}g ({}g each) and advanced proof to step {}",
-                totalWeight, portions, servingSize, nextStep);
+        // 7) Reduce the input stack’s weight (or clear it)
+        reduceInput(portionWeight * portions);
+
+        // 8) Prepare the output stack
+        ItemStack output = itemHandler.getStackInSlot(OUTPUT_SLOT);
+        if (output.isEmpty()) {
+            // New stack of “portions” count
+            output = new ItemStack(input.getItem(), portions);
+        } else if (output.getItem() == input.getItem()) {
+            // Grow existing stack
+            output.grow(portions);
+        } else {
+            LOGGER.warn("→ Cannot divide: output slot occupied by {}", output.getItem());
+            return;
+        }
+
+        // Copy metadata (recipe type, proofing state, baker %)
+        copyDoughMetadataExceptWeight(input, output);
+
+        // Stamp new recipe component & weight
+        if (newRec != null) {
+            output.set(ModDataComponentTypes.DOUGH_RECIPE.get(), newRec);
+        }
+        output.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
+                new WeightComponent((float) portionWeight)
+        );
+
+        // Advance proofing step once
+        ProofingStateComponent oldState = input.get(ModDataComponentTypes.PROOFING_STATE.get());
+        int nextStep = oldState != null ? oldState.stepIndex() + 1 : 0;
+        output.set(ModDataComponentTypes.PROOFING_STATE.get(),
+                new ProofingStateComponent(nextStep, 0, true)
+        );
+
+        // 9) Write back & mark dirty
+        itemHandler.setStackInSlot(OUTPUT_SLOT, output);
+        setChanged();
+        LOGGER.info("→ Divided {}g into {} pieces of {}g each", totalWeight, portions, portionWeight);
     }
-
-
-
 
 
 
@@ -311,9 +297,4 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
         // mark dirty so it syncs & saves
         setChanged();
     }
-
-
-
-
 }
-

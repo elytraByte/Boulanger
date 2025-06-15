@@ -217,23 +217,39 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         new RatioRecipeBuilder(
                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_bread"),
                 new ItemStack(ModItems.DOUGH.get()),
-                2.0D // tolerance %
+                0.05D // 5% tolerance
         )
-                .addComponent(IngredientCategory.FLOUR, 100.0, List.of(
-                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"),
-                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"),
-                        ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran")
-                ))
-                .addComponent(IngredientCategory.FLOUR, 70.0, List.of(ResourceLocation.fromNamespaceAndPath(MODID, "whole_wheat_flour")))
-                .addComponent(IngredientCategory.FLOUR, 25.0, List.of(ResourceLocation.fromNamespaceAndPath(MODID, "high_gluten_flour")))
-                .addComponent(IngredientCategory.FLOUR, 5.0, List.of(ResourceLocation.fromNamespaceAndPath(MODID, "wheat_bran")))
-                .addComponent(IngredientCategory.SUGAR, 10.0, List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brown_sugar")))
+                // 100% total flour is implied by these three lines summing to 100%
+                .addComponent(
+                        IngredientCategory.FLOUR, 70.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_wheat_flour"))
+                )
+                .addComponent(
+                        IngredientCategory.FLOUR, 25.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"))
+                )
+                .addComponent(
+                        IngredientCategory.FLOUR, 5.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "wheat_bran"))
+                )
+                // then your other ingredients by baker's %
+                .addComponent(
+                        IngredientCategory.SUGAR, 10.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brown_sugar"))
+                )
                 .addComponent(IngredientCategory.SALT, 6.0, List.of())
                 .addComponent(IngredientCategory.YEAST, 8.0, List.of())
-                .addComponent(IngredientCategory.EGGS, 10.0, List.of(ResourceLocation.fromNamespaceAndPath("boulanger", "fancy_egg")))
-                .addComponent(IngredientCategory.WATER, 72.0, List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket")))
+                .addComponent(
+                        IngredientCategory.EGGS, 10.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "fancy_egg"))
+                )
+                .addComponent(
+                        IngredientCategory.WATER, 72.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
+                )
                 .servingWeight(680.0)
                 .save(pRecipeOutput);
+
 
 //        // ——— Debug Hydrated Dough ———
 //        new RatioRecipeBuilder(
@@ -266,5 +282,20 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .setServingWeight(454.0)             // ← Defines portion size post-divide
                 .addStep(StepType.SHAPE)             // Shape dough into pan or free-form
                 .save(pRecipeOutput);
+
+        new DoughProcessRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath("boulanger", "dough_process/whole_wheat_bread"),
+                ResourceLocation.fromNamespaceAndPath("boulanger", "whole_wheat_bread")
+        )
+                .addStep(StepType.PROOF, 1600)       // 1st proof
+                .addStep(StepType.PUNCHDOWN)         // degas
+                .addStep(StepType.PROOF, 1600)       // 2nd proof
+                .addStep(StepType.PUNCHDOWN)         // degas before divide
+                .addStep(StepType.DIVIDE)            // split into portions
+                .addStep(StepType.SHAPE)             // shape into pan or free-form
+                .addStep(StepType.PROOF, 1600)       // final proof after shaping
+                .setServingWeight(680.0)             // each portion is 680 g
+                .save(pRecipeOutput);
+
     }
 }
