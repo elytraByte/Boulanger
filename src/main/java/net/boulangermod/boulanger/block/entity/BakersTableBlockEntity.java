@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.block.entity;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.PanTypeComponent;
 import net.boulangermod.boulanger.component.ProofingStateComponent;
+import net.boulangermod.boulanger.item.PanType;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
@@ -10,8 +11,6 @@ import net.boulangermod.boulanger.recipe.ProcessingStep;
 import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.screen.BakersTableMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
@@ -25,6 +24,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
+import net.minecraft.core.component.DataComponentType;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +36,10 @@ public class BakersTableBlockEntity extends BlockEntity implements MenuProvider 
             setChanged();
         }
     };
+
+    public static final int DOUGH_SLOT = 0;
+    public static final int PAN_SLOT   = 1;
+    public static final int OUTPUT_SLOT= 2;
 
     public BakersTableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.BAKERS_TABLE.get(), pos, state);
@@ -56,73 +60,76 @@ public class BakersTableBlockEntity extends BlockEntity implements MenuProvider 
         blockEntity.tryShape();
     }
 
+    @SuppressWarnings("unchecked")
     public static void copyKnownDoughComponents(ItemStack source, ItemStack target) {
+        // Explicitly type the component variable to avoid 'var' error
         for (DataComponentType<?> component : List.of(
                 ModDataComponentTypes.DOUGH_RECIPE.get(),
                 ModDataComponentTypes.PROOFING_STATE.get(),
                 ModDataComponentTypes.INGREDIENT_GRAMS.get(),
                 ModDataComponentTypes.BAKER_PERCENTAGES.get(),
                 ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(),
-                ModDataComponentTypes.INGREDIENT_TYPE.get()
+                ModDataComponentTypes.INGREDIENT_TYPE.get(),
+                ModDataComponentTypes.PAN_TYPE.get()
         )) {
             if (source.has(component)) {
-                // Unsafe cast okay for controlled use
+                // cast to Object-component for set
                 target.set((DataComponentType<Object>) component, source.get(component));
             }
         }
     }
 
     public boolean tryShape() {
-        ItemStack dough = itemHandler.getStackInSlot(0);
-        ItemStack pan   = itemHandler.getStackInSlot(1);
-        ItemStack output= itemHandler.getStackInSlot(2);
+        ItemStack dough  = itemHandler.getStackInSlot(DOUGH_SLOT);
+        ItemStack pan    = itemHandler.getStackInSlot(PAN_SLOT);
+        ItemStack output = itemHandler.getStackInSlot(OUTPUT_SLOT);
 
         if (dough.isEmpty() || pan.isEmpty() || !output.isEmpty()) return false;
 
-        // 1) Check proofing state & recipe
         if (!dough.has(ModDataComponentTypes.PROOFING_STATE.get())
-                || !dough.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) return false;
-
-        // 2) Ensure this exact pan stack has a PanType component
-        if (!pan.has(ModDataComponentTypes.PAN_TYPE.get())) {
+                || !dough.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) {
             return false;
         }
 
-        // 3) Lookup the shaping step
-        ProofingStateComponent stateComp = dough.get(ModDataComponentTypes.PROOFING_STATE.get());
-        ResourceLocation recipeId         = dough.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+        // Enforce pan-type whitelist
+        if (!dough.has(ModDataComponentTypes.PAN_TYPE.get())
+                || !pan.has(ModDataComponentTypes.PAN_TYPE.get())) {
+            return false;
+        }
+        String requiredId = dough.get(ModDataComponentTypes.PAN_TYPE.get()).id();
+        String presentId  = pan .get(ModDataComponentTypes.PAN_TYPE.get()).id();
+        PanType required = PanType.fromId(requiredId);
+        PanType present  = PanType.fromId(presentId);
+        if (!required.equals(present)) {
+            return false;
+        }
+
         Optional<DoughProcessRecipe> opt  = getLevel().getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
                 .map(RecipeHolder::value)
-                .filter(r -> r.getDoughType().equals(recipeId))
+                .filter(r -> r.getDoughType().equals(dough.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())))
                 .findFirst();
         if (opt.isEmpty()) return false;
-        DoughProcessRecipe recipe = opt.get();
-        ProcessingStep step       = recipe.getSteps().get(stateComp.stepIndex());
+        ProcessingStep step = opt.get().getSteps()
+                .get(dough.get(ModDataComponentTypes.PROOFING_STATE.get()).stepIndex());
         if (step.type() != StepType.SHAPE) return false;
 
-        // 4) Create a copy of the pan so we keep its item, model-data, etc.
         ItemStack filledPan = pan.copy();
-
-        // 5) Copy the dough components into that pan
         copyKnownDoughComponents(dough, filledPan);
-
-        // 6) Advance proofing step
         filledPan.set(ModDataComponentTypes.PROOFING_STATE.get(),
-                new ProofingStateComponent(stateComp.stepIndex() + 1, 0, true)
+                new ProofingStateComponent(
+                        dough.get(ModDataComponentTypes.PROOFING_STATE.get()).stepIndex() + 1,
+                        0,
+                        true
+                )
         );
 
-        // 7) Consume inputs & set result
-        itemHandler.setStackInSlot(2, filledPan);
-        itemHandler.setStackInSlot(0, ItemStack.EMPTY);
-        itemHandler.setStackInSlot(1, ItemStack.EMPTY);
-
+        itemHandler.setStackInSlot(OUTPUT_SLOT, filledPan);
+        itemHandler.setStackInSlot(DOUGH_SLOT, ItemStack.EMPTY);
+        itemHandler.setStackInSlot(PAN_SLOT, ItemStack.EMPTY);
         setChanged();
         return true;
     }
-
-
-
 
     public ItemStackHandler getItemHandler() {
         return itemHandler;

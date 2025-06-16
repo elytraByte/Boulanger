@@ -5,6 +5,7 @@ import net.boulangermod.boulanger.block.AbstractProcessingBlock;
 import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.item.FlourItemType;
 import net.boulangermod.boulanger.item.ModItems;
+import net.boulangermod.boulanger.item.PanType;
 import net.boulangermod.boulanger.recipe.*;
 import net.boulangermod.boulanger.screen.MixingBlockMenu;
 import net.boulangermod.boulanger.util.IngredientCategory;
@@ -305,73 +306,92 @@ public class MixingBlockEntity extends BlockEntity
 
     private void generateDough() {
         LOGGER.debug("Generating dough at {}", worldPosition);
-        Optional<RatioRecipe> opt = findMatchingRecipe();
-        if (opt.isEmpty()) {
+
+        // 1) Find matching ratio recipe
+        Optional<RatioRecipe> optRatio = findMatchingRecipe();
+        if (optRatio.isEmpty()) {
             LOGGER.info("No valid recipe — clearing output.");
             itemHandler.setStackInSlot(OUTPUT_DOUGH, ItemStack.EMPTY);
             ingredientList.clear();
             return;
         }
+        RatioRecipe ratio = optRatio.get();
+        LOGGER.info("Creating dough for {}", ratio.getId());
 
-        RatioRecipe recipe = opt.get();
-        LOGGER.info("Creating dough for {}", recipe.getId());
+        // 2) Build the raw dough stack
+        ItemStack dough = new ItemStack(ModItems.DOUGH.get());
 
-        Map<IngredientCategory, Double> targetMap = recipe.getComponents().stream()
+        // 3) Baker percentages
+        Map<IngredientCategory, Double> targetMap = ratio.getComponents().stream()
                 .collect(Collectors.groupingBy(
                         IngredientComponent::category,
                         Collectors.summingDouble(IngredientComponent::targetPercent)
                 ));
-
-        ItemStack dough = new ItemStack(ModItems.DOUGH.get());
         dough.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(),
                 new BakerPctComponent(targetMap));
 
+        // 4) DoughRecipeComponent + weight
         List<IngredientInfo> infos = new ArrayList<>();
-        int total = 0;
+        int totalGrams = 0;
         for (IngredientStack st : ingredientList) {
-            String itemId = Optional.ofNullable(st.getBowlStack().get(ModDataComponentTypes.FLOUR_TYPE.get()))
+            String itemId = Optional.ofNullable(
+                            st.getBowlStack().get(ModDataComponentTypes.FLOUR_TYPE.get())
+                    )
                     .map(FlourType::getId)
                     .orElse(BuiltInRegistries.ITEM.getKey(st.getActualItem()).toString());
+
             int grams = st.getGrams();
-            total += grams;
+            totalGrams += grams;
             infos.add(new IngredientInfo(itemId, st.getCategory(), grams));
         }
+        dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
+                new DoughRecipeComponent(ratio.getId(), targetMap, infos, totalGrams));
+        dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
+                new WeightComponent(totalGrams));
 
-        dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(), new DoughRecipeComponent(
-                recipe.getId(),
-                targetMap,
-                infos,
-                total
-        ));
-        dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(total));
-        dough.set(ModDataComponentTypes.PROOFING_STATE.get(), new ProofingStateComponent(0, 0, false));
+        // 5) Proofing state & link to process recipe
+        dough.set(ModDataComponentTypes.PROOFING_STATE.get(),
+                new ProofingStateComponent(0, /*ticks=*/0, /*shaped=*/false));
+        dough.set(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(), ratio.getId());
 
-        Optional<DoughProcessRecipe> process = level.getRecipeManager()
+        // 6) **Tag on the recipe’s pan — using a PanTypeComponent wrapper**
+        Optional<DoughProcessRecipe> optProcess = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
                 .map(RecipeHolder::value)
-                .filter(p -> p.getDoughType().equals(recipe.getId()))
+                .filter(p -> p.getDoughType().equals(ratio.getId()))
                 .findFirst();
 
-        if (process.isPresent()) {
-            ResourceLocation doughTypeId = process.get().getDoughType();
-            dough.set(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(), doughTypeId);
+        if (optProcess.isPresent()) {
+            ResourceLocation panLoc = optProcess.get().getPanType();
+            if (panLoc != null) {
+                PanType panEnum = PanType.byId(panLoc);
+                if (panEnum != null) {
+                    // <-- Here’s the key change:
+                    dough.set(
+                            ModDataComponentTypes.PAN_TYPE.get(),
+                            new PanTypeComponent(panEnum.getId())
+                    );
+                } else {
+                    LOGGER.warn("Unknown pan type '{}' for recipe {}", panLoc, ratio.getId());
+                }
+            }
         } else {
-            LOGGER.warn("⚠ No DoughProcessRecipe found for dough type: {}", recipe.getId());
+            LOGGER.warn("⚠ No DoughProcessRecipe found for dough type: {}", ratio.getId());
         }
 
-        double totalWeight = ingredientList.stream()
-                .mapToDouble(IngredientStack::getGrams)
-                .sum();
-
-        if (totalWeight > MAX_DOUGH_WEIGHT_GRAMS) {
-            LOGGER.warn("Mixing exceeds maximum allowed dough size ({}g > {}g)", totalWeight, MAX_DOUGH_WEIGHT_GRAMS);
-            return; // Or set an error flag for GUI display
+        // 7) Final size check and output
+        if (totalGrams > MAX_DOUGH_WEIGHT_GRAMS) {
+            LOGGER.warn("Mixing exceeds maximum allowed dough size ({}g > {}g)",
+                    totalGrams, MAX_DOUGH_WEIGHT_GRAMS);
+            return;
         }
-
-
         itemHandler.setStackInSlot(OUTPUT_DOUGH, dough);
         ingredientList.clear();
     }
+
+
+
+
 
     private boolean isWeighedIngredient(ItemStack s) {
         return s.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())

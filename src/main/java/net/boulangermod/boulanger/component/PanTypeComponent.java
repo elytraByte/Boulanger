@@ -2,6 +2,7 @@ package net.boulangermod.boulanger.component;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.boulangermod.boulanger.item.PanType;
 import net.boulangermod.boulanger.util.StreamCodecsCompat;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -36,5 +37,9 @@ public record PanTypeComponent(String id) {
     @Override
     public String toString() {
         return id;
+    }
+
+    public int getModelIndex() {
+        return PanType.fromId(id).getModelIndex();
     }
 }

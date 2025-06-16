@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.PanTypeComponent;
 import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.util.StreamCodecsCompat;
 import net.minecraft.core.HolderLookup;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,13 +25,19 @@ import static net.boulangermod.boulanger.recipe.ModRecipeSerializers.*;
 public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
     private final ResourceLocation id;
     private final ResourceLocation doughType;
+    private final @Nullable ResourceLocation panType;
     private final List<ProcessingStep> steps;
     private final double servingWeightGrams;
 
-    public DoughProcessRecipe(ResourceLocation id, ResourceLocation doughType, List<ProcessingStep> steps, double servingWeightGrams) {
-        this.id = Objects.requireNonNull(id);
-        this.doughType = Objects.requireNonNull(doughType);
-        this.steps = List.copyOf(Objects.requireNonNull(steps));
+    public DoughProcessRecipe(ResourceLocation id,
+                              ResourceLocation doughType,
+                              @Nullable ResourceLocation panType,
+                              List<ProcessingStep> steps,
+                              double servingWeightGrams) {
+        this.id                = id;
+        this.doughType         = doughType;
+        this.panType           = panType;
+        this.steps             = List.copyOf(steps);
         this.servingWeightGrams = servingWeightGrams;
     }
 
@@ -59,7 +67,20 @@ public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
 
     @Override
     public boolean matches(DoughProcessInput input, Level level) {
-        return false;
+        // first, is the dough the right type?
+        if (!input.getDoughType().equals(doughType)) return false;
+
+        // now, check that the pan sitting under/with it matches our recipe’s panType
+        ItemStack panStack = input.getPanStack();
+        if (panStack == null || !panStack.has(ModDataComponentTypes.PAN_TYPE.get())) {
+            return false;
+        }
+        PanTypeComponent actual = panStack.get(ModDataComponentTypes.PAN_TYPE.get());
+        if (actual == null) return false;
+
+        ResourceLocation actualRL = ResourceLocation.tryParse(actual.id());
+        return actualRL != null && actualRL.equals(this.panType);
+
     }
 
     @Override
@@ -87,6 +108,10 @@ public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
         return DOUGH_PROCESS_TYPE.get();
     }
 
+    public @Nullable ResourceLocation getPanType() {
+        return panType;
+    }
+
     // ------------------------------------------------------------------
     // SERIALIZER
     // ------------------------------------------------------------------
@@ -94,6 +119,7 @@ public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
         public static final MapCodec<DoughProcessRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 ResourceLocation.CODEC.fieldOf("id").forGetter(DoughProcessRecipe::getId),
                 ResourceLocation.CODEC.fieldOf("dough_type").forGetter(DoughProcessRecipe::getDoughType),
+                ResourceLocation.CODEC.fieldOf("pan_type").forGetter(DoughProcessRecipe::getPanType),     // ← new
                 ProcessingStep.CODEC.listOf().fieldOf("steps").forGetter(DoughProcessRecipe::getSteps),
                 Codec.DOUBLE.fieldOf("serving_weight_grams").forGetter(DoughProcessRecipe::getServingWeightGrams)
         ).apply(instance, DoughProcessRecipe::new));
@@ -107,6 +133,7 @@ public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
                 StreamCodec.composite(
                         ResourceLocation.STREAM_CODEC, DoughProcessRecipe::getId,
                         ResourceLocation.STREAM_CODEC, DoughProcessRecipe::getDoughType,
+                        ResourceLocation.STREAM_CODEC, DoughProcessRecipe::getPanType,
                         StreamCodecsCompat.list(ProcessingStep.STREAM_CODEC), DoughProcessRecipe::getSteps,
                         StreamCodecsCompat.DOUBLE, DoughProcessRecipe::getServingWeightGrams,
                         DoughProcessRecipe::new

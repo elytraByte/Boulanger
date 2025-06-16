@@ -22,11 +22,12 @@ public class DoughProcessRecipeBuilder {
 
     private final ResourceLocation id;
     private final ResourceLocation doughType;
+    private ResourceLocation panType = null;
     private final List<ProcessingStep> steps = new ArrayList<>();
     private double servingWeightGrams = 0.0; // Optional
 
     public DoughProcessRecipeBuilder(ResourceLocation id, ResourceLocation doughType) {
-        this.id = Objects.requireNonNull(id);
+        this.id        = Objects.requireNonNull(id);
         this.doughType = Objects.requireNonNull(doughType);
     }
 
@@ -44,12 +45,23 @@ public class DoughProcessRecipeBuilder {
         return this;
     }
 
+    public DoughProcessRecipeBuilder setPanType(ResourceLocation panType) {
+        this.panType = Objects.requireNonNull(panType);
+        return this;
+    }
+
     public void save(RecipeOutput output) {
         JsonObject json = new JsonObject();
         json.addProperty("type", "boulanger:dough_process");
         json.addProperty("id", id.toString());
         json.addProperty("dough_type", doughType.toString());
 
+        // ← Add pan_type if it was set
+        if (panType != null) {
+            json.addProperty("pan_type", panType.toString());
+        }
+
+        // Steps array
         JsonArray stepArray = new JsonArray();
         for (ProcessingStep step : steps) {
             JsonObject obj = new JsonObject();
@@ -59,19 +71,21 @@ public class DoughProcessRecipeBuilder {
             }
             stepArray.add(obj);
         }
-
         json.add("steps", stepArray);
 
+        // Optional serving weight
         if (servingWeightGrams > 0.0) {
             json.addProperty("serving_weight_grams", servingWeightGrams);
         }
 
         LOGGER.debug("Generated dough process recipe JSON for {}: {}", id, json);
 
-        // Use codec to convert the JsonObject into a DoughProcessRecipe instance
+        // Build the recipe instance via codec
         DataResult<DoughProcessRecipe> parsed = CODEC.codec().parse(JsonOps.INSTANCE, json);
         DoughProcessRecipe recipe = parsed.getOrThrow();
 
+        // Register it
         output.accept(id, recipe, null);
     }
+
 }

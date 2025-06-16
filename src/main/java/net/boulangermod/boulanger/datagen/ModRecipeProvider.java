@@ -6,6 +6,7 @@ import net.boulangermod.boulanger.datagen.builder.DoughProcessRecipeBuilder;
 import net.boulangermod.boulanger.datagen.builder.RatioRecipeBuilder;
 import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.ModItems;
+import net.boulangermod.boulanger.item.PanType;
 import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.HolderLookup;
@@ -281,6 +282,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .addStep(StepType.DIVIDE)            // → Used by DoughDividerBlockEntity
                 .setServingWeight(454.0)             // ← Defines portion size post-divide
                 .addStep(StepType.SHAPE)             // Shape dough into pan or free-form
+                .setPanType(ResourceLocation.fromNamespaceAndPath(MODID, PanType.BAGUETTE.getId()))
                 .save(pRecipeOutput);
 
         new DoughProcessRecipeBuilder(
@@ -295,6 +297,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .addStep(StepType.SHAPE)             // shape into pan or free-form
                 .addStep(StepType.PROOF, 1600)       // final proof after shaping
                 .setServingWeight(680.0)             // each portion is 680 g
+                .setPanType(ResourceLocation.fromNamespaceAndPath(MODID, PanType.LOAF.getId()))
                 .save(pRecipeOutput);
 
     }

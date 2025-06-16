@@ -33,6 +33,9 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
 
     private static final int INPUT_SLOT = 0;
     private static final int OUTPUT_SLOT = 1;
+    // grams of wiggle room
+    private static final double TOLERANCE_GRAMS = 2.0;
+
 
     private final NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
@@ -62,159 +65,150 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
         if (level.isClientSide) {
             return;
         }
-
-        if (canProcess()) {
-            LOGGER.debug("→ Can process. Attempting to divide dough.");
-            processItem();
-        } else {
-            LOGGER.debug("→ Cannot process: Input conditions not met.");
-        }
+        processItem();
     }
 
 
     @Override
     protected boolean canProcess() {
-        ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
-        if (input.isEmpty()) {
-            LOGGER.debug("→ Input slot is empty.");
-            return false;
-        }
+        var input = itemHandler.getStackInSlot(INPUT_SLOT);
+        if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) return false;
 
-        if (!input.is(ModItems.DOUGH.get())) {
-            LOGGER.debug("→ Input is not a dough item: {}", input.getItem());
-            return false;
-        }
+        var recComp = input.get(ModDataComponentTypes.DOUGH_RECIPE);
+        var wc      = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
+        if (recComp == null || wc == null || wc.grams() <= 0) return false;
 
-        DoughRecipeComponent recipeComponent = input.get(ModDataComponentTypes.DOUGH_RECIPE);
-        WeightComponent weight = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
+        double total = wc.grams();
+        double serving = findRecipeFor(input).getServingWeightGrams();
 
-        if (recipeComponent == null) {
-            LOGGER.debug("→ Missing DoughRecipeComponent.");
-            return false;
-        }
+        // 1× serving (within tolerance) OR at least 2× serving (allow a smidge under)
+        boolean minimalOk = Math.abs(total - serving) <= TOLERANCE_GRAMS;
+        boolean multiOk   = total >= (2 * serving - TOLERANCE_GRAMS);
 
-        if (weight == null || weight.grams() <= 0) {
-            LOGGER.debug("→ Missing or invalid WeightComponent: {}", weight);
-            return false;
-        }
-
-        LOGGER.debug("→ Dough has {}g, recipeId={}", weight.grams(), recipeComponent.recipeId());
-
-        ResourceLocation processId = input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE);
-        Optional<DoughProcessRecipe> recipeOpt = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
-                .map(r -> (DoughProcessRecipe) r.value())
-                .filter(r -> r.getDoughType().equals(processId))
-                .findFirst();
-
-
-        if (recipeOpt.isEmpty()) {
-            LOGGER.debug("→ No DoughProcessRecipe found for: {}", recipeComponent.recipeId());
-            return false;
-        }
-
-        DoughProcessRecipe processRecipe = recipeOpt.get();
-        double servingWeight = processRecipe.getServingWeightGrams();
-        LOGGER.debug("→ Serving weight: {}g", servingWeight);
-
-        boolean canDivide = servingWeight > 0 && weight.grams() >= servingWeight;
-        LOGGER.debug("→ canDivide = {}", canDivide);
-
-        return canDivide;
+        LOGGER.debug("→ Dough {}g, serving {}g → minimalOk={} multiOk={}", total, serving, minimalOk, multiOk);
+        return minimalOk || multiOk;
     }
+
 
     @Override
     protected void processItem() {
-        // 1) Pull the input dough
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
-        if (input.isEmpty() || !input.has(ModDataComponentTypes.INGREDIENT_GRAMS.get())) {
-            return;
-        }
+        if (input.isEmpty()) return;
 
-        // 2) Lookup recipe & serving size
+        // lookup recipe & serving
         DoughProcessRecipe recipe = findRecipeFor(input);
-        if (recipe == null) {
-            LOGGER.warn("→ no recipe for {}", input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get()));
+        double serving = recipe.getServingWeightGrams();
+
+        // read total grams
+        WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
+        double total = wc != null ? wc.grams() : 0.0;
+        int floorPortions = (int) Math.floor(total / serving);
+
+        // --- 1) Minimal‐portion branch (≈1× serving) ---
+        if (floorPortions < 2) {
+            double diff = Math.abs(total - serving);
+            if (diff <= TOLERANCE_GRAMS) {
+                LOGGER.debug("→ {}g ≈ 1× serving ({}g ±{}g); advancing step", total, serving, TOLERANCE_GRAMS);
+                advanceSinglePortion(input);
+            } else {
+                LOGGER.debug("→ Only {} portion(s) possible and {}g off target; skipping", floorPortions, diff);
+            }
             return;
         }
-        double servingWeight = recipe.getServingWeightGrams();
 
-        // 3) Read total grams
-        WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-        double totalWeight = (wc != null ? wc.grams() : 0.0);
+        // --- 2) Multi‐portion branch (≥2× serving) ---
+        double leftover = total - (floorPortions * serving);
+        int   portions;
+        double portionWeight;
 
-        // 4) Compute number of full portions
-        int portions = (int) Math.floor(totalWeight / servingWeight);
-        // Skip if fewer than 2 portions
-        if (portions < 2) {
-            LOGGER.debug("→ Only {} portion(s) possible; not dividing.", portions);
-            return;
-        }
-
-        // 5) Compute exact per‐portion weight
-        double portionWeight = totalWeight / portions;
-
-        // 6) Build a scaled‐down DoughRecipeComponent
-        DoughRecipeComponent oldRec = input.get(ModDataComponentTypes.DOUGH_RECIPE.get());
-        DoughRecipeComponent newRec = null;
-        if (oldRec != null) {
-            double scale = portionWeight / oldRec.totalWeight();
-            List<IngredientInfo> scaledIngredients = oldRec.ingredients().stream()
-                    .map(info -> new IngredientInfo(
-                            info.itemId(),
-                            info.category(),
-                            (int) Math.round(info.weight() * scale)
-                    ))
-                    .collect(Collectors.toList());
-
-            newRec = new DoughRecipeComponent(
-                    oldRec.recipeId(),
-                    oldRec.targetPercentages(),
-                    scaledIngredients,
-                    (int) portionWeight
-            );
-        }
-
-        // 7) Reduce the input stack’s weight (or clear it)
-        reduceInput(portionWeight * portions);
-
-        // 8) Prepare the output stack
-        ItemStack output = itemHandler.getStackInSlot(OUTPUT_SLOT);
-        if (output.isEmpty()) {
-            // New stack of “portions” count
-            output = new ItemStack(input.getItem(), portions);
-        } else if (output.getItem() == input.getItem()) {
-            // Grow existing stack
-            output.grow(portions);
+        if (leftover <= TOLERANCE_GRAMS) {
+            // treat as exact multiples
+            portions = floorPortions;
+            portionWeight = serving;
+            LOGGER.debug("→ {}g is {}×{}g with {}g leftover ≤{}g; trimming leftover", total, portions, serving, leftover, TOLERANCE_GRAMS);
         } else {
-            LOGGER.warn("→ Cannot divide: output slot occupied by {}", output.getItem());
-            return;
+            // fall back to equal split
+            portions = floorPortions;
+            portionWeight = total / portions;
+            LOGGER.debug("→ Splitting {}g evenly into {} pieces of {}g each (no trim)", total, portions, portionWeight);
         }
 
-        // Copy metadata (recipe type, proofing state, baker %)
-        copyDoughMetadataExceptWeight(input, output);
-
-        // Stamp new recipe component & weight
-        if (newRec != null) {
-            output.set(ModDataComponentTypes.DOUGH_RECIPE.get(), newRec);
-        }
-        output.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
-                new WeightComponent((float) portionWeight)
-        );
-
-        // Advance proofing step once
-        ProofingStateComponent oldState = input.get(ModDataComponentTypes.PROOFING_STATE.get());
-        int nextStep = oldState != null ? oldState.stepIndex() + 1 : 0;
-        output.set(ModDataComponentTypes.PROOFING_STATE.get(),
-                new ProofingStateComponent(nextStep, 0, true)
-        );
-
-        // 9) Write back & mark dirty
-        itemHandler.setStackInSlot(OUTPUT_SLOT, output);
-        setChanged();
-        LOGGER.info("→ Divided {}g into {} pieces of {}g each", totalWeight, portions, portionWeight);
+        // now do the usual divide‐and‐stamp with `portions` and `portionWeight`
+        divideIntoPortions(input, portions, portionWeight);
     }
 
+
+    private void advanceSinglePortion(ItemStack input) {
+        // ensure output empty
+        if (!itemHandler.getStackInSlot(OUTPUT_SLOT).isEmpty()) return;
+
+        // copy & bump proof step
+        ItemStack out = input.copy();
+        out.set(ModDataComponentTypes.PROOFING_STATE.get(),
+                bumpProofStep(input));
+
+        // write & clear
+        itemHandler.setStackInSlot(OUTPUT_SLOT, out);
+        itemHandler.setStackInSlot(INPUT_SLOT, ItemStack.EMPTY);
+        setChanged();
+    }
+
+    private void divideIntoPortions(ItemStack input, int portions, double pWeight) {
+        // reduce input by exactly the weight we’re splitting off
+        reduceInput(portions * pWeight);
+
+        // build the output stack
+        ItemStack out = itemHandler.getStackInSlot(OUTPUT_SLOT);
+        if (out.isEmpty()) {
+            out = new ItemStack(input.getItem(), portions);
+        } else if (out.getItem() == input.getItem()) {
+            out.grow(portions);
+        } else {
+            LOGGER.warn("→ Cannot divide: output occupied by {}", out.getItem());
+            return;
+        }
+
+        // copy everything except weight
+        copyDoughMetadataExceptWeight(input, out);
+
+        // stamp the correct recipe & weight
+        var oldRec = input.get(ModDataComponentTypes.DOUGH_RECIPE);
+        if (oldRec != null) {
+            out.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
+                    scaleRecipeForWeight(oldRec, pWeight));
+        }
+        out.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
+                new WeightComponent((float)pWeight));
+
+        // advance proof step
+        out.set(ModDataComponentTypes.PROOFING_STATE.get(),
+                bumpProofStep(input));
+
+        // write back
+        itemHandler.setStackInSlot(OUTPUT_SLOT, out);
+        setChanged();
+
+        LOGGER.info("→ Divided into {} × {}g", portions, pWeight);
+    }
+
+    private ProofingStateComponent bumpProofStep(ItemStack stack) {
+        var old = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
+        int next = old != null ? old.stepIndex() + 1 : 0;
+        return new ProofingStateComponent(next, /*ticks=*/0, /*shaped=*/true);
+    }
+
+    private DoughRecipeComponent scaleRecipeForWeight(DoughRecipeComponent old, double newWeight) {
+        double scale = newWeight / old.totalWeight();
+        var scaled = old.ingredients().stream()
+                .map(i -> new IngredientInfo(i.itemId(), i.category(), (int)Math.round(i.weight() * scale)))
+                .collect(Collectors.toList());
+        return new DoughRecipeComponent(
+                old.recipeId(),
+                old.targetPercentages(),
+                scaled,
+                (int)newWeight
+        );
+    }
 
 
     private static void copyDoughMetadataExceptWeight(ItemStack src, ItemStack dst) {
@@ -222,8 +216,8 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
                 ModDataComponentTypes.PROOFING_STATE.get(),
                 ModDataComponentTypes.BAKER_PERCENTAGES.get(),
                 ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(),
-                ModDataComponentTypes.INGREDIENT_TYPE.get()
-                // <-- note: NO DOUGH_RECIPE or INGREDIENT_GRAMS here
+                ModDataComponentTypes.INGREDIENT_TYPE.get(),
+                ModDataComponentTypes.PAN_TYPE.get()
         );
 
         for (DataComponentType<?> type : toCopy) {

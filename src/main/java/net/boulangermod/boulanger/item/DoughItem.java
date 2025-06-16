@@ -10,6 +10,7 @@ import net.boulangermod.boulanger.recipe.ProcessingStep;
 import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
@@ -147,17 +148,18 @@ public class DoughItem extends Item {
 
     @Override
     public int getBarWidth(ItemStack stack) {
-        return getBarWidth(stack, /* level = */ null);
+        Level level = Minecraft.getInstance().level;
+        if (level == null) return 0;
+        return getBarWidth(stack, level);
     }
 
-    // Custom helper with level context (e.g., from client world)
+    // Internal helper — no @Override
     public int getBarWidth(ItemStack stack, @Nullable Level level) {
-        if (level == null) return 0;
-
-        var state = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
-        var processId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
-
-        if (state == null || processId == null) return 0;
+        ProofingStateComponent state = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
+        ResourceLocation processId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+        if (state == null || processId == null || level == null) {
+            return 0;
+        }
 
         Optional<DoughProcessRecipe> opt = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
@@ -165,13 +167,22 @@ public class DoughItem extends Item {
                 .filter(r -> r.getDoughType().equals(processId))
                 .findFirst();
 
-        if (opt.isPresent()) {
-            ProcessingStep step = opt.get().getSteps().get(state.stepIndex());
-            return (int) (13.0f * ((float) state.ticksInStep() / (float) step.durationTicks()));
+        if (opt.isEmpty()) {
+            return 0;
         }
 
-        return 0;
+        List<ProcessingStep> steps = opt.get().getSteps();
+        int idx = state.stepIndex();
+
+        if (idx < 0) {
+            return 0;
+        } else if (idx >= steps.size()) {
+            // fully done → full bar
+            return 13;
+        }
+
+        ProcessingStep step = steps.get(idx);
+        float progress = (float) state.ticksInStep() / (float) step.durationTicks();
+        return (int) (13f * progress);
     }
-
-
 }

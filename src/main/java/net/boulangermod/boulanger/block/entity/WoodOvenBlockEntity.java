@@ -195,25 +195,36 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
                 input.has(ModDataComponentTypes.PROOFING_STATE.get()) &&
                 input.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) {
 
-            var proof = input.get(ModDataComponentTypes.PROOFING_STATE.get());
+            var proof     = input.get(ModDataComponentTypes.PROOFING_STATE.get());
             var processId = input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+            var recipeOpt = getRecipe(processId);
 
-            var recipe = getRecipe(processId);
-            if (recipe.isPresent()) {
-                var steps = recipe.get().getSteps();
+            if (recipeOpt.isPresent()) {
+                var steps = recipeOpt.get().getSteps();
                 if (proof.stepIndex() >= steps.size()) {
                     // ✔ Fully proofed and ready
                     result = bakeBreadFromPan(input);
-
-                    // Insert result
                     itemHandler.setStackInSlot(SLOT_OUTPUT, result);
 
-                    // Optional: return the empty pan
+                    // build the returned pan, preserving its pan‐type AND model data
                     ItemStack panReturn = new ItemStack(ModItems.PAN.get());
-                    panReturn.set(ModDataComponentTypes.PAN_TYPE.get(), input.get(ModDataComponentTypes.PAN_TYPE.get()));
-                    Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), panReturn);
+                    // preserve the PanType component
+                    var panType = input.get(ModDataComponentTypes.PAN_TYPE.get());
+                    if (panType != null) {
+                        panReturn.set(ModDataComponentTypes.PAN_TYPE.get(), panType);
+                        // now set the custom model data so the texture comes back correctly
+                        panReturn.set(DataComponents.CUSTOM_MODEL_DATA,
+                                new CustomModelData(panType.getModelIndex()));
+                    }
 
-                    // Consume input
+                    // drop it in the world
+                    Containers.dropItemStack(level,
+                            worldPosition.getX(),
+                            worldPosition.getY(),
+                            worldPosition.getZ(),
+                            panReturn);
+
+                    // consume the input
                     itemHandler.setStackInSlot(SLOT_INPUT, ItemStack.EMPTY);
                     setChanged();
                     return true;
@@ -223,8 +234,7 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
 
         // 🔍 CASE 2: legacy/unpanned dough
         if (input.is(ModItems.DOUGH.get())) {
-            result = bakeBreadFromPlainDough(input); // you'd implement similarly
-
+            result = bakeBreadFromPlainDough(input);
             itemHandler.setStackInSlot(SLOT_OUTPUT, result);
             itemHandler.setStackInSlot(SLOT_INPUT, ItemStack.EMPTY);
             setChanged();
@@ -233,6 +243,7 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
 
         return false;
     }
+
 
     private boolean isBurning() {
         return burnTime > 0;
