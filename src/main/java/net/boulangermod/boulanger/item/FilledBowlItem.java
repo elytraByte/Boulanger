@@ -13,20 +13,32 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 public class FilledBowlItem extends Item {
-
     public FilledBowlItem(Properties properties) {
         super(properties);
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        // Call the super method first
+    public void appendHoverText(ItemStack stack,
+                                TooltipContext context,
+                                List<Component> tooltipComponents,
+                                TooltipFlag tooltipFlag) {
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
 
-        // Retrieve and add the WeightComponent tooltip.
-        WeightComponent weightComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS);
+        // Milligram-precision weight
+        WeightComponent weightComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
         if (weightComp != null) {
-            tooltipComponents.add(Component.literal("Weight: " + weightComp.grams() + " g"));
+            float grams = weightComp.grams();
+            if (grams < 1f) {
+                int mg = Math.round(grams * 1000f);
+                tooltipComponents.add(Component.literal("Weight: " + mg + " mg"));
+            } else {
+                // Show an integer if there is no fractional part
+                if (Math.abs(grams - Math.round(grams)) < 0.0005f) {
+                    tooltipComponents.add(Component.literal("Weight: " + Math.round(grams) + " g"));
+                } else {
+                    tooltipComponents.add(Component.literal(String.format("Weight: %.3f g", grams)));
+                }
+            }
         }
 
         // Retrieve and add the FlourType tooltip, if available.

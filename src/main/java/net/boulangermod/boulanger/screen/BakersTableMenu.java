@@ -24,9 +24,9 @@ public class BakersTableMenu extends AbstractContainerMenu {
         this.blockEntity = (BakersTableBlockEntity) entity;
 
         // Slots: 0 = dough, 1 = pan, 2 = output
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 44, 30)); // Dough
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 80, 30)); // Pan
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 116, 30)); // Output
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 27, 47)); // Dough
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 76, 47)); // Pan
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 134, 37)); // Output
 
         // Player inventory
         for (int row = 0; row < 3; ++row) {

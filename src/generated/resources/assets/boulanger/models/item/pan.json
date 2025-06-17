@@ -1,0 +1,20 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "model": "boulanger:pan/loaf",
+      "predicate": {
+        "minecraft:custom_model_data": 1.0
+      }
+    },
+    {
+      "model": "boulanger:pan/baguette",
+      "predicate": {
+        "minecraft:custom_model_data": 2.0
+      }
+    }
+  ],
+  "textures": {
+    "layer0": "boulanger:item/loaf_pan"
+  }
+}

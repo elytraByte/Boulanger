@@ -15,36 +15,59 @@ public class ScaleBlockMenu extends AbstractContainerMenu {
     private final ScaleBlockEntity blockEntity;
 
     public ScaleBlockMenu(int id, Inventory playerInventory, FriendlyByteBuf extraData) {
-        this(id, playerInventory, playerInventory.player.level().getBlockEntity(extraData.readBlockPos()));
+        this(id,
+                playerInventory,
+                playerInventory.player.level().getBlockEntity(extraData.readBlockPos()));
     }
-
 
     public ScaleBlockMenu(int id, Inventory playerInv, BlockEntity entity) {
         super(ModMenuTypes.SCALE_BLOCK_MENU.get(), id);
         this.blockEntity = (ScaleBlockEntity) entity;
 
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 26, 17));
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 62, 17));
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 62, 53));
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 3, 26, 53));
+        // --- our four tile slots ---
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 26, 17)); // bulk
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 62, 17)); // bowl in
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 62, 53)); // bowl out
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 3, 26, 53)); // residual
 
-
-        // Player inventory
+        // --- player inventory + hotbar (unchanged) ---
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
-                this.addSlot(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
+                this.addSlot(new Slot(playerInv,
+                        col + row * 9 + 9,
+                        8 + col * 18,
+                        84 + row * 18));
             }
         }
-
         for (int i = 0; i < 9; ++i) {
             this.addSlot(new Slot(playerInv, i, 8 + i * 18, 142));
         }
     }
 
-
     @Override
     public boolean stillValid(Player player) {
-        return blockEntity.getLevel().getBlockState(blockEntity.getBlockPos()).getBlock() instanceof ScaleBlock;
+        return blockEntity.getLevel()
+                .getBlockState(blockEntity.getBlockPos())
+                .getBlock() instanceof ScaleBlock;
+    }
+
+    /**
+     * Called by our packet‐handler when the user clicks “weigh.”
+     */
+    public void onMeasureClick(int weightMg) {
+        blockEntity.setGramsToWeigh(weightMg);
+        blockEntity.transferToBowl();
+    }
+
+    /**
+     * Expose the BE so our network code can grab it.
+     */
+    public ScaleBlockEntity getBlockEntity() {
+        return blockEntity;
+    }
+
+    public int getContainerId() {
+        return this.containerId;
     }
 
     // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
@@ -97,7 +120,5 @@ public class ScaleBlockMenu extends AbstractContainerMenu {
         return copyOfSourceStack;
     }
 
-    public BlockEntity getBlockEntity() {
-        return blockEntity;
-    }
+
 }

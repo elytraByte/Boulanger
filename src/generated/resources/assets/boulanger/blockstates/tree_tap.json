@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "boulanger:block/tree_tap",
+      "y": 270
+    },
+    "facing=north": {
+      "model": "boulanger:block/tree_tap",
+      "y": 180
+    },
+    "facing=south": {
+      "model": "boulanger:block/tree_tap"
+    },
+    "facing=west": {
+      "model": "boulanger:block/tree_tap",
+      "y": 90
+    }
+  }
+}

@@ -2,7 +2,7 @@ package net.boulangermod.boulanger.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.boulangermod.boulanger.Boulanger;
-import net.boulangermod.boulanger.network.MeasureData;
+import net.boulangermod.boulanger.network.MeasureItemData;
 import net.boulangermod.boulanger.network.BoulangerNetwork;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -21,7 +21,6 @@ public class ScaleBlockScreen extends AbstractContainerScreen<ScaleBlockMenu> {
 
     public ScaleBlockScreen(ScaleBlockMenu menu, Inventory playerInv, Component title) {
         super(menu, playerInv, title);
-        // standard 176×166 GUI
         this.imageWidth  = 176;
         this.imageHeight = 166;
     }
@@ -30,42 +29,47 @@ public class ScaleBlockScreen extends AbstractContainerScreen<ScaleBlockMenu> {
     protected void init() {
         super.init();
 
-        // center the title
         this.titleLabelX    = (this.imageWidth - this.font.width(this.title)) / 2;
         this.inventoryLabelY = this.imageHeight - 94;
 
         int tfW = 70, tfH = 20;
         int btnW = 50, btnH = 20;
 
-        // position widgets in right-hand margin
         int textFieldX = this.leftPos + this.imageWidth - tfW - 8;
         int textFieldY = this.topPos + 20;
-        this.weightInput = new EditBox(
-                this.font, textFieldX, textFieldY, tfW, tfH,
+        weightInput = new EditBox(
+                this.font,
+                textFieldX,
+                textFieldY,
+                tfW,
+                tfH,
                 Component.literal("Weight")
         );
-        this.weightInput.setMaxLength(9);
-        this.weightInput.setValue("");
-        addRenderableWidget(this.weightInput);
+        weightInput.setMaxLength(9);
+        weightInput.setValue("");
+        addRenderableWidget(weightInput);
 
         int buttonX = textFieldX + (tfW - btnW) / 2;
         int buttonY = textFieldY + tfH + 6;
-        Button measureButton = Button.builder(Component.literal("Measure"), btn -> {
-                    String text = weightInput.getValue();
-                    try {
-                        int weight = Integer.parseInt(text);
-                        BoulangerNetwork.sendToServer(
-                                new MeasureData(weight, menu.getBlockEntity().getBlockPos())
-                        );
-                    } catch (NumberFormatException e) {
-                        this.minecraft.player.sendSystemMessage(
-                                Component.literal("Invalid weight: “" + text + "”"));
-                    }
-                })
-                .pos(buttonX, buttonY)
-                .size(btnW, btnH)
-                .build();
-        addRenderableWidget(measureButton);
+        addRenderableWidget(
+                Button.builder(Component.literal("Measure"), btn -> {
+                            String text = weightInput.getValue();
+                            try {
+                                int weight = Integer.parseInt(text);
+                                // send the containerId + weight to the server
+                                BoulangerNetwork.sendToServer(
+                                        new MeasureItemData(menu.getContainerId(), weight)
+                                );
+                            } catch (NumberFormatException e) {
+                                this.minecraft.player.sendSystemMessage(
+                                        Component.literal("Invalid weight: “" + text + "”")
+                                );
+                            }
+                        })
+                        .pos(buttonX, buttonY)
+                        .size(btnW, btnH)
+                        .build()
+        );
     }
 
     @Override
@@ -81,7 +85,7 @@ public class ScaleBlockScreen extends AbstractContainerScreen<ScaleBlockMenu> {
         renderBackground(gui, mx, my, delta);
         super.render(gui, mx, my, delta);
         renderTooltip(gui, mx, my);
-        this.weightInput.render(gui, mx, my, delta);
+        weightInput.render(gui, mx, my, delta);
     }
 
     @Override
@@ -92,13 +96,13 @@ public class ScaleBlockScreen extends AbstractContainerScreen<ScaleBlockMenu> {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int mods) {
-        if (this.weightInput.keyPressed(keyCode, scanCode, mods)) return true;
+        if (weightInput.keyPressed(keyCode, scanCode, mods)) return true;
         return super.keyPressed(keyCode, scanCode, mods);
     }
 
     @Override
     public boolean charTyped(char codePoint, int mods) {
-        if (this.weightInput.charTyped(codePoint, mods)) return true;
+        if (weightInput.charTyped(codePoint, mods)) return true;
         return super.charTyped(codePoint, mods);
     }
 }

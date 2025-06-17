@@ -14,9 +14,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class DoughDividerMenu extends AbstractContainerMenu {
     private final DoughDividerBlockEntity blockEntity;
-    private static final int INPUT_SLOT_X  = 60;
-    private static final int INPUT_SLOT_Y  = 55;
-    private static final int OUTPUT_SLOT_X = INPUT_SLOT_X + 72; // keep the same +72px spacing
+    private static final int INPUT_SLOT_X  = 44;
+    private static final int INPUT_SLOT_Y  = 35;
+    private static final int OUTPUT_SLOT_X = 116; // keep the same +72px spacing
     private static final int OUTPUT_SLOT_Y = INPUT_SLOT_Y;
 
     public DoughDividerMenu(int id, Inventory playerInventory, FriendlyByteBuf extraData) {

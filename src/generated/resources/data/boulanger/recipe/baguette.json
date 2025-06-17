@@ -1,0 +1,43 @@
+{
+  "type": "boulanger:ratio",
+  "components": [
+    {
+      "allowed_items": [
+        "boulanger:bread_flour"
+      ],
+      "category": "FLOUR",
+      "target_percent": 95.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:vital_wheat_gluten"
+      ],
+      "category": "FLOUR",
+      "target_percent": 5.0
+    },
+    {
+      "allowed_items": [
+        "minecraft:water_bucket"
+      ],
+      "category": "WATER",
+      "target_percent": 70.0
+    },
+    {
+      "allowed_items": [],
+      "category": "SALT",
+      "target_percent": 3.0
+    },
+    {
+      "allowed_items": [],
+      "category": "YEAST",
+      "target_percent": 4.0
+    }
+  ],
+  "id": "boulanger:baguette",
+  "result": {
+    "count": 1,
+    "id": "boulanger:generic_dough"
+  },
+  "serving_weight": 454.0,
+  "tolerance": 0.05
+}

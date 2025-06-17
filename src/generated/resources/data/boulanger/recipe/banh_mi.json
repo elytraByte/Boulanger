@@ -1,0 +1,94 @@
+{
+  "type": "boulanger:ratio",
+  "components": [
+    {
+      "allowed_items": [
+        "boulanger:bread_flour"
+      ],
+      "category": "FLOUR",
+      "target_percent": 57.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:high_gluten_flour"
+      ],
+      "category": "FLOUR",
+      "target_percent": 43.0
+    },
+    {
+      "allowed_items": [
+        "minecraft:water_bucket"
+      ],
+      "category": "WATER",
+      "target_percent": 31.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:whole_milk"
+      ],
+      "category": "DAIRY",
+      "target_percent": 31.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:fancy_egg"
+      ],
+      "category": "EGGS",
+      "target_percent": 12.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:unsalted_butter"
+      ],
+      "category": "FAT",
+      "target_percent": 4.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:brown_sugar"
+      ],
+      "category": "SUGAR",
+      "target_percent": 3.0
+    },
+    {
+      "allowed_items": [],
+      "category": "SALT",
+      "target_percent": 2.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:ascorbic_acid"
+      ],
+      "category": "ADDITIVE",
+      "target_percent": 0.09
+    },
+    {
+      "allowed_items": [
+        "boulanger:calcium_propionate"
+      ],
+      "category": "ADDITIVE",
+      "target_percent": 0.03
+    },
+    {
+      "allowed_items": [
+        "boulanger:diastatic_malt_powder"
+      ],
+      "category": "ADDITIVE",
+      "target_percent": 0.005
+    },
+    {
+      "allowed_items": [
+        "boulanger:l_cysteine"
+      ],
+      "category": "ADDITIVE",
+      "target_percent": 0.005
+    }
+  ],
+  "id": "boulanger:banh_mi",
+  "result": {
+    "count": 1,
+    "id": "boulanger:generic_dough"
+  },
+  "serving_weight": 180.0,
+  "tolerance": 0.05
+}

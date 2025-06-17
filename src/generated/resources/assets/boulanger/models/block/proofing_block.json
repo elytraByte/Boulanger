@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "boulanger:block/pine_planks",
+    "particle": "boulanger:block/proofing_box_side",
+    "side": "boulanger:block/proofing_box_side",
+    "top": "boulanger:block/proofing_block"
+  }
+}

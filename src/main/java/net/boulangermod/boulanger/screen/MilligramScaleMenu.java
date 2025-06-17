@@ -69,11 +69,9 @@ public class MilligramScaleMenu extends AbstractContainerMenu {
 
     /** Called by the packet handler when “Measure” is clicked */
     public void onMeasureClick(int mg) {
-        this.targetMg = mg;
-        float grams = mg / 1000f;
-        ScaleLogic.TransferResult r = ScaleLogic.transfer(handler.getStackInSlot(0), Math.round(grams));
-
-        handler.setStackInSlot(2, ScaleLogic.createFilledBowl(handler.getStackInSlot(0), r.transferred));
+        ScaleLogic.TransferResult r =
+                ScaleLogic.transfer(handler.getStackInSlot(0), mg);
+        handler.setStackInSlot(2, ScaleLogic.createFilledBowl(handler.getStackInSlot(0), r.transferredMg));
         handler.setStackInSlot(0, r.newBulkStack);
         handler.setStackInSlot(3, r.residualStack);
 
@@ -140,4 +138,9 @@ public class MilligramScaleMenu extends AbstractContainerMenu {
         sourceSlot.onTake(playerIn, sourceStack);
         return copyOfSource;
     }
+
+    public int getContainerId() {
+        return this.containerId;
+    }
 }
+

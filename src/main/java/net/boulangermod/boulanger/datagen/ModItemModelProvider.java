@@ -145,6 +145,25 @@ public class ModItemModelProvider extends ItemModelProvider {
         fenceItem(ModBlocks.PINE_FENCE, ModBlocks.PINE_PLANKS);
         basicItem(ModItems.MILLIGRAM_SCALE.get());
 
+        // ─── PINE STAIRS, SLAB & FENCE GATE ITEM MODELS ───────────────────────
+        // Stairs: use the 3D block model so it renders in‐world shape in your inventory
+        withExistingParent(
+                ModBlocks.PINE_STAIRS.getId().getPath(),
+                modLoc("block/pine_stairs")
+        );
+
+        // Slab: same idea, references the slab block’s model
+        withExistingParent(
+                ModBlocks.PINE_SLAB.getId().getPath(),
+                modLoc("block/pine_slab")
+        );
+
+        // Fence Gate: reference the block model so it shows the gate shape
+        withExistingParent(
+                ModBlocks.PINE_FENCE_GATE.getId().getPath(),
+                modLoc("block/pine_fence_gate")
+        );
+
 
         withExistingParent("wood_oven", modLoc("block/wood_oven_off"));
         withExistingParent("mixing_block", modLoc("block/mixing_block"));

@@ -1,4 +1,4 @@
-// 1.21	2025-06-16T22:46:52.3563976	Item Models: boulanger
+// 1.21	2025-06-17T17:54:22.4757367	Item Models: boulanger
 782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
 5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
 604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
@@ -60,8 +60,11 @@ d9c2a5b9c83658fddb576c96210c739f79d2b503 assets/boulanger/models/item/mixing_blo
 843c4103dd77bf441011d130dc57de3e13e7f486 assets/boulanger/models/item/pan.json
 0f52263aa5ad2db88094847e086c45b1a5511fb5 assets/boulanger/models/item/pcb.json
 c25dd0fc9387c01554b1fb34ee1a2ded0febf530 assets/boulanger/models/item/pine_fence.json
+343a1479c23dba83f054bd277206630f5ea5325e assets/boulanger/models/item/pine_fence_gate.json
 a4b0c555681ed424830767419f9942b84d593461 assets/boulanger/models/item/pine_resin.json
 92d9a973d83c1367b30089acc02ba9faf6f8c314 assets/boulanger/models/item/pine_sapling.json
+86c7ad6bf371395e94c0d877a6245babb86f6b4e assets/boulanger/models/item/pine_slab.json
+354b86c8b345bcfbbfb0b5a8f322135f7a059789 assets/boulanger/models/item/pine_stairs.json
 130af2600eea17f765d068f452cb62245e4cc31a assets/boulanger/models/item/porcelain_brick.json
 e4eb8952c4c6ef3407eafd175f91cf2f35f4f6a8 assets/boulanger/models/item/porcelain_mix.json
 56d94aeff086b842366b36a1de1424e408eca5f9 assets/boulanger/models/item/powdered_sugar.json

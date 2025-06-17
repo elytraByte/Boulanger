@@ -271,6 +271,68 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 //                .servingWeight(200.0)
 //                .save(pRecipeOutput);
 
+        // ——— Banh Mi ———
+        new RatioRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "banh_mi"),
+                new ItemStack(ModItems.DOUGH.get()),
+                0.05D // 5% tolerance
+        )
+                // Flour blend: 57% bread flour, 43% high-gluten flour
+                .addComponent(
+                        IngredientCategory.FLOUR, 57.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "bread_flour"))
+                )
+                .addComponent(
+                        IngredientCategory.FLOUR, 43.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "high_gluten_flour"))
+                )
+                // Hydration: 31% water, 31% whole milk
+                .addComponent(
+                        IngredientCategory.WATER, 31.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
+                )
+                .addComponent(
+                        IngredientCategory.DAIRY, 31.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath("boulanger", "whole_milk"))
+                )
+                // Enrichments & add-ins
+                .addComponent(
+                        IngredientCategory.EGGS, 12.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "fancy_egg"))
+                )
+                .addComponent(
+                        IngredientCategory.FAT, 4.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "unsalted_butter"))
+                )
+                .addComponent(
+                        IngredientCategory.SUGAR, 3.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brown_sugar"))
+                )
+                .addComponent(
+                        IngredientCategory.SALT, 2.0,
+                        List.of()  // any salt
+                )
+                // Functional additives (all at baker’s %)
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.09,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "ascorbic_acid"))
+                )
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.03,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "calcium_propionate"))
+                )
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.005,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "diastatic_malt_powder"))
+                )
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.005,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "l_cysteine"))
+                )
+                .servingWeight(180.0)  // 180 g loaf
+                .save(pRecipeOutput);
+
+
         new DoughProcessRecipeBuilder(
                 ResourceLocation.fromNamespaceAndPath("boulanger", "dough_process/baguette"),
                 ResourceLocation.fromNamespaceAndPath("boulanger", "baguette")
@@ -299,6 +361,23 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .setServingWeight(680.0)             // each portion is 680 g
                 .setPanType(ResourceLocation.fromNamespaceAndPath(MODID, PanType.LOAF.getId()))
                 .save(pRecipeOutput);
+
+        // ——— Banh Mi dough‐process pipeline ———
+        new DoughProcessRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "dough_process/banh_mi"),
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "banh_mi")
+        )
+                .addStep(StepType.PROOF, 1600)     // 1st bulk proof
+                .addStep(StepType.PUNCHDOWN)       // degas
+                .addStep(StepType.PROOF, 1600)     // 2nd proof
+                .addStep(StepType.PUNCHDOWN)       // degas before dividing
+                .addStep(StepType.DIVIDE)          // split into 1×180 g portions
+                .setServingWeight(180.0)
+                .addStep(StepType.SHAPE)           // shape into banh mi loaf form
+                .setPanType(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, PanType.BAGUETTE.getId()))
+                .addStep(StepType.PROOF, 1600)     // final proof in pan
+                .save(pRecipeOutput);
+
 
     }
 }

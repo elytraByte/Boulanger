@@ -1,0 +1,33 @@
+{
+  "type": "boulanger:dough_process",
+  "dough_type": "boulanger:banh_mi",
+  "id": "boulanger:dough_process/banh_mi",
+  "pan_type": "boulanger:baguette",
+  "serving_weight_grams": 180.0,
+  "steps": [
+    {
+      "type": "PROOF",
+      "duration": 1600
+    },
+    {
+      "type": "PUNCHDOWN"
+    },
+    {
+      "type": "PROOF",
+      "duration": 1600
+    },
+    {
+      "type": "PUNCHDOWN"
+    },
+    {
+      "type": "DIVIDE"
+    },
+    {
+      "type": "SHAPE"
+    },
+    {
+      "type": "PROOF",
+      "duration": 1600
+    }
+  ]
+}

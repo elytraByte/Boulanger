@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
+import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
@@ -10,10 +11,16 @@ import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.screen.*;
 import net.boulangermod.boulanger.util.MyModLootFunctions;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -25,11 +32,13 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.item.ModItems;
+import net.neoforged.neoforge.registries.DeferredRegister;
 import org.jline.utils.Log;
 import org.slf4j.Logger;
 
@@ -98,6 +107,26 @@ public class Boulanger {
             event.register(ModMenuTypes.BAKERS_TABLE_MENU.get(), BakersTableScreen::new);
             event.register(ModMenuTypes.DOUGH_DIVIDER_MENU.get(), DoughDividerScreen::new);
             event.register(ModMenuTypes.MILLIGRAM_SCALE_MENU.get(), MilligramScaleScreen::new);
+
+        }
+    }
+
+    //
+    // —— FORGE‐BUS CLIENT TOOLTIP HANDLER ——
+    // Appends “Weight: X g” for every vanilla sugar stack.
+    //
+    @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+    public static class ForgeClientEvents {
+        @OnlyIn(Dist.CLIENT)
+        @SubscribeEvent
+        public static void onItemTooltip(ItemTooltipEvent event) {
+            ItemStack stack = event.getItemStack();
+            if (stack.getItem() == Items.SUGAR) {
+                event.getToolTip().add(
+                        Component.literal("Weight: 113 g")
+                                .withStyle(ChatFormatting.GREEN)
+                );
+            }
 
         }
     }

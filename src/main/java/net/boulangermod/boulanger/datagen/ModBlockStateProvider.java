@@ -95,9 +95,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
         );
 
 
-        blockWithItem(ModBlocks.PROOFING_BOX);
-        blockWithItem(ModBlocks.BAKERS_TABLE);
-        blockWithItem(ModBlocks.DOUGH_DIVIDER);
+        proofingBoxBlock(ModBlocks.PROOFING_BOX);
+        doughDividerBlock(ModBlocks.DOUGH_DIVIDER);
 
 
 
@@ -153,6 +152,27 @@ public class ModBlockStateProvider extends BlockStateProvider {
         simpleBlockItem(ModBlocks.WOOD_OVEN.get(),
                 models().getExistingFile(modLoc("block/wood_oven_off"))
         );
+
+        // ─── BAKER'S TABLE ─────────────────────────────────────────────────────
+        ModelFile bakersTableModel = models().orientable(
+                "bakers_table",
+                modLoc("block/bakers_table_side"),   // all four side faces
+                modLoc("block/bakers_table_front"),  // “front” face
+                modLoc("block/bakers_table_top")     // top face
+        );
+
+// use the same orientable model for the item form
+        simpleBlockItem(ModBlocks.BAKERS_TABLE.get(), bakersTableModel);
+
+// rotate the block in-world based on its facing property
+        getVariantBuilder(ModBlocks.BAKERS_TABLE.get())
+                .forAllStates(s -> {
+                    Direction dir = s.getValue(BlockStateProperties.HORIZONTAL_FACING);
+                    return ConfiguredModel.builder()
+                            .modelFile(bakersTableModel)
+                            .rotationY((int) dir.toYRot())
+                            .build();
+                });
 
         // ─── MIXING BLOCK ──────────────────────────────────────────────────────
         String mixerName = ModBlocks.MIXING_BLOCK.getId().getPath();
@@ -380,6 +400,37 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 modLoc("block/scale_top")
         ).texture("particle", modLoc("block/diorite_side"));
         simpleBlock(block, model);
+    }
+
+    private void proofingBoxBlock(DeferredBlock<? extends Block> block) {
+        // derive the registry name (e.g. "proofing_box")
+        String name = block.get().builtInRegistryHolder().key().location().getPath();
+
+        // build a cube with custom side, bottom, and top textures
+        ModelFile proofingModel = models().cubeBottomTop(
+                name,
+                modLoc("block/proofing_box_side"),  // sides
+                modLoc("block/pine_planks"),        // bottom
+                modLoc("block/proofing_block")      // top
+        ).texture("particle", modLoc("block/proofing_box_side"));
+
+        // register both the blockstate and the item model
+        simpleBlockWithItem(block.get(), proofingModel);
+    }
+
+    private void doughDividerBlock(DeferredBlock<? extends Block> block) {
+        // e.g. "dough_divider"
+        String name = block.get().builtInRegistryHolder().key().location().getPath();
+
+        // sides: diorite_side, bottom: diorite_side, top: dough_divider_top
+        ModelFile model = models().cubeBottomTop(
+                name,
+                modLoc("block/diorite_side"),        // side texture
+                modLoc("block/diorite_side"),        // bottom texture
+                modLoc("block/dough_divider_top")    // top texture
+        ).texture("particle", modLoc("block/diorite_side"));
+
+        simpleBlockWithItem(block.get(), model);
     }
 
 

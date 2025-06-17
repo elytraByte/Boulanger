@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "boulanger:block/bakers_table",
+      "y": 270
+    },
+    "facing=north": {
+      "model": "boulanger:block/bakers_table",
+      "y": 180
+    },
+    "facing=south": {
+      "model": "boulanger:block/bakers_table"
+    },
+    "facing=west": {
+      "model": "boulanger:block/bakers_table",
+      "y": 90
+    }
+  }
+}

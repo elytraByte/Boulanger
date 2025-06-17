@@ -6,17 +6,28 @@ import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.item.FiftyPoundBagItem;
 import net.boulangermod.boulanger.item.ModItems;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;              // ← import vanilla sugar
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class ScaleLogic {
+    private static final Logger LOGGER = LogManager.getLogger();
     private ScaleLogic() {}
 
-    public static ItemStack createFilledBowl(ItemStack bulk, int toTransfer) {
+    /**
+     * Create a bowl tagged with exactly transferMg milligrams of ingredient.
+     */
+    public static ItemStack createFilledBowl(ItemStack bulk, int transferMg) {
+        float grams = (float) transferMg / 1000f;
+        LOGGER.debug("createFilledBowl: transferMg={} mg  →  grams={} g", transferMg, grams);
+
         ItemStack filled = new ItemStack(ModItems.FILLED_BOWL_ITEM.get());
-        filled.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(toTransfer));
+        filled.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(grams));
         filled.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(),
                 IngredientCategory.getIngredientCategory(bulk));
+
         Item ingredientItem = (bulk.getItem() instanceof FiftyPoundBagItem)
                 ? ModItems.FLOUR_ITEM.get()
                 : bulk.getItem();
@@ -27,74 +38,96 @@ public final class ScaleLogic {
         if (flourType != null) {
             filled.set(ModDataComponentTypes.FLOUR_TYPE.get(), flourType);
         }
+
         return filled;
     }
 
-    public static TransferResult transfer(
-            ItemStack bulk,
-            int requestedGrams
-    ) {
-        // compute perUnit, totalAvailable exactly like in your block entity
-        FlourType flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
-        float perUnit = flourType != null
-                ? flourType.getWeight()
-                : bulk.has(ModDataComponentTypes.INGREDIENT_GRAMS.get())
-                ? bulk.get(ModDataComponentTypes.INGREDIENT_GRAMS.get()).getWeight()
-                : bulk.has(ModDataComponentTypes.FOOD_ADDITIVE.get())
-                ? bulk.get(ModDataComponentTypes.FOOD_ADDITIVE.get()).getWeight()
-                : 113f;
+    /**
+     * Pull up to requestedMg milligrams out of the bulk stack.
+     */
+    public static TransferResult transfer(ItemStack bulk, int requestedMg) {
+        // 1) pick grams per “unit”...
+        float perUnitGrams;
 
-        float totalAvailable;
-        boolean isBulkBag = bulk.getItem() instanceof FiftyPoundBagItem &&
-                bulk.has(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-
-        if (isBulkBag) {
-            totalAvailable = bulk.get(ModDataComponentTypes.INGREDIENT_GRAMS.get()).grams();
-            perUnit = totalAvailable;
-        } else {
-            totalAvailable = bulk.getCount() * perUnit;
+        // → sugar override: 113 g each
+        if (bulk.getItem() == Items.SUGAR) {
+            perUnitGrams = 113f;
+        }
+        // → custom flour types
+        else if (bulk.get(ModDataComponentTypes.FLOUR_TYPE.get()) != null) {
+            perUnitGrams = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get()).getWeight();
+        }
+        // → any item tagged with INGREDIENT_GRAMS
+        else if (bulk.has(ModDataComponentTypes.INGREDIENT_GRAMS.get())) {
+            perUnitGrams = bulk.get(ModDataComponentTypes.INGREDIENT_GRAMS.get()).getWeight();
+        }
+        // → any food additive tagged
+        else if (bulk.has(ModDataComponentTypes.FOOD_ADDITIVE.get())) {
+            perUnitGrams = bulk.get(ModDataComponentTypes.FOOD_ADDITIVE.get()).getWeight();
+        }
+        // → nothing else has weight
+        else {
+            perUnitGrams = 0f;
         }
 
-        int toTransfer = Math.min((int) totalAvailable, requestedGrams);
-        float remaining = totalAvailable - toTransfer;
+        boolean isBulkBag = bulk.getItem() instanceof FiftyPoundBagItem
+                && bulk.has(ModDataComponentTypes.INGREDIENT_GRAMS.get());
 
-        // figure out new bulk / residual as in your block
-        ItemStack newBulk = ItemStack.EMPTY;
+        // 2) compute total available
+        float totalAvailableGrams = isBulkBag
+                ? bulk.get(ModDataComponentTypes.INGREDIENT_GRAMS.get()).getWeight()
+                : bulk.getCount() * perUnitGrams;
+
+        // 3) to milligrams
+        long totalAvailableMg = Math.round(totalAvailableGrams * 1000f);
+        int transferMg      = (int)Math.min(totalAvailableMg, (long)requestedMg);
+        long remainingMg    = totalAvailableMg - transferMg;
+        float remainingGrams = remainingMg / 1000f;
+
+        LOGGER.debug("transfer: requestedMg={} mg, totalAvailableMg={} mg, willTransfer={} mg, remain={} mg",
+                requestedMg, totalAvailableMg, transferMg, remainingMg);
+
+        // 4) split into new bulk + any leftover partial
+        ItemStack newBulk  = ItemStack.EMPTY;
         ItemStack residual = ItemStack.EMPTY;
 
         if (isBulkBag) {
-            if (remaining > 0) {
+            if (remainingMg > 0) {
                 newBulk = bulk.copy();
                 newBulk.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
-                        new WeightComponent((int) remaining));
+                        new WeightComponent(remainingGrams));
             }
         } else {
-            int fullRemain = (int)(remaining / perUnit);
-            float partial = remaining - fullRemain * perUnit;
+            int fullRemain     = (int)(remainingGrams / perUnitGrams);
+            float leftoverGrams = remainingGrams - fullRemain * perUnitGrams;
+
             if (fullRemain > 0) {
                 newBulk = bulk.copy();
                 newBulk.setCount(fullRemain);
             }
-            if (partial > 0f) {
+            if (leftoverGrams > 0f) {
                 residual = bulk.copy();
                 residual.setCount(1);
                 residual.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
-                        new WeightComponent((int)partial));
+                        new WeightComponent(leftoverGrams));
             }
         }
 
-        return new TransferResult(toTransfer, newBulk, residual);
+        return new TransferResult(transferMg, newBulk, residual);
     }
 
     public static class TransferResult {
-        public final int transferred;
+        /** how many milligrams actually moved */
+        public final int transferredMg;
+        /** updated bulk after removal */
         public final ItemStack newBulkStack;
+        /** any leftover “partial” unit */
         public final ItemStack residualStack;
-        public TransferResult(int t, ItemStack bulk, ItemStack res) {
-            this.transferred = t;
-            this.newBulkStack = bulk;
-            this.residualStack = res;
+
+        public TransferResult(int transferMg, ItemStack newBulk, ItemStack residual) {
+            this.transferredMg = transferMg;
+            this.newBulkStack  = newBulk;
+            this.residualStack = residual;
         }
     }
 }
-

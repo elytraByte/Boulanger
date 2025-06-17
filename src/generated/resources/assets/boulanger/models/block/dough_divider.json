@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "boulanger:block/diorite_side",
+    "particle": "boulanger:block/diorite_side",
+    "side": "boulanger:block/diorite_side",
+    "top": "boulanger:block/dough_divider_top"
+  }
+}

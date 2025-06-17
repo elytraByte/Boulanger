@@ -1,0 +1,33 @@
+{
+  "type": "boulanger:dough_process",
+  "dough_type": "boulanger:whole_wheat_bread",
+  "id": "boulanger:dough_process/whole_wheat_bread",
+  "pan_type": "boulanger:loaf",
+  "serving_weight_grams": 680.0,
+  "steps": [
+    {
+      "type": "PROOF",
+      "duration": 1600
+    },
+    {
+      "type": "PUNCHDOWN"
+    },
+    {
+      "type": "PROOF",
+      "duration": 1600
+    },
+    {
+      "type": "PUNCHDOWN"
+    },
+    {
+      "type": "DIVIDE"
+    },
+    {
+      "type": "SHAPE"
+    },
+    {
+      "type": "PROOF",
+      "duration": 1600
+    }
+  ]
+}

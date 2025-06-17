@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "boulanger:block/bakers_table_front",
+    "side": "boulanger:block/bakers_table_side",
+    "top": "boulanger:block/bakers_table_top"
+  }
+}

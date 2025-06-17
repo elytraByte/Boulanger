@@ -1,0 +1,64 @@
+{
+  "type": "boulanger:ratio",
+  "components": [
+    {
+      "allowed_items": [
+        "boulanger:whole_wheat_flour"
+      ],
+      "category": "FLOUR",
+      "target_percent": 70.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:high_gluten_flour"
+      ],
+      "category": "FLOUR",
+      "target_percent": 25.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:wheat_bran"
+      ],
+      "category": "FLOUR",
+      "target_percent": 5.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:brown_sugar"
+      ],
+      "category": "SUGAR",
+      "target_percent": 10.0
+    },
+    {
+      "allowed_items": [],
+      "category": "SALT",
+      "target_percent": 6.0
+    },
+    {
+      "allowed_items": [],
+      "category": "YEAST",
+      "target_percent": 8.0
+    },
+    {
+      "allowed_items": [
+        "boulanger:fancy_egg"
+      ],
+      "category": "EGGS",
+      "target_percent": 10.0
+    },
+    {
+      "allowed_items": [
+        "minecraft:water_bucket"
+      ],
+      "category": "WATER",
+      "target_percent": 72.0
+    }
+  ],
+  "id": "boulanger:whole_wheat_bread",
+  "result": {
+    "count": 1,
+    "id": "boulanger:generic_dough"
+  },
+  "serving_weight": 680.0,
+  "tolerance": 0.05
+}

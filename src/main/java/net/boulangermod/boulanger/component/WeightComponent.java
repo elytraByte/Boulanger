@@ -23,5 +23,12 @@ public record WeightComponent(float grams) {
 
         return grams;
     }
+    /**
+     * Returns the weight in milligrams, rounded to the nearest whole mg.
+     */
+    public long milligrams() {
+        return Math.round(this.grams * 1000.0);
+    }
+
 }
 
