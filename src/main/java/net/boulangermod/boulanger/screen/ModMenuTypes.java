@@ -1,9 +1,13 @@
 package net.boulangermod.boulanger.screen;
 
 import net.boulangermod.boulanger.Boulanger;
+import net.boulangermod.boulanger.item.MilligramScaleItem;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.network.IContainerFactory;
@@ -37,6 +41,20 @@ public class ModMenuTypes {
 
     public static final DeferredHolder<MenuType<?>, MenuType<DoughDividerMenu>> DOUGH_DIVIDER_MENU =
             registerMenuType("dough_divider_menu", DoughDividerMenu::new);
+
+    public static final DeferredHolder<MenuType<?>, MenuType<MilligramScaleMenu>> MILLIGRAM_SCALE_MENU =
+            registerMenuType(
+                    "milligram_scale_menu",
+                    (windowId, inv, buf) -> {
+                        // pull the scale stack out of whichever hand holds it:
+                        Player p = inv.player;
+                        ItemStack main = p.getItemInHand(InteractionHand.MAIN_HAND);
+                        ItemStack stack = main.getItem() instanceof MilligramScaleItem
+                                ? main
+                                : p.getItemInHand(InteractionHand.OFF_HAND);
+                        return new MilligramScaleMenu(windowId, inv, stack);
+                    }
+            );
 
     private static <T extends AbstractContainerMenu>DeferredHolder<MenuType<?>,
             MenuType<T>> registerMenuType(String name, IContainerFactory<T> factory) {

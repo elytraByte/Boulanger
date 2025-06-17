@@ -1,4 +1,4 @@
-// 1.21	2025-06-13T21:33:18.5912811	Item Models: boulanger
+// 1.21	2025-06-16T22:46:52.3563976	Item Models: boulanger
 782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
 5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
 604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
@@ -54,6 +54,7 @@ f65a1521a5aa0d8037d096bb7b8dc654fc3db873 assets/boulanger/models/item/hen_spawn_
 c06e30592056a30c29178cf2017a82acb66b70cb assets/boulanger/models/item/holstein_friesain_cow_spawn_egg.json
 ab2426e464ace9013e2279f9263ae985d8a48c90 assets/boulanger/models/item/iron_wedge.json
 aef85b2c1fe39d08ccd8f7563cf45ee9da69b275 assets/boulanger/models/item/kaolinite_clay_ball.json
+7779cbde0bd8a79b2a85ec62f3c5b89a3f74ed00 assets/boulanger/models/item/milligram_scale.json
 d9c2a5b9c83658fddb576c96210c739f79d2b503 assets/boulanger/models/item/mixing_block.json
 86c91439ad89ffc2cda3d5665a9bac81f7202e51 assets/boulanger/models/item/molasses.json
 843c4103dd77bf441011d130dc57de3e13e7f486 assets/boulanger/models/item/pan.json

@@ -51,6 +51,8 @@ public class ModItems {
     public static final DeferredItem<Item> FILLED_BOWL_ITEM = ITEMS.register("filled_bowl",
             () -> new FilledBowlItem(new Item.Properties()));
     public static final DeferredItem<Item> WOOD_GAS_BUCKET = ITEMS.registerSimpleItem("wood_gas_bucket");
+    public static final DeferredItem<Item> MILLIGRAM_SCALE = ITEMS.register("milligram_scale",
+            () -> new MilligramScaleItem(new Item.Properties()));
 
 
     // Dairy and Eggs (Food Additives)

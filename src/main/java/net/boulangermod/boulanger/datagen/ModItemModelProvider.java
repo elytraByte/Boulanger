@@ -143,6 +143,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.GASIFIER_FILTER.get());
         saplingItem(ModBlocks.PINE_SAPLING);
         fenceItem(ModBlocks.PINE_FENCE, ModBlocks.PINE_PLANKS);
+        basicItem(ModItems.MILLIGRAM_SCALE.get());
 
 
         withExistingParent("wood_oven", modLoc("block/wood_oven_off"));

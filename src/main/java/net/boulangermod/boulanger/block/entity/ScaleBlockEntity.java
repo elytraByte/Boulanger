@@ -99,9 +99,7 @@ public class ScaleBlockEntity extends BlockEntity implements MenuProvider {
         // === General ingredient logic (flour, additives, etc.) ===
 
         // Determine weight per item or per bag
-        FlourType flourType = null;
-        flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
-
+        FlourType flourType = bulk.get(ModDataComponentTypes.FLOUR_TYPE.get());
 
         float perUnit = flourType != null
                 ? flourType.getWeight()
