@@ -114,6 +114,27 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL))
                 .save(pRecipeOutput);
 
+        SimpleCookingRecipeBuilder.blasting(Ingredient.of(Blocks.DIORITE), RecipeCategory.MISC, ModItems.DIORITE_BRICK.get(), 0.35f, 100)
+                .unlockedBy("has_diorite", has(Blocks.DIORITE))
+                .save(pRecipeOutput);
+
+    ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.DIORITE_PLATE.get(), 1)
+                .pattern("DDD")
+                .pattern("DDD")
+                .pattern("DDD")
+                .define('D', ModItems.DIORITE_BRICK)
+                .unlockedBy("has_diorite_brick", has(ModItems.DIORITE_BRICK))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.REINFORCED_DIORITE_PLATE.get(), 2)
+                .pattern("IDI")
+                .pattern("DID")
+                .pattern("IDI")
+                .define('D', ModItems.DIORITE_PLATE)
+                .define('I', Items.IRON_INGOT)
+                .unlockedBy("has_diorite_brick", has(ModItems.DIORITE_PLATE))
+                .save(pRecipeOutput);
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.MIXING_BLOCK.get(), 1)
                 .pattern("TCW")
                 .pattern("DPD")
@@ -130,12 +151,13 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.SCALE_BLOCK.get(), 1)
                 .pattern("PPP")
-                .pattern("WUW")
+                .pattern("DUD")
                 .pattern("WEW")
                 .define('P', Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE)
                 .define('W', ModBlocks.PINE_PLANKS)
                 .define('U', Blocks.PISTON)
                 .define('E', ModItems.PCB)
+                .define('D', ModItems.DIORITE_PLATE)
                 .unlockedBy("has_pcb", has(ModItems.PCB))
                 .save(pRecipeOutput);
 

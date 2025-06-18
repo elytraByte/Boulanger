@@ -7,10 +7,13 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.block.PineResinLogBlock;
+import net.boulangermod.boulanger.worldgen.ModConfiguredFeatures;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelSimulatedReader;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
 import net.minecraft.world.level.levelgen.feature.foliageplacers.FoliagePlacer;
 import net.minecraft.world.level.levelgen.feature.trunkplacers.StraightTrunkPlacer;
@@ -29,6 +32,7 @@ public class ResinPineTrunkPlacer extends StraightTrunkPlacer {
     public ResinPineTrunkPlacer(int baseHeight, int heightRandA, int heightRandB) {
         super(baseHeight, heightRandA, heightRandB);
     }
+
 
     @Override
     protected TrunkPlacerType<?> type() {
