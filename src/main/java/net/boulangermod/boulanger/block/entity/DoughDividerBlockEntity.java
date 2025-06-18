@@ -62,9 +62,9 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide) {
-            return;
-        }
+        if (level.isClientSide) return;
+        // only attempt processing when we actually have dough and a valid recipe
+        if (!canProcess()) return;
         processItem();
     }
 
@@ -92,50 +92,63 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
 
     @Override
     protected void processItem() {
+        // 0) Grab the input stack
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
-        if (input.isEmpty()) return;
+        // 0a) Nothing to do if empty or not dough
+        if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) {
+            return;
+        }
 
-        // lookup recipe & serving
+        // 1) Look up the dough‐process recipe
         DoughProcessRecipe recipe = findRecipeFor(input);
+        if (recipe == null) {
+            LOGGER.warn("→ processItem: no dough‐process recipe for {}", input);
+            return;
+        }
         double serving = recipe.getServingWeightGrams();
 
-        // read total grams
+        // 2) Read total grams from the weight component
         WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
-        double total = wc != null ? wc.grams() : 0.0;
+        double total = (wc != null ? wc.grams() : 0.0);
         int floorPortions = (int) Math.floor(total / serving);
 
-        // --- 1) Minimal‐portion branch (≈1× serving) ---
+        // --- 3) Minimal‐portion branch (≈1× serving) ---
         if (floorPortions < 2) {
             double diff = Math.abs(total - serving);
             if (diff <= TOLERANCE_GRAMS) {
-                LOGGER.debug("→ {}g ≈ 1× serving ({}g ±{}g); advancing step", total, serving, TOLERANCE_GRAMS);
+                LOGGER.debug("→ {}g ≈ 1× serving ({}g ±{}g); advancing step",
+                        total, serving, TOLERANCE_GRAMS);
                 advanceSinglePortion(input);
             } else {
-                LOGGER.debug("→ Only {} portion(s) possible and {}g off target; skipping", floorPortions, diff);
+                LOGGER.debug("→ Only {} portion(s) possible and {}g off target; skipping",
+                        floorPortions, diff);
             }
             return;
         }
 
-        // --- 2) Multi‐portion branch (≥2× serving) ---
+        // --- 4) Multi‐portion branch (≥2× serving) ---
         double leftover = total - (floorPortions * serving);
-        int   portions;
+        int portions;
         double portionWeight;
 
         if (leftover <= TOLERANCE_GRAMS) {
-            // treat as exact multiples
-            portions = floorPortions;
+            // exact multiples: trim leftover
+            portions      = floorPortions;
             portionWeight = serving;
-            LOGGER.debug("→ {}g is {}×{}g with {}g leftover ≤{}g; trimming leftover", total, portions, serving, leftover, TOLERANCE_GRAMS);
+            LOGGER.debug("→ {}g is {}×{}g with {}g leftover ≤{}g; trimming leftover",
+                    total, portions, serving, leftover, TOLERANCE_GRAMS);
         } else {
-            // fall back to equal split
-            portions = floorPortions;
+            // split evenly
+            portions      = floorPortions;
             portionWeight = total / portions;
-            LOGGER.debug("→ Splitting {}g evenly into {} pieces of {}g each (no trim)", total, portions, portionWeight);
+            LOGGER.debug("→ Splitting {}g evenly into {} pieces of {}g each (no trim)",
+                    total, portions, portionWeight);
         }
 
-        // now do the usual divide‐and‐stamp with `portions` and `portionWeight`
+        // 5) Perform the divide‐and‐stamp
         divideIntoPortions(input, portions, portionWeight);
     }
+
 
 
     private void advanceSinglePortion(ItemStack input) {

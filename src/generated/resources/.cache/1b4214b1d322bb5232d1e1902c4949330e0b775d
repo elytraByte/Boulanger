@@ -1,4 +1,4 @@
-// 1.21	2025-06-17T17:54:22.4807371	Block States: boulanger
+// 1.21	2025-06-17T18:48:59.2902559	Block States: boulanger
 1e5500f221cf165e9146ecfa3d3d9e81fba4e43d assets/boulanger/blockstates/bakers_table.json
 cbe2406c5629ecfeda96071a79a9d55aec18551f assets/boulanger/blockstates/battery.json
 8c8ddc53613ecdb21afc8929b3e45a039d7c0650 assets/boulanger/blockstates/black_tile.json
@@ -16,7 +16,7 @@ fac90502cc2ea1e85bc1e0ef6ce3183782a85fc2 assets/boulanger/blockstates/l3e_tile.j
 f561b7fa24f4ffc47b4b082559ed6174abed3bcb assets/boulanger/blockstates/pine_fence.json
 c23b77dc31fbff89a5c2bb7d1d395e959b5c0fcc assets/boulanger/blockstates/pine_fence_gate.json
 bc72b69239b5994127c03e8282e813b94a8fe6a0 assets/boulanger/blockstates/pine_leaves.json
-64e42864992d3855f237916c8b79fe6c8a667376 assets/boulanger/blockstates/pine_log.json
+49ba9eb042fec1c0a3963ce83c3878183d13079f assets/boulanger/blockstates/pine_log.json
 7bb4a3598d999406e39380f14395be64d9c64877 assets/boulanger/blockstates/pine_planks.json
 738026f5eee65fa76ce518ad4dca52ab781ae72c assets/boulanger/blockstates/pine_sapling.json
 c7b8b9bc324f5b7c31086b12c7b44bb85ffe66ee assets/boulanger/blockstates/pine_slab.json
@@ -60,7 +60,7 @@ d7ae9675d874c87d47da14c20e56c1b9bd1fae12 assets/boulanger/models/block/pine_fenc
 f2255a654bcd6049d06fd1da15c1d01bb53131c7 assets/boulanger/models/block/pine_fence_side.json
 7b63e5b943c18ea6cc46f9f200d7bf9ab6f1d625 assets/boulanger/models/block/pine_leaves.json
 4bc63911edd5e44bdc610be6d78bf0efe764789f assets/boulanger/models/block/pine_log.json
-6f895afe3be888457881aed9b303218ba021a7fb assets/boulanger/models/block/pine_log_horizontal.json
+35b4f5cd345b6c0aa2a8616acadfe73a7c6b8f0d assets/boulanger/models/block/pine_log_resin.json
 c6ecd75e193501c2f259c9ad8ebd6be9994ec4e4 assets/boulanger/models/block/pine_planks.json
 4ef52c2cd35040b9415f1d158d7e10e6dc9a6c01 assets/boulanger/models/block/pine_sapling.json
 66b238397be88311fc867ee7b88445a1eba23a14 assets/boulanger/models/block/pine_slab.json

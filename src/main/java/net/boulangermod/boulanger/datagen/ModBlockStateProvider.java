@@ -33,10 +33,34 @@ public class ModBlockStateProvider extends BlockStateProvider {
     @Override
     protected void registerStatesAndModels() {
         // ─── PINE LOGS & WOOD ────────────────────────────────────────────────
-        logBlock((RotatedPillarBlock) ModBlocks.PINE_LOG.get());
-        simpleBlockItem(ModBlocks.PINE_LOG.get(),
-                models().getExistingFile(modLoc("block/pine_log")));
+        ResourceLocation side       = modLoc("block/pine_log");
+        ResourceLocation sideResin  = modLoc("block/resin_pine_log");
+        ResourceLocation end        = modLoc("block/pine_log_top");
 
+// build two models for us
+        ModelFile pineLog      = models().cubeColumn("pine_log",      side,      end);
+        ModelFile pineLogResin = models().cubeColumn("pine_log_resin", sideResin, end);
+
+// then wire them up in your variant builder as before...
+        getVariantBuilder(ModBlocks.PINE_LOG.get())
+                .forAllStates(state -> {
+                    boolean hasResin = state.getValue(PineResinLogBlock.HAS_RESIN);
+                    Direction.Axis axis = state.getValue(RotatedPillarBlock.AXIS);
+
+                    ModelFile file = hasResin ? pineLogResin : pineLog;
+                    ConfiguredModel.Builder<?> b = ConfiguredModel.builder()
+                            .modelFile(file);
+
+                    if (axis == Direction.Axis.X) {
+                        b.rotationX(90).rotationY(90);
+                    } else if (axis == Direction.Axis.Z) {
+                        b.rotationX(90);
+                    }
+                    return b.build();
+                });
+
+// item model still points at the no-resin version
+        simpleBlockItem(ModBlocks.PINE_LOG.get(), pineLog);
         logBlock((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_LOG.get());
         simpleBlockItem(ModBlocks.STRIPPED_PINE_LOG.get(),
                 models().getExistingFile(modLoc("block/stripped_pine_log")));

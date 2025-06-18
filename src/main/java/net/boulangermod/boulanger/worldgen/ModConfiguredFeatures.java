@@ -33,7 +33,7 @@ public class ModConfiguredFeatures {
         // Wild wheat patch
         register(context, WILD_WHEAT_KEY, Feature.RANDOM_PATCH,
                 new RandomPatchConfiguration(
-                        96, 64, 1,
+                        96, 10, 1,
                         PlacementUtils.filtered(Feature.SIMPLE_BLOCK,
                                 new SimpleBlockConfiguration(BlockStateProvider.simple(ModBlocks.WILD_WHEAT.get())),
                                 BlockPredicate.matchesBlocks(Blocks.SHORT_GRASS)
