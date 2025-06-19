@@ -65,9 +65,11 @@ public class MixingBlock extends AbstractProcessingBlock implements MenuProvider
         return CODEC;
     }
 
-    @Override
-    public @Nullable AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        BlockEntity be = player.level().getBlockEntity(player.blockPosition());
+    /**
+     * Create a menu for the mixer at the given position.
+     */
+    public @Nullable AbstractContainerMenu createMenu(int id, Inventory inv, Player player, BlockPos pos) {
+        BlockEntity be = player.level().getBlockEntity(pos);
         if (be instanceof MixingBlockEntity mixer) {
             LOGGER.info("Opening mixer UI, printing all recipes to console:");
             return new MixingBlockMenu(id, inv, mixer);
@@ -85,15 +87,16 @@ public class MixingBlock extends AbstractProcessingBlock implements MenuProvider
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                               Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (!level.isClientSide()) {
-            BlockEntity entity = level.getBlockEntity(pos);
-            if (entity instanceof MenuProvider provider) {
-                player.openMenu(new SimpleMenuProvider(
-                        (id, inventory, plyr) -> new MixingBlockMenu(id, inventory, entity),
-                        Component.translatable("mixer.boulanger")
-                ), pos); // 🡐 This part ensures extraData contains the block pos
-            }
+            player.openMenu(new SimpleMenuProvider(
+                    (id, inventory, plyr) -> this.createMenu(id, inventory, plyr, pos),
+                    Component.translatable("mixer.boulanger")
+            ), pos);
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide());
     }
 
+    @Override
+    public @Nullable AbstractContainerMenu createMenu(int i, Inventory inventory, Player player) {
+        return null;
+    }
 }

@@ -14,11 +14,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -27,107 +23,44 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractProcessingBlockEntity extends BlockEntity implements MenuProvider {
-    protected final ItemStackHandler itemHandler = new ItemStackHandler(3) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-            if (!level.isClientSide()) {
-                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            }
-        }
-    };
+    protected final ItemStackHandler itemHandler;
 
-    protected static final int INPUT_SLOT = 0;
-    protected static final int FUEL_SLOT = 1;
-    protected static final int OUTPUT_SLOT = 2;
-
-    protected int burnTime = 0;
-    protected int maxBurnTime = 160;
-    protected int cookTime = 0;
-    protected int maxCookTime = 200;
-
-    protected final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> burnTime;
-                case 1 -> maxBurnTime;
-                case 2 -> cookTime;
-                case 3 -> maxCookTime;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case 0 -> burnTime = value;
-                case 1 -> maxBurnTime = value;
-                case 2 -> cookTime = value;
-                case 3 -> maxCookTime = value;
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return 4;
-        }
-    };
-
-    public AbstractProcessingBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+    public AbstractProcessingBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int slots) {
         super(type, pos, state);
-    }
 
-    public void tick(Level level, BlockPos pos, BlockState state) {
-        boolean isBurning = burnTime > 0;
-        if (isBurning) burnTime--;
 
-        boolean dirty = false;
-
-        if (!isBurning && canProcess()) {
-            ItemStack fuel = itemHandler.getStackInSlot(FUEL_SLOT);
-            int burn = AbstractFurnaceBlockEntity.getFuel().getOrDefault(fuel.getItem(), 0);
-            if (burn > 0) {
-                itemHandler.extractItem(FUEL_SLOT, 1, false);
-                burnTime = maxBurnTime = burn;
-                dirty = true;
+        this.itemHandler = new ItemStackHandler(slots) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                setChanged();
+                if (!level.isClientSide()) {
+                    level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+                }
             }
-        }
-
-        if (burnTime > 0 && canProcess()) {
-            cookTime++;
-            if (cookTime >= maxCookTime) {
-                cookTime = 0;
-                processItem();
-                dirty = true;
-            }
-        } else {
-            cookTime = 0;
-        }
-
-        if (dirty) setChanged();
+        };
     }
 
     public static <T extends BlockEntity> BlockEntityTicker<T> createTickerHelper(
             BlockEntityType<T> actualType,
-            BlockEntityType<? extends T> expectedType,
+            BlockEntityType<T> expectedType,
             BlockEntityTicker<? super T> ticker
     ) {
-        return actualType == expectedType ? (BlockEntityTicker<T>) ticker : null;
+        return actualType == expectedType
+                ? (BlockEntityTicker<T>) ticker
+                : null;
     }
 
 
-    protected abstract boolean canProcess();
-    protected abstract void processItem();
-    public abstract BlockEntityType<?> getType(); // Subclasses must implement this
+    public abstract BlockEntityType<?> getType();
+
     public abstract AbstractContainerMenu createMenu(int id, Inventory playerInv, Player player);
 
-    public void drops() {
-        SimpleContainer inventory = new SimpleContainer(itemHandler.getSlots());
-        for (int i = 0; i < itemHandler.getSlots(); i++) {
-            inventory.setItem(i, itemHandler.getStackInSlot(i));
+    protected static void drops(Level level, BlockPos pos, ItemStackHandler handler) {
+        SimpleContainer inventory = new SimpleContainer(handler.getSlots());
+        for (int i = 0; i < handler.getSlots(); i++) {
+            inventory.setItem(i, handler.getStackInSlot(i));
         }
-        Containers.dropContents(this.level, this.worldPosition, inventory);
+        Containers.dropContents(level, pos, inventory);
     }
 
     @Override
@@ -138,10 +71,6 @@ public abstract class AbstractProcessingBlockEntity extends BlockEntity implemen
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         tag.put("inventory", itemHandler.serializeNBT(provider));
-        tag.putInt("burnTime", burnTime);
-        tag.putInt("maxBurnTime", maxBurnTime);
-        tag.putInt("cookTime", cookTime);
-        tag.putInt("maxCookTime", maxCookTime);
         super.saveAdditional(tag, provider);
     }
 
@@ -149,10 +78,6 @@ public abstract class AbstractProcessingBlockEntity extends BlockEntity implemen
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.loadAdditional(tag, provider);
         itemHandler.deserializeNBT(provider, tag.getCompound("inventory"));
-        burnTime = tag.getInt("burnTime");
-        maxBurnTime = tag.getInt("maxBurnTime");
-        cookTime = tag.getInt("cookTime");
-        maxCookTime = tag.getInt("maxCookTime");
     }
 
     @Override
@@ -169,10 +94,6 @@ public abstract class AbstractProcessingBlockEntity extends BlockEntity implemen
     @Override
     public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider provider) {
         super.onDataPacket(net, pkt, provider);
-    }
-
-    public ContainerData getData() {
-        return this.data;
     }
 
     public ItemStackHandler getItemHandler() {

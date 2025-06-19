@@ -55,7 +55,7 @@ public class ScaleBlockMenu extends AbstractContainerMenu {
      * Called by our packet‐handler when the user clicks “weigh.”
      */
     public void onMeasureClick(int weightMg) {
-        blockEntity.setGramsToWeigh(weightMg);
+        blockEntity.setTargetWeight(weightMg);
         blockEntity.transferToBowl();
     }
 

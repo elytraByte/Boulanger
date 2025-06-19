@@ -36,14 +36,9 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
     // grams of wiggle room
     private static final double TOLERANCE_GRAMS = 2.0;
 
-
-    private final NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
-
-
     public DoughDividerBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.DOUGH_DIVIDER.get(), pos, state);// input + output
+        super(ModBlockEntities.DOUGH_DIVIDER.get(), pos, state, 2);
     }
-
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
@@ -60,7 +55,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
     }
 
 
-    @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide) return;
         // only attempt processing when we actually have dough and a valid recipe
@@ -68,8 +62,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
         processItem();
     }
 
-
-    @Override
     protected boolean canProcess() {
         var input = itemHandler.getStackInSlot(INPUT_SLOT);
         if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) return false;
@@ -89,8 +81,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
         return minimalOk || multiOk;
     }
 
-
-    @Override
     protected void processItem() {
         // 0) Grab the input stack
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
@@ -148,8 +138,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
         // 5) Perform the divide‐and‐stamp
         divideIntoPortions(input, portions, portionWeight);
     }
-
-
 
     private void advanceSinglePortion(ItemStack input) {
         // ensure output empty
@@ -222,7 +210,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
                 (int)newWeight
         );
     }
-
 
     private static void copyDoughMetadataExceptWeight(ItemStack src, ItemStack dst) {
         List<DataComponentType<?>> toCopy = List.of(

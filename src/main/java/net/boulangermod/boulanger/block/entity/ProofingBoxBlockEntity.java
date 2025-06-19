@@ -23,6 +23,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.apache.logging.log4j.LogManager;
@@ -31,30 +32,22 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.Optional;
 
-import static net.boulangermod.boulanger.block.entity.AbstractProcessingBlockEntity.INPUT_SLOT;
-
-public class ProofingBoxBlockEntity extends BlockEntity implements MenuProvider {
+public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int SLOT_COUNT = 54;
     private static final int PROOF_TIME_TICKS = 20 * 60 * 5; // 5 minutes in ticks (6000 ticks)
 
-    private final ItemStackHandler itemHandler = new ItemStackHandler(SLOT_COUNT) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-            if (level != null && !level.isClientSide()) {
-                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
-            }
-        }
-    };
-
-    private int proofTimer = 0;
-
     public ProofingBoxBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.PROOFING_BOX.get(), pos, state);
+        super(ModBlockEntities.PROOFING_BOX.get(), pos, state, SLOT_COUNT);
     }
+
+    @Override
+    public BlockEntityType<?> getType() {
+        return ModBlockEntities.PROOFING_BOX.get();
+    }
+
 
     public ItemStackHandler getItemHandler() {
         return itemHandler;
@@ -64,14 +57,12 @@ public class ProofingBoxBlockEntity extends BlockEntity implements MenuProvider 
     public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         itemHandler.deserializeNBT(registries, tag.getCompound("Inventory"));
-        proofTimer = tag.getInt("ProofTimer");
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.put("Inventory", itemHandler.serializeNBT(registries));
-        tag.putInt("ProofTimer", proofTimer);
     }
 
     @Override

@@ -27,6 +27,7 @@ import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.Containers;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -36,35 +37,30 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 
-import static net.minecraft.commands.arguments.ResourceLocationArgument.getRecipe;
-
-public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessingBlock.Tickable, MenuProvider {
-    public static final int SLOT_INPUT  = 0;
-    public static final int SLOT_FUEL   = 1;
-    public static final int SLOT_OUTPUT = 2;
-
-    private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-            if (!level.isClientSide()) {
-                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            }
-        }
-    };
-
-    public WoodOvenBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.WOOD_OVEN_BE.get(), pos, state);
-    }
+public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
+    public static final int SLOT_INPUT      = 0;
+    public static final int SLOT_FUEL       = 1;
+    public static final int SLOT_OUTPUT     = 2;
+    public static final int SLOT_PAN_RETURN = 3;  // new
 
     private int burnTime    = 0;
     private int maxBurnTime = 0;
     private int cookTime    = 0;
     private static final int MAX_COOK_TIME = 200;
 
+    public WoodOvenBlockEntity(BlockPos pos, BlockState state) {
+        // now 4 slots: input, fuel, output, pan-return
+        super(ModBlockEntities.WOOD_OVEN_BE.get(), pos, state, 4);
+    }
+
     public int getBurnTime()    { return burnTime; }
     public int getMaxBurnTime() { return maxBurnTime; }
     public int getCookTime()    { return cookTime;    }
+
+    @Override
+    public BlockEntityType<?> getType() {
+        return ModBlockEntities.WOOD_OVEN_BE.get();
+    }
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
@@ -76,30 +72,79 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
             burnTime--;
         }
 
-        boolean canSmelt = canCook(); // Check if there is valid input
+        boolean canSmelt = canCook();
         ItemStack fuelStack = itemHandler.getStackInSlot(SLOT_FUEL);
 
-        // Consume fuel if needed
         if (burnTime == 0 && canSmelt && fuelStack.getItem() == ModItems.SPLIT_PINE_LOGS.get()) {
-            burnTime = (int)(160 * 1.5f); // burn time multiplier
+            burnTime = (int)(160 * 1.5f);
             maxBurnTime = burnTime;
             fuelStack.shrink(1);
         }
 
-        // Bake item if burning and valid input exists
         if (isBurning() && canSmelt) {
             cookTime++;
             if (cookTime >= MAX_COOK_TIME) {
                 cookTime = 0;
-                tryBake(); // new baking logic
+                tryBake();
             }
         } else {
             cookTime = 0;
         }
 
         if (wasBurning != isBurning()) {
-            setChanged(); // triggers blockstate update for flame animation
+            setChanged();
         }
+    }
+
+    private boolean tryBake() {
+        ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
+        if (input.isEmpty()) return false;
+
+        ItemStack result;
+
+        // CASE 1: fully proofed panned dough
+        if (input.is(ModItems.PAN.get()) &&
+                input.has(ModDataComponentTypes.PROOFING_STATE.get()) &&
+                input.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) {
+
+            var processId = input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+            var recipeOpt = getRecipe(processId);
+
+            if (recipeOpt.isPresent() &&
+                    input.get(ModDataComponentTypes.PROOFING_STATE.get()).stepIndex() >= recipeOpt.get().getSteps().size()) {
+
+                result = bakeBreadFromPan(input);
+                itemHandler.setStackInSlot(SLOT_OUTPUT, result);
+
+                // build the returned empty pan
+                ItemStack panReturn = new ItemStack(ModItems.PAN.get());
+                var panType = input.get(ModDataComponentTypes.PAN_TYPE.get());
+                if (panType != null) {
+                    panReturn.set(ModDataComponentTypes.PAN_TYPE.get(), panType);
+                    panReturn.set(DataComponents.CUSTOM_MODEL_DATA,
+                            new CustomModelData(panType.getModelIndex()));
+                }
+
+                // instead of dropping, put it into slot 3
+                itemHandler.setStackInSlot(SLOT_PAN_RETURN, panReturn);
+
+                // consume input
+                itemHandler.setStackInSlot(SLOT_INPUT, ItemStack.EMPTY);
+                setChanged();
+                return true;
+            }
+        }
+
+        // CASE 2: plain dough
+        if (input.is(ModItems.DOUGH.get())) {
+            result = bakeBreadFromPlainDough(input);
+            itemHandler.setStackInSlot(SLOT_OUTPUT, result);
+            itemHandler.setStackInSlot(SLOT_INPUT, ItemStack.EMPTY);
+            setChanged();
+            return true;
+        }
+
+        return false;
     }
 
     private boolean canCook() {
@@ -184,82 +229,13 @@ public class WoodOvenBlockEntity extends BlockEntity implements AbstractProcessi
         return bread;
     }
 
-    private boolean tryBake() {
-        ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
-        if (input.isEmpty()) return false;
-
-        ItemStack result;
-
-        // 🔍 CASE 1: fully proofed panned dough
-        if (input.is(ModItems.PAN.get()) &&
-                input.has(ModDataComponentTypes.PROOFING_STATE.get()) &&
-                input.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) {
-
-            var proof     = input.get(ModDataComponentTypes.PROOFING_STATE.get());
-            var processId = input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
-            var recipeOpt = getRecipe(processId);
-
-            if (recipeOpt.isPresent()) {
-                var steps = recipeOpt.get().getSteps();
-                if (proof.stepIndex() >= steps.size()) {
-                    // ✔ Fully proofed and ready
-                    result = bakeBreadFromPan(input);
-                    itemHandler.setStackInSlot(SLOT_OUTPUT, result);
-
-                    // build the returned pan, preserving its pan‐type AND model data
-                    ItemStack panReturn = new ItemStack(ModItems.PAN.get());
-                    // preserve the PanType component
-                    var panType = input.get(ModDataComponentTypes.PAN_TYPE.get());
-                    if (panType != null) {
-                        panReturn.set(ModDataComponentTypes.PAN_TYPE.get(), panType);
-                        // now set the custom model data so the texture comes back correctly
-                        panReturn.set(DataComponents.CUSTOM_MODEL_DATA,
-                                new CustomModelData(panType.getModelIndex()));
-                    }
-
-                    // drop it in the world
-                    Containers.dropItemStack(level,
-                            worldPosition.getX(),
-                            worldPosition.getY(),
-                            worldPosition.getZ(),
-                            panReturn);
-
-                    // consume the input
-                    itemHandler.setStackInSlot(SLOT_INPUT, ItemStack.EMPTY);
-                    setChanged();
-                    return true;
-                }
-            }
-        }
-
-        // 🔍 CASE 2: legacy/unpanned dough
-        if (input.is(ModItems.DOUGH.get())) {
-            result = bakeBreadFromPlainDough(input);
-            itemHandler.setStackInSlot(SLOT_OUTPUT, result);
-            itemHandler.setStackInSlot(SLOT_INPUT, ItemStack.EMPTY);
-            setChanged();
-            return true;
-        }
-
-        return false;
-    }
-
-
     private boolean isBurning() {
         return burnTime > 0;
     }
 
     @Override
     public void drops() {
-        SimpleContainer container = new SimpleContainer(itemHandler.getSlots());
-        for (int i = 0; i < itemHandler.getSlots(); i++) {
-            container.setItem(i, itemHandler.getStackInSlot(i));
-        }
-        Containers.dropContents(level, worldPosition, container);
-    }
-
-    public ItemStackHandler getItemHandler() {
-        return itemHandler;
+        AbstractProcessingBlockEntity.drops(level, worldPosition, itemHandler);
     }
 
     @Override

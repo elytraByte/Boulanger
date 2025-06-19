@@ -78,15 +78,15 @@ public class BakersTableBlock extends AbstractProcessingBlock {
         return new BakersTableBlockEntity(pos, state);
     }
 
-    @Nullable
     @Override
+    @Nullable
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
             Level level, BlockState state, BlockEntityType<T> type
     ) {
         return createTickerHelper(
                 type,
-                ModBlockEntities.BAKERS_TABLE.get(),
-                level.isClientSide ? null : BakersTableBlockEntity::tick
+                ModBlockEntities.BAKERS_TABLE.get(),   // now BlockEntityType<BakersTableBlockEntity>
+                BakersTableBlockEntity::tick           // BlockEntityTicker<BakersTableBlockEntity>
         );
     }
 

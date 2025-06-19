@@ -33,7 +33,10 @@ public class ServerPayloadHandler {
             BlockEntity be = level.getBlockEntity(data.pos());
 
             if (be instanceof ScaleBlockEntity scaleEntity) {
-                scaleEntity.setGramsToWeigh(data.weight());
+                // Convert incoming milligrams to grams for the ScaleBlockEntity
+                int milligrams = data.weight();
+                int grams = milligrams / 1000;
+                scaleEntity.setTargetWeight(grams);
                 scaleEntity.transferToBowl();
             } else {
                 context.disconnect(Component.literal("Invalid scale block position"));

@@ -25,6 +25,7 @@ public class WoodOvenMenu extends AbstractContainerMenu {
         addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 56, 17)); // Input
         addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 56, 53)); // Fuel
         addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 116, 35)); // Output
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 3, 145, 35)); // Output
 
         // Player inventory
         for (int row = 0; row < 3; ++row) {
@@ -60,7 +61,7 @@ public class WoodOvenMenu extends AbstractContainerMenu {
     private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
 
     // THIS YOU HAVE TO DEFINE!
-    private static final int TE_INVENTORY_SLOT_COUNT = 3;  // must be the number of slots you have!
+    private static final int TE_INVENTORY_SLOT_COUNT = 4;  // must be the number of slots you have!
     @Override
     public ItemStack quickMoveStack(Player playerIn, int pIndex) {
         Slot sourceSlot = slots.get(pIndex);

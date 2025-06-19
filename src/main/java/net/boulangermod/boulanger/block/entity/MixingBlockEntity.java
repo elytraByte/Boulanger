@@ -29,6 +29,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.apache.logging.log4j.LogManager;
@@ -37,8 +38,8 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MixingBlockEntity extends BlockEntity
-        implements AbstractProcessingBlock.Tickable, MenuProvider {
+public class MixingBlockEntity extends AbstractProcessingBlockEntity
+        implements AbstractProcessingBlock.Tickable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -48,15 +49,6 @@ public class MixingBlockEntity extends BlockEntity
 
     private static final double MAX_DOUGH_WEIGHT_GRAMS = 22680.0; // 20 kg default for basic mixer
 
-
-    private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
-        @Override protected void onContentsChanged(int slot) {
-            setChanged();
-            if (!level.isClientSide) {
-                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-            }
-        }
-    };
     private final List<IngredientStack> ingredientList = new ArrayList<>();
     private boolean mixing = false;
     private int mixProgress = 0;
@@ -64,10 +56,13 @@ public class MixingBlockEntity extends BlockEntity
     private static final int MAX_MIX_TIME = 100;
 
     public MixingBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.MIXING_BLOCK_BE.get(), pos, state);
+        super(ModBlockEntities.MIXING_BLOCK_BE.get(), pos, state, 3);
+    }
+    @Override
+    public BlockEntityType<?> getType() {
+        return ModBlockEntities.MIXING_BLOCK_BE.get();
     }
 
-    public ItemStackHandler getItemHandler() { return itemHandler; }
     public List<IngredientStack> getIngredientList() { return Collections.unmodifiableList(ingredientList); }
     public int getMixProgress() { return mixProgress; }
     public boolean isMixing() { return mixing; }
@@ -389,10 +384,6 @@ public class MixingBlockEntity extends BlockEntity
         ingredientList.clear();
     }
 
-
-
-
-
     private boolean isWeighedIngredient(ItemStack s) {
         return s.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
                 && s.has(ModDataComponentTypes.INGREDIENT_GRAMS.get());
@@ -485,10 +476,6 @@ public class MixingBlockEntity extends BlockEntity
     }
 
     @Override public void drops() {
-        SimpleContainer c = new SimpleContainer(itemHandler.getSlots());
-        for (int i = 0; i < itemHandler.getSlots(); i++) {
-            c.setItem(i, itemHandler.getStackInSlot(i));
-        }
-        Containers.dropContents(level, worldPosition, c);
+        AbstractProcessingBlockEntity.drops(level, worldPosition, itemHandler);
     }
 }
