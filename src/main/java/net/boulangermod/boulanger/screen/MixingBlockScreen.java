@@ -2,8 +2,6 @@ package net.boulangermod.boulanger.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.boulangermod.boulanger.Boulanger;
-import net.boulangermod.boulanger.block.entity.MixingBlockEntity;
-import net.boulangermod.boulanger.network.BoulangerNetwork;
 import net.boulangermod.boulanger.network.StartMixingPacket;
 import net.boulangermod.boulanger.util.IngredientStack;
 import net.minecraft.client.gui.GuiGraphics;
@@ -14,7 +12,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
+
+import java.awt.*;
+import java.util.List;
 
 public class MixingBlockScreen extends AbstractContainerScreen<MixingBlockMenu> {
     private static final ResourceLocation GUI_TEXTURE =
@@ -51,54 +51,107 @@ public class MixingBlockScreen extends AbstractContainerScreen<MixingBlockMenu> 
         this.addRenderableWidget(mixButton);
     }
 
-
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1, 1, 1, 1);
         RenderSystem.setShaderTexture(0, GUI_TEXTURE);
 
-        int x0 = (this.width - this.imageWidth) / 2;
+        // origin of mixer GUI
+        int x0 = (this.width  - this.imageWidth)  / 2;
         int y0 = (this.height - this.imageHeight) / 2;
 
-        // draw the full GUI
+        // 1) draw your 1024×1024 texture at 1/4 scale
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(x0, y0, 0);
         guiGraphics.pose().scale(0.25f, 0.25f, 1.0f);
         guiGraphics.blit(GUI_TEXTURE, 0, 0, 0, 0, 1024, 1024, 1024, 1024);
         guiGraphics.pose().popPose();
 
-        // now draw the ingredient list on top
-        guiGraphics.pose().pushPose();
-        // translate into GUI coords (no scale here)
-        guiGraphics.pose().translate(x0, y0, 0);
+        // 2) panel metrics
+        int count      = menu.getIngredientCount();
+        int rows       = (count + 1) / 2;       // two columns
+        int iconSize   = 16;
+        int vertSpace  = 18;                    // same vertical step you had
+        int colSpace   = 8;                     // extra horizontal gap
+        int padding    = 4;
+        int panelWidth = padding * 2 + iconSize * 2 + colSpace;
 
-        for (int i = 0; i < menu.getIngredientCount(); i++) {
+        // panel covers full GUI height
+        int panelX1 = x0;
+        int panelX0 = panelX1 - panelWidth;
+        int panelY0 = y0;
+        int panelY1 = y0 + this.imageHeight;
+
+        // 3) draw solid background (C6C6C6)
+        guiGraphics.fill(panelX0, panelY0, panelX1, panelY1, 0xFFC6C6C6);
+
+        // 4) render each icon + count
+        for (int i = 0; i < count; i++) {
             IngredientStack ingr = menu.getIngredient(i);
-            ItemStack stack = ingr.getBowlStack().copy();
+            ItemStack stack      = ingr.getBowlStack().copy();
 
-            // draw the item icon
-            guiGraphics.renderItem(stack, 10, 20 + i * 18);
-            // draw the grams text in the lower‑right corner of the slot
+            int col = i % 2;
+            int row = i / 2;
+
+            int iconX = panelX0 + padding + col * (iconSize + colSpace);
+            int iconY = panelY0 + padding + row * vertSpace;
+
+            guiGraphics.renderItem(stack, iconX, iconY);
             guiGraphics.renderItemDecorations(
                     this.font,
                     stack,
-                    10,
-                    20 + i * 18,
+                    iconX,
+                    iconY,
                     ingr.getGrams() + "g"
             );
         }
-        guiGraphics.pose().popPose();
 
-        // (optionally) draw your progress bar here, too...
+        // (…any other progress bars, etc.…)
     }
-
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        renderBackground(guiGraphics, mouseX, mouseY, delta);
+        // draw background dimming
+        this.renderBackground(guiGraphics, mouseX, mouseY, delta);
+        // draw GUI and slots
         super.render(guiGraphics, mouseX, mouseY, delta);
-        renderTooltip(guiGraphics, mouseX, mouseY);
+
+        // --- custom ingredient‐tooltip logic ---
+        int x0 = (this.width  - this.imageWidth)  / 2;
+        int y0 = (this.height - this.imageHeight) / 2;
+        int iconSize   = 16;
+        int vertSpace  = 18;
+        int colSpace   = 8;
+        int padding    = 4;
+        int panelWidth = padding * 2 + iconSize * 2 + colSpace;
+        int panelX0    = x0 - panelWidth;
+
+        for (int i = 0; i < menu.getIngredientCount(); i++) {
+            int col = i % 2;
+            int row = i / 2;
+
+            int iconX = panelX0 + padding + col * (iconSize + colSpace);
+            int iconY = y0 + padding + row * vertSpace;
+            // check if mouse is over this icon
+            if (mouseX >= iconX && mouseX < iconX + iconSize
+                    && mouseY >= iconY && mouseY < iconY + iconSize) {
+                IngredientStack ingr = menu.getIngredient(i);
+                ItemStack stack      = ingr.getBowlStack();
+                int grams            = ingr.getGrams();
+
+                List<Component> tip = List.of(
+                        stack.getHoverName(),
+                        Component.literal(grams + " g")
+                );
+                guiGraphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
+
+                break;  // only one tooltip at a time
+            }
+        }
+
+        // then default slot/tooltips
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
     @Override
