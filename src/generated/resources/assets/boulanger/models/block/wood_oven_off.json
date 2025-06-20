@@ -2,7 +2,7 @@
   "parent": "minecraft:block/orientable",
   "textures": {
     "front": "boulanger:block/wood_oven_front_off",
-    "side": "boulanger:block/wood_oven_side",
-    "top": "boulanger:block/wood_oven_top"
+    "side": "boulanger:block/diorite_side",
+    "top": "boulanger:block/diorite_side"
   }
 }

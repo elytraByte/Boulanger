@@ -22,7 +22,6 @@ import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ModBlockStateProvider extends BlockStateProvider {
@@ -134,6 +133,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.L3E_TILE);
         blockWithItem(ModBlocks.WHITE_TILE);
         scaleBlockWithCustomSides(ModBlocks.SCALE_BLOCK.get());
+        blockWithItem(ModBlocks.MACHINE_HOUSING);
+        blockWithItem(ModBlocks.TEST_MULTIBLOCK_MASTER);
+        blockWithItem(ModBlocks.TEST_MULTIBLOCK_SLAVE);
 
         // ─── WILD WHEAT & CROPS ───────────────────────────────────────────────
         simpleBlock(
@@ -164,9 +166,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
                     String suffix = lit ? "_on" : "_off";
                     ModelFile file = models().orientable(
                             "wood_oven" + suffix,
-                            modLoc("block/wood_oven_side"),
+                            modLoc("block/diorite_side"),
                             modLoc("block/wood_oven_front" + suffix),
-                            modLoc("block/wood_oven_top")
+                            modLoc("block/diorite_side")
                     );
                     return ConfiguredModel.builder()
                             .modelFile(file)
@@ -202,8 +204,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
         String mixerName = ModBlocks.MIXING_BLOCK.getId().getPath();
         ModelFile mixerModel = models().orientable(
                 mixerName,
-                modLoc("block/diorite_side"),
-                modLoc("block/diorite_copper_back"),
+                modLoc("block/machine_side_1"),
+                modLoc("block/mixer_front"),
                 modLoc("block/mixer_top")
         );
         simpleBlockItem(ModBlocks.MIXING_BLOCK.get(), mixerModel);
@@ -415,32 +417,30 @@ public class ModBlockStateProvider extends BlockStateProvider {
         });
     }
 
-    public void scaleBlockWithCustomSides(Block block) {
+    private void scaleBlockWithCustomSides(Block block) {
         String name = block.builtInRegistryHolder().key().location().getPath();
-        ModelFile model = models().cubeBottomTop(
+        ModelFile model = models().orientable(
                 name,
-                modLoc("block/diorite_side"),
-                modLoc("block/pine_planks"),
-                modLoc("block/scale_top")
+                modLoc("block/diorite_side"),   // side texture (will appear on back, left, right)
+                modLoc("block/scale_front"),    // front texture (the face your FACING points toward)
+                modLoc("block/scale_top")       // top texture
         ).texture("particle", modLoc("block/diorite_side"));
-        simpleBlock(block, model);
+
+        // NOTE: this is the only change
+        horizontalBlock(block, model);
     }
 
     private void proofingBoxBlock(DeferredBlock<? extends Block> block) {
-        // derive the registry name (e.g. "proofing_box")
         String name = block.get().builtInRegistryHolder().key().location().getPath();
-
-        // build a cube with custom side, bottom, and top textures
         ModelFile proofingModel = models().cubeBottomTop(
                 name,
-                modLoc("block/proofing_box_side"),  // sides
-                modLoc("block/pine_planks"),        // bottom
-                modLoc("block/proofing_block")      // top
+                modLoc("block/proofing_box_side"), // side stays as proofing_box_side
+                modLoc("block/pine_planks"),       // new bottom texture
+                modLoc("block/proofing_box_top")   // switched top to proofing_box_top
         ).texture("particle", modLoc("block/proofing_box_side"));
-
-        // register both the blockstate and the item model
         simpleBlockWithItem(block.get(), proofingModel);
     }
+
 
     private void doughDividerBlock(DeferredBlock<? extends Block> block) {
         // e.g. "dough_divider"

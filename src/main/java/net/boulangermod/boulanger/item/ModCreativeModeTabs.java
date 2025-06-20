@@ -84,6 +84,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.SCALE_BLOCK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MACHINE_HOUSING.get(), 1));
 // drop the explicit count; the 1-arg ctor also yields count==1
                         pOutput.accept(new ItemStack(ModBlocks.BATTERY .get()));
                         pOutput.accept(new ItemStack(ModBlocks.ENERGY_CABLE.get()));

@@ -1,7 +1,7 @@
 package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
-import net.boulangermod.boulanger.component.WeightComponent;
+import net.boulangermod.boulanger.command.RecipeWeightsCommand;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
@@ -13,7 +13,6 @@ import net.boulangermod.boulanger.util.MyModLootFunctions;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -32,14 +31,13 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.item.ModItems;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import org.jline.utils.Log;
 import org.slf4j.Logger;
 
 @Mod(Boulanger.MODID)
@@ -129,5 +127,11 @@ public class Boulanger {
             }
 
         }
+    }
+
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        // pass the dispatcher into your command’s constructor:
+        new RecipeWeightsCommand(event.getDispatcher());
     }
 }

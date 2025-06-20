@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "boulanger:block/machine_housing"
+    }
+  }
+}

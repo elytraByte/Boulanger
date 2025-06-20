@@ -1,35 +1,26 @@
 package net.boulangermod.boulanger.block;
 
-import net.boulangermod.boulanger.block.entity.EnergyCableBlockEntity;
-import net.boulangermod.boulanger.block.entity.InternalCombustionEngineBlockEntity;
-import net.minecraft.client.resources.model.Material;
+
+import net.boulangermod.boulanger.multiblock.TestMultiblockMasterBlock;
+import net.boulangermod.boulanger.multiblock.TestMultiblockSlaveBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.WoodType;
-import net.minecraft.world.level.levelgen.structure.structures.StrongholdPieces;
-import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.crops.HardRedSpringWheatCrop;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.worldgen.tree.ModTreeGrowers;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
-
-import static net.boulangermod.boulanger.block.entity.ModBlockEntities.BLOCK_ENTITIES;
-
 
 public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(Boulanger.MODID);
@@ -80,11 +71,6 @@ public class ModBlocks {
     public static final DeferredBlock<Block> IRON_WEDGE = BLOCKS.register("iron_wedge",
             () -> new IronWedgeBlock(BlockBehaviour.Properties.of().strength(2f).noOcclusion()));
 
-//    public static final DeferredBlock<Block> PROOFING_BOX =
-//            BLOCKS.register("proofing_box", () -> new ProofingBoxBlock(BlockBehaviour.Properties.of()
-//                    .strength(2.0f)
-//                    .sound(SoundType.WOOD)));
-
     public static final DeferredBlock<Block> PROOFING_BOX = registerBlock("proofing_block",
             () -> new ProofingBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
@@ -94,14 +80,23 @@ public class ModBlocks {
     public static final DeferredBlock<Block> DOUGH_DIVIDER = registerBlock("dough_divider",
             () -> new DoughDividerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
+    public static final DeferredBlock<Block> MACHINE_HOUSING = registerBlock("machine_housing",
+            () -> new Block(
+                    BlockBehaviour.Properties
+                            .of()
+                            .strength(4f, 6f)                 // hardness & blast-resistance
+                            .requiresCorrectToolForDrops()    // needs pickaxe
+            )
+    );
 
+    public static final DeferredBlock<TestMultiblockMasterBlock> TEST_MULTIBLOCK_MASTER =
+            registerBlock("test_multiblock_master",
+                    () -> new TestMultiblockMasterBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
+    public static final DeferredBlock<TestMultiblockSlaveBlock> TEST_MULTIBLOCK_SLAVE =
+            registerBlock("test_multiblock_slave",
+                    () -> new TestMultiblockSlaveBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
-//    public static final DeferredBlock<Block> PORCELAIN_TILE = registerBlock("porcelain_tile",)
-//    public static final DeferredBlock<Block> KILN = registerBlock("kiln",)
-//    public static final DeferredBlock<Block> PROOFER = registerBlock("proofer",)
-//    public static final DeferredBlock<Block> WOOD_OVEN = registerBlock("wood_oven",)
-//    public static final DeferredBlock<Block> FERMENTATION_JAR = registerBlock("fermentation_jar",)
 
 
     public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",

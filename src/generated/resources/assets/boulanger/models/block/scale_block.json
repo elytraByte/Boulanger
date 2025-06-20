@@ -1,7 +1,7 @@
 {
-  "parent": "minecraft:block/cube_bottom_top",
+  "parent": "minecraft:block/orientable",
   "textures": {
-    "bottom": "boulanger:block/pine_planks",
+    "front": "boulanger:block/scale_front",
     "particle": "boulanger:block/diorite_side",
     "side": "boulanger:block/diorite_side",
     "top": "boulanger:block/scale_top"

@@ -170,6 +170,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent("stone_mill_block", modLoc("block/stone_mill_block"));
         withExistingParent("scale_block", modLoc("block/scale_block"));
         withExistingParent("proofing_box", modLoc("block/proofing_block"));
+        withExistingParent("machine_housing", modLoc("block/machine_housing"));
     }
 
     private ItemModelBuilder saplingItem(DeferredBlock<Block> item) {

@@ -1,8 +1,8 @@
 {
   "parent": "minecraft:block/orientable",
   "textures": {
-    "front": "boulanger:block/diorite_copper_back",
-    "side": "boulanger:block/diorite_side",
+    "front": "boulanger:block/mixer_front",
+    "side": "boulanger:block/machine_side_1",
     "top": "boulanger:block/mixer_top"
   }
 }

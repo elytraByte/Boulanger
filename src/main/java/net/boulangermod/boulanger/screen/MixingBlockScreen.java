@@ -13,92 +13,80 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
-import java.awt.*;
 import java.util.List;
 
 public class MixingBlockScreen extends AbstractContainerScreen<MixingBlockMenu> {
     private static final ResourceLocation GUI_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/mixer.png");
 
-    public MixingBlockScreen(MixingBlockMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title);
+    // sidebar constants
+    private static final int COLUMNS   = 3;
+    private static final int ICON_SZ   = 16;
+    private static final int VERT_SP   = 18;
+    private static final int COL_SP    = 12;
+    private static final int PADDING   = 4;
+
+    public MixingBlockScreen(MixingBlockMenu menu, Inventory inv, Component title) {
+        super(menu, inv, title);
     }
 
     @Override
     protected void init() {
         super.init();
         this.inventoryLabelY = 72;
-        this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
+        this.titleLabelX     = (this.imageWidth - this.font.width(this.title)) / 2;
 
-        // GUI origin
-        int x0 = (this.width - this.imageWidth) / 2;
+        int x0 = (this.width  - this.imageWidth)  / 2;
         int y0 = (this.height - this.imageHeight) / 2;
+        int btnW = 40, btnH = 18;
 
-        // button size
-        int btnW = 40;
-        int btnH = 18;
-        // center X within the GUI
-        int btnX = x0 + (this.imageWidth / 2) - (btnW / 2);
-        // desired Y offset (tweak as needed)
-        int btnY = y0 + 60;
-
-        Button mixButton = Button.builder(Component.literal("Mix"), btn -> {
-                    StartMixingPacket.sendFromClient(menu.getBlockEntity().getBlockPos());
-                })
-                .bounds(btnX, btnY, btnW, btnH)
+        Button mixBtn = Button.builder(Component.literal("Mix"), b ->
+                        StartMixingPacket.sendFromClient(menu.getBlockEntity().getBlockPos())
+                )
+                .bounds(x0 + this.imageWidth/2 - btnW/2, y0 + 60, btnW, btnH)
                 .build();
 
-        this.addRenderableWidget(mixButton);
+        this.addRenderableWidget(mixBtn);
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics g, float pt, int mx, int my) {
+        // 1) draw main GUI scaled 1/4
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1, 1, 1, 1);
+        RenderSystem.setShaderColor(1f,1f,1f,1f);
         RenderSystem.setShaderTexture(0, GUI_TEXTURE);
 
-        // origin of mixer GUI
         int x0 = (this.width  - this.imageWidth)  / 2;
         int y0 = (this.height - this.imageHeight) / 2;
 
-        // 1) draw your 1024×1024 texture at 1/4 scale
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(x0, y0, 0);
-        guiGraphics.pose().scale(0.25f, 0.25f, 1.0f);
-        guiGraphics.blit(GUI_TEXTURE, 0, 0, 0, 0, 1024, 1024, 1024, 1024);
-        guiGraphics.pose().popPose();
+        g.pose().pushPose();
+        g.pose().translate(x0, y0, 0);
+        g.pose().scale(0.25f, 0.25f, 1f);
+        g.blit(GUI_TEXTURE, 0, 0, 0, 0, 1024, 1024, 1024, 1024);
+        g.pose().popPose();
 
-        // 2) panel metrics
-        int count      = menu.getIngredientCount();
-        int rows       = (count + 1) / 2;       // two columns
-        int iconSize   = 16;
-        int vertSpace  = 18;                    // same vertical step you had
-        int colSpace   = 8;                     // extra horizontal gap
-        int padding    = 4;
-        int panelWidth = padding * 2 + iconSize * 2 + colSpace;
+        // 2) sidebar panel
+        int count  = menu.getIngredientCount();
+        int panelW = PADDING*2 + ICON_SZ*COLUMNS + COL_SP*(COLUMNS - 1);
+        int px1    = x0;
+        int px0    = px1 - panelW;
+        int py0    = y0;
+        int py1    = y0 + this.imageHeight;
+        g.fill(px0, py0, px1, py1, 0xFFC6C6C6);
 
-        // panel covers full GUI height
-        int panelX1 = x0;
-        int panelX0 = panelX1 - panelWidth;
-        int panelY0 = y0;
-        int panelY1 = y0 + this.imageHeight;
-
-        // 3) draw solid background (C6C6C6)
-        guiGraphics.fill(panelX0, panelY0, panelX1, panelY1, 0xFFC6C6C6);
-
-        // 4) render each icon + count
+        // 3) render icons + overlay text
         for (int i = 0; i < count; i++) {
             IngredientStack ingr = menu.getIngredient(i);
-            ItemStack stack      = ingr.getBowlStack().copy();
+            ItemStack       stack = ingr.getBowlStack().copy();
+            int             col   = i % COLUMNS;
+            int             row   = i / COLUMNS;
+            int iconX = px0 + PADDING + col*(ICON_SZ+COL_SP);
+            int iconY = py0 + PADDING + row*VERT_SP;
 
-            int col = i % 2;
-            int row = i / 2;
-
-            int iconX = panelX0 + padding + col * (iconSize + colSpace);
-            int iconY = panelY0 + padding + row * vertSpace;
-
-            guiGraphics.renderItem(stack, iconX, iconY);
-            guiGraphics.renderItemDecorations(
+            // draw icon
+            g.renderItem(stack, iconX, iconY);
+            // overlay grams on top
+            g.renderItemDecorations(
                     this.font,
                     stack,
                     iconX,
@@ -106,59 +94,47 @@ public class MixingBlockScreen extends AbstractContainerScreen<MixingBlockMenu> 
                     ingr.getGrams() + "g"
             );
         }
-
-        // (…any other progress bars, etc.…)
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        // draw background dimming
-        this.renderBackground(guiGraphics, mouseX, mouseY, delta);
-        // draw GUI and slots
-        super.render(guiGraphics, mouseX, mouseY, delta);
+    public void render(GuiGraphics g, int mx, int my, float dt) {
+        // background and GUI + sidebar from renderBg
+        this.renderBackground(g, mx, my, dt);
+        super.render(g, mx, my, dt);
 
-        // --- custom ingredient‐tooltip logic ---
+        // ingredient tooltip
         int x0 = (this.width  - this.imageWidth)  / 2;
         int y0 = (this.height - this.imageHeight) / 2;
-        int iconSize   = 16;
-        int vertSpace  = 18;
-        int colSpace   = 8;
-        int padding    = 4;
-        int panelWidth = padding * 2 + iconSize * 2 + colSpace;
-        int panelX0    = x0 - panelWidth;
+        int count  = menu.getIngredientCount();
+        int panelW = PADDING*2 + ICON_SZ*COLUMNS + COL_SP*(COLUMNS - 1);
+        int px0    = x0 - panelW;
 
-        for (int i = 0; i < menu.getIngredientCount(); i++) {
-            int col = i % 2;
-            int row = i / 2;
+        for (int i = 0; i < count; i++) {
+            int col = i % COLUMNS;
+            int row = i / COLUMNS;
+            int iconX = px0 + PADDING + col*(ICON_SZ+COL_SP);
+            int iconY = y0 + PADDING + row*VERT_SP;
 
-            int iconX = panelX0 + padding + col * (iconSize + colSpace);
-            int iconY = y0 + padding + row * vertSpace;
-            // check if mouse is over this icon
-            if (mouseX >= iconX && mouseX < iconX + iconSize
-                    && mouseY >= iconY && mouseY < iconY + iconSize) {
+            if (mx >= iconX && mx < iconX + ICON_SZ
+                    && my >= iconY && my < iconY + ICON_SZ) {
                 IngredientStack ingr = menu.getIngredient(i);
-                ItemStack stack      = ingr.getBowlStack();
-                int grams            = ingr.getGrams();
+                String      name = ingr.getBowlStack().getHoverName().getString();
+                int         grams = ingr.getGrams();
 
-                List<Component> tip = List.of(
-                        stack.getHoverName(),
-                        Component.literal(grams + " g")
-                );
-                guiGraphics.renderComponentTooltip(this.font, tip, mouseX, mouseY);
-
-                break;  // only one tooltip at a time
+                Component line1 = Component.literal("\u00A7a" + name);
+                Component line2 = Component.literal("\u00A7a" + grams + " g");
+                g.renderComponentTooltip(this.font, List.of(line1, line2), mx, my);
+                break;
             }
         }
 
-        // then default slot/tooltips
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
+        // default slot tooltips
+        this.renderTooltip(g, mx, my);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0x404040, false);
-        guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, 72, 0x404040, false);
+    protected void renderLabels(GuiGraphics g, int mx, int my) {
+        g.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0x404040, false);
+        g.drawString(this.font, this.playerInventoryTitle, 8, 72, 0x404040, false);
     }
-
 }
-

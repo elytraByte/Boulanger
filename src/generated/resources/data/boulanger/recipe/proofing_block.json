@@ -2,29 +2,29 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "boulanger:pcb"
-    },
     "C": {
       "item": "boulanger:machine_housing"
     },
     "D": {
-      "item": "boulanger:diorite_plate"
+      "item": "boulanger:pine_planks"
+    },
+    "G": {
+      "item": "minecraft:campfire"
     },
     "W": {
-      "item": "minecraft:oak_pressure_plate"
+      "item": "boulanger:diorite_plate"
     },
     "X": {
-      "item": "boulanger:pine_planks"
+      "item": "boulanger:pcb"
     }
   },
   "pattern": [
-    "WWW",
+    "WXW",
     "DCD",
-    "XBX"
+    "WGW"
   ],
   "result": {
     "count": 1,
-    "id": "boulanger:scale_block"
+    "id": "boulanger:proofing_block"
   }
 }

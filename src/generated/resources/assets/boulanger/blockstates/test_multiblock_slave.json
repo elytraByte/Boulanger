@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "boulanger:block/test_multiblock_slave"
+    }
+  }
+}

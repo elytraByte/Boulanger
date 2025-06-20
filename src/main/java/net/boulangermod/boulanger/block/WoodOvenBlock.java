@@ -48,7 +48,7 @@ public class WoodOvenBlock extends AbstractProcessingBlock implements MenuProvid
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         return this.defaultBlockState()
                 .setValue(FACING, context.getHorizontalDirection())
-                .setValue(LIT, true);
+                .setValue(LIT, false);
     }
 
     @Override

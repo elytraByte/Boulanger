@@ -33,11 +33,10 @@ public class DoughItem extends Item {
 
     @Override
     public void appendHoverText(
-            ItemStack stack,
-            TooltipContext context,
+            ItemStack stack, TooltipContext context,
             List<Component> tooltipComponents,
-            TooltipFlag tooltipFlag
-    ) {
+            TooltipFlag tooltipFlag) {
+
         super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
 
         DoughRecipeComponent dr = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());

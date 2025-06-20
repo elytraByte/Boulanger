@@ -149,17 +149,40 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_pcb", has(ModItems.PCB))
                 .save(pRecipeOutput);
 
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.SCALE_BLOCK.get(), 1)
-                .pattern("PPP")
-                .pattern("DUD")
-                .pattern("WEW")
-                .define('P', Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE)
-                .define('W', ModBlocks.PINE_PLANKS)
-                .define('U', Blocks.PISTON)
-                .define('E', ModItems.PCB)
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.MACHINE_HOUSING.get(), 1)
+                .pattern("PDP")
+                .pattern("DXD")
+                .pattern("PDP")
+                .define('P', ModItems.PORCELAIN_BRICK)
+                .define('X', ModItems.PCB)
                 .define('D', ModItems.DIORITE_PLATE)
                 .unlockedBy("has_pcb", has(ModItems.PCB))
                 .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.SCALE_BLOCK.get(), 1)
+                .pattern("WWW")
+                .pattern("DCD")
+                .pattern("XBX")
+                .define('W', Blocks.OAK_PRESSURE_PLATE)
+                .define('D', ModItems.DIORITE_PLATE)
+                .define('C', ModBlocks.MACHINE_HOUSING)
+                .define('X', ModBlocks.PINE_PLANKS)
+                .define('B', ModItems.PCB)
+                .unlockedBy("has_machine_housing", has(ModBlocks.MACHINE_HOUSING))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.PROOFING_BOX.get(), 1)
+                .pattern("WXW")
+                .pattern("DCD")
+                .pattern("WGW")
+                .define('W', ModItems.DIORITE_PLATE)
+                .define('G', Blocks.CAMPFIRE)
+                .define('C', ModBlocks.MACHINE_HOUSING)
+                .define('D', ModBlocks.PINE_PLANKS)
+                .define('X', ModItems.PCB)
+                .unlockedBy("has_machine_housing", has(ModBlocks.MACHINE_HOUSING))
+                .save(pRecipeOutput);
+
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.WOOD_OVEN.get(), 1)
                 .pattern("DDD")
