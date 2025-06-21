@@ -60,7 +60,6 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
         return (lvl, pos, st, be) -> ((BakersTableBlockEntity) be).tryShape();
     }
 
-    // in BakersTableBlockEntity
     public static void tick(
             Level level,
             BlockPos pos,
@@ -70,7 +69,6 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
         if (level.isClientSide()) return;
         be.tryShape();
     }
-
 
     @SuppressWarnings("unchecked")
     private static void copyKnownDoughComponents(ItemStack source, ItemStack target) {
@@ -97,19 +95,20 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
 
         if (dough.isEmpty() || pan.isEmpty() || !output.isEmpty()) return false;
 
-        var ds = ModDataComponentTypes.PROOFING_STATE.get();
-        var pt = ModDataComponentTypes.DOUGH_PROCESS_TYPE.get();
+        // ensure dough & pan both have the right components
+        var ds      = ModDataComponentTypes.PROOFING_STATE.get();
+        var pt      = ModDataComponentTypes.DOUGH_PROCESS_TYPE.get();
         var panComp = ModDataComponentTypes.PAN_TYPE.get();
         if (!dough.has(ds) || !dough.has(pt) || !dough.has(panComp) || !pan.has(panComp)) {
             return false;
         }
-
         String required = dough.get(panComp).id();
         String present  = pan.get(panComp).id();
         if (!PanType.fromId(required).equals(PanType.fromId(present))) {
             return false;
         }
 
+        // find the shaping recipe
         Optional<DoughProcessRecipe> recipe = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
                 .map(RecipeHolder::value)
@@ -117,21 +116,33 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
                 .findFirst();
         if (recipe.isEmpty()) return false;
 
-        ProcessingStep step = recipe.get().getSteps()
-                .get(dough.get(ds).stepIndex());
+        ProcessingStep step = recipe.get().getSteps().get(dough.get(ds).stepIndex());
         if (step.type() != StepType.SHAPE) return false;
 
-        ItemStack filledPan = pan.copy();
-        copyKnownDoughComponents(dough, filledPan);
-        filledPan.set(ds, new ProofingStateComponent(
+        // create a single-shaped pan
+        ItemStack shapedPan = pan.copy();
+        shapedPan.setCount(1);
+        copyKnownDoughComponents(dough, shapedPan);
+        shapedPan.set(ds, new ProofingStateComponent(
                 dough.get(ds).stepIndex() + 1,
                 0,
                 true
         ));
 
-        handler.setStackInSlot(OUTPUT_SLOT, filledPan);
-        handler.setStackInSlot(DOUGH_SLOT, ItemStack.EMPTY);
-        handler.setStackInSlot(PAN_SLOT, ItemStack.EMPTY);
+        // consume exactly one dough and one pan
+        dough.shrink(1);
+        pan.shrink(1);
+
+        // write back remaining stacks (or empty if count == 0)
+        if (dough.isEmpty()) handler.setStackInSlot(DOUGH_SLOT, ItemStack.EMPTY);
+        else              handler.setStackInSlot(DOUGH_SLOT, dough);
+
+        if (pan.isEmpty()) handler.setStackInSlot(PAN_SLOT, ItemStack.EMPTY);
+        else               handler.setStackInSlot(PAN_SLOT, pan);
+
+        // place the shaped pan into the output
+        handler.setStackInSlot(OUTPUT_SLOT, shapedPan);
+
         setChanged();
         return true;
     }

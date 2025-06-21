@@ -12,15 +12,11 @@ import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.IngredientStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -28,10 +24,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -111,28 +105,21 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     }
 
     private Optional<RatioRecipe> findMatchingRecipe() {
-        var recipes = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.RATIO_TYPE.get());
+        var recipes = level.getRecipeManager().getAllRecipesFor(ModRecipeSerializers.RATIO_TYPE.get());
 
         double totalFlour = calculateTotalFlour();
         if (totalFlour <= 0) return Optional.empty();
-        LOGGER.debug("→ Total flour in mixer: {}g", totalFlour);
 
         for (var holder : recipes) {
             RatioRecipe recipe = holder.value();
-            LOGGER.debug("→ Checking recipe: {}", recipe.getId());
-
-            boolean matches = matchesIngredientComponents(recipe, totalFlour)
+            boolean matches = matchesIngredientComponents(recipe)
                     && hasEnoughTotalWeight(recipe)
                     && meetsItemRequirements(recipe);
 
             if (matches) {
-                LOGGER.debug("✓ Recipe {} matched!", recipe.getId());
                 return Optional.of(recipe);
             }
         }
-
-        LOGGER.debug("→ No valid recipe matched.");
         return Optional.empty();
     }
 
@@ -143,85 +130,62 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
                 .sum();
     }
 
-    private boolean matchesIngredientComponents(RatioRecipe recipe, double totalFlour) {
+    private boolean matchesIngredientComponents(RatioRecipe recipe) {
+        // 1) Sum up everything
         double totalWeight = ingredientList.stream()
                 .mapToDouble(IngredientStack::getGrams)
                 .sum();
-        if (totalWeight <= 0) return false;
-
-        double percentSum = recipe.getComponents().stream()
-                .mapToDouble(IngredientComponent::targetPercent)
-                .sum();
-
-        double flourPercent = recipe.getComponents().stream()
-                .filter(c -> c.category() == IngredientCategory.FLOUR)
-                .mapToDouble(IngredientComponent::targetPercent)
-                .sum();
-
-        double gramsPerPercent = recipe.getServingWeight() / percentSum;
-
-        double totalFlourInMixer = ingredientList.stream()
-                .filter(st -> st.getCategory() == IngredientCategory.FLOUR)
-                .mapToDouble(IngredientStack::getGrams)
-                .sum();
-
-        if (totalFlourInMixer <= 0) return false;
-
-        double servings = totalFlourInMixer / (flourPercent * gramsPerPercent);
-        servings = Math.floor(servings * 100) / 100.0;
-
-        double expectedTotal = servings * recipe.getServingWeight();
-        if (Math.abs(totalWeight - expectedTotal) > recipe.getServingWeight() * 0.03) {
-            LOGGER.debug("   ✗ Total dough weight mismatch: {}g vs expected {}g", totalWeight, expectedTotal);
+        if (totalWeight < recipe.getServingWeight() * (1 - recipe.getTolerance())) {
+            // not even close to one batch
             return false;
         }
 
-        LOGGER.debug("→ totalFlour={}g → servings={} based on flourPercent={} and GPP={}",
-                totalFlourInMixer, servings, flourPercent, gramsPerPercent);
+        // 2) Compute the *single-serving* flour weight
+        double nonFlourPctSum = recipe.getComponents().stream()
+                .filter(c -> c.category() != IngredientCategory.FLOUR)
+                .mapToDouble(IngredientComponent::targetPercent)
+                .sum();
+        double singleFlourWeight = recipe.getServingWeight()
+                / (1.0 + nonFlourPctSum / 100.0);
 
-        if (servings < 0.5) {
-            LOGGER.debug("   ✗ Too little total mass for even 1/2 batch.");
-            return false;
-        }
+        // 3) “1 % of flour” in grams for one serving
+        double gramsPerPct = singleFlourWeight / 100.0;
 
-        // === Group expected % by category
-        Map<IngredientCategory, Double> expectedPctPerCategory = new EnumMap<>(IngredientCategory.class);
+        // 4) How many whole batches do we actually have?
+        //    We allow a little slack so that slight rounding drift still rounds to the intended batchCount.
+        double rawBatches = totalWeight / recipe.getServingWeight();
+        int batchCount = (int) Math.floor(rawBatches + recipe.getTolerance());
+        if (batchCount < 1) return false;
+
+        // 5) For each component, check actual vs expected = singleTarget * batchCount
         for (IngredientComponent comp : recipe.getComponents()) {
-            expectedPctPerCategory.merge(comp.category(), comp.targetPercent(), Double::sum);
-        }
+            // one-serving target
+            double singleTarget = gramsPerPct * comp.targetPercent();
+            // scaled for N servings
+            double expected = singleTarget * batchCount;
+            // tolerance also scales
+            double tol = singleTarget * recipe.getTolerance() * batchCount;
 
-        for (IngredientCategory category : expectedPctPerCategory.keySet()) {
-            List<IngredientStack> matchingStacks = ingredientList.stream()
-                    .filter(st -> st.getCategory() == category)
-                    .filter(st -> recipe.getComponents().stream()
-                            .filter(c -> c.category() == category)
-                            .anyMatch(c -> isAllowedItem(st, c))
-                    )
-                    .toList();
-
-            if (matchingStacks.isEmpty()) {
-                LOGGER.debug("   ✗ No matching items found for category {}", category);
-                return false;
-            }
-
-            double foundGrams = matchingStacks.stream()
+            double actual = ingredientList.stream()
+                    .filter(st -> st.getCategory() == comp.category())
+                    .filter(st -> comp.allowedItems().isEmpty()
+                            || comp.allowedItems().contains(getMatchId(st, comp.category())))
                     .mapToDouble(IngredientStack::getGrams)
                     .sum();
 
-            double expectedGrams = expectedPctPerCategory.get(category) * gramsPerPercent * servings;
-            double toleranceGrams = expectedGrams * recipe.getTolerance();
-
-            LOGGER.info(String.format(
-                    "%s → [%s] total: %.1fg in bowl vs expected %.1fg (±%.2fg @ %.2f%%) [%d matching items]",
-                    recipe.getId(), category, foundGrams, expectedGrams,
-                    toleranceGrams, recipe.getTolerance() * 100.0,
-                    matchingStacks.size()
-            ));
-
-            if (Math.abs(foundGrams - expectedGrams) > toleranceGrams) {
-                LOGGER.debug("   ✗ Component {} outside tolerance", category);
+            if (Math.abs(actual - expected) > tol) {
+                LOGGER.debug("   ✗ {}: got {}g vs expected {}g (±{}g)",
+                        comp.category(), actual, expected, tol);
                 return false;
             }
+        }
+
+        // 6) Finally, ensure totalWeight ≈ batchCount × servingWeight
+        double totalTol = recipe.getServingWeight() * recipe.getTolerance() * batchCount;
+        if (Math.abs(totalWeight - recipe.getServingWeight() * batchCount) > totalTol) {
+            LOGGER.debug("   ✗ Total dough {}g vs {}×{}g (±{}g)",
+                    totalWeight, batchCount, recipe.getServingWeight(), totalTol);
+            return false;
         }
 
         return true;
@@ -235,16 +199,12 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     }
 
     private boolean meetsItemRequirements(RatioRecipe recipe) {
-        for (IngredientRequirement req : recipe.getItemRequirements()) {
+        for (var req : recipe.getItemRequirements()) {
             double got = ingredientList.stream()
                     .filter(st -> resolveIngredientId(st).equals(req.getItemId()))
                     .mapToDouble(IngredientStack::getGrams)
                     .sum();
-
-            if (got < req.getAmount()) {
-                LOGGER.debug("   ✗ Requirement not met: {}", req.getItemId());
-                return false;
-            }
+            if (got < req.getAmount()) return false;
         }
         return true;
     }

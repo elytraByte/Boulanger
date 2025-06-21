@@ -21,5 +21,13 @@ public record ProcessingStep(
                     StreamCodecsCompat.INT, ProcessingStep::durationTicks,
                     ProcessingStep::new
             );
+    /** JavaBean‐style getter for the step type. */
+    public StepType getType() {
+        return this.type;
+    }
 
+    // (Optional) JavaBean‐style getter for duration
+    public int getDurationTicks() {
+        return this.durationTicks;
+    }
 }

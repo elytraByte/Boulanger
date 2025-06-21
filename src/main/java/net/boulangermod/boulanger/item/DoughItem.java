@@ -22,6 +22,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 
+
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
@@ -103,7 +104,6 @@ public class DoughItem extends Item {
                     .withStyle(ChatFormatting.LIGHT_PURPLE)
             );
         }
-
     }
 
     @Override
@@ -140,6 +140,7 @@ public class DoughItem extends Item {
 
         return InteractionResult.PASS;
     }
+
     @Override
     public boolean isBarVisible(ItemStack stack) {
         return stack.has(ModDataComponentTypes.PROOFING_STATE.get());
@@ -183,5 +184,17 @@ public class DoughItem extends Item {
         ProcessingStep step = steps.get(idx);
         float progress = (float) state.ticksInStep() / (float) step.durationTicks();
         return (int) (13f * progress);
+    }
+
+    // Force dough items to never stack above 1
+    @Override
+    public int getMaxStackSize(ItemStack stack) {
+        return 1;
+    }
+
+    // Light-blue proofing bar (RGB 0x55FFFF)
+    @Override
+    public int getBarColor(ItemStack stack) {
+        return 0x55FFFF;
     }
 }

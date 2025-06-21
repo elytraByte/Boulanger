@@ -5,6 +5,7 @@ import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.recipe.ProcessingStep;
+import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.screen.DoughDividerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -56,30 +57,53 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
 
 
     public void tick(Level level, BlockPos pos, BlockState state) {
+        // only run on server
         if (level.isClientSide) return;
-        // only attempt processing when we actually have dough and a valid recipe
+
+        // 0) Grab the input stack
+        ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
+        if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) return;
+
+        // 1) Look up the dough-process recipe
+        DoughProcessRecipe recipe = findRecipeFor(input);
+        if (recipe == null) return;
+
+        // 2) Check that the current processing step is DIVIDE
+        ProofingStateComponent proofState = input.get(ModDataComponentTypes.PROOFING_STATE);
+        int stepIdx = proofState != null ? proofState.stepIndex() : 0;
+        ProcessingStep currentStep = recipe.getSteps().get(stepIdx);
+        if (currentStep.getType() != StepType.DIVIDE) return;
+
+        // 3) Only now check weight/tolerance and actually process
         if (!canProcess()) return;
         processItem();
     }
 
+
     protected boolean canProcess() {
-        var input = itemHandler.getStackInSlot(INPUT_SLOT);
+        ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
         if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) return false;
 
-        var recComp = input.get(ModDataComponentTypes.DOUGH_RECIPE);
-        var wc      = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
-        if (recComp == null || wc == null || wc.grams() <= 0) return false;
+        // a) recipe must exist
+        DoughProcessRecipe recipe = findRecipeFor(input);
+        if (recipe == null) return false;
 
+        // b) must be on the DIVIDE step
+        ProofingStateComponent proofState = input.get(ModDataComponentTypes.PROOFING_STATE);
+        int stepIdx = proofState != null ? proofState.stepIndex() : 0;
+        ProcessingStep currentStep = recipe.getSteps().get(stepIdx);
+        if (currentStep.getType() != StepType.DIVIDE) return false;
+
+        // c) original weight checks remain exactly the same…
+        WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
+        if (wc == null || wc.grams() <= 0) return false;
         double total = wc.grams();
-        double serving = findRecipeFor(input).getServingWeightGrams();
-
-        // 1× serving (within tolerance) OR at least 2× serving (allow a smidge under)
+        double serving = recipe.getServingWeightGrams();
         boolean minimalOk = Math.abs(total - serving) <= TOLERANCE_GRAMS;
         boolean multiOk   = total >= (2 * serving - TOLERANCE_GRAMS);
-
-        LOGGER.debug("→ Dough {}g, serving {}g → minimalOk={} multiOk={}", total, serving, minimalOk, multiOk);
         return minimalOk || multiOk;
     }
+
 
     protected void processItem() {
         // 0) Grab the input stack
