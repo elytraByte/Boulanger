@@ -1,13 +1,18 @@
 package net.boulangermod.boulanger.block.entity;
 
 import com.mojang.logging.LogUtils;
-import net.boulangermod.boulanger.energy.ModEnergyStorage;
 import net.boulangermod.boulanger.block.entity.ModBlockEntities;
-import net.boulangermod.boulanger.block.entity.InternalCombustionEngineBlockEntity;
-import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
+import net.boulangermod.boulanger.energy.ModEnergyStorage;
 import net.boulangermod.boulanger.fluid.ModFluids;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -17,8 +22,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import org.slf4j.Logger;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class InternalCombustionEngineBlockEntity extends BlockEntity {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -27,14 +31,13 @@ public class InternalCombustionEngineBlockEntity extends BlockEntity {
     private static final int RF_PER_CYCLE      = 1000;
     private static final int BURN_INTERVAL     = 1;
 
-    // 8,000 mB wood-gas buffer with validator and change callback
+    // 8,000 mB wood-gas buffer
     private final FluidTank tank = new FluidTank(8_000) {
         @Override
         public boolean isFluidValid(FluidStack stack) {
             return stack.getFluid() == ModFluids.WOOD_GAS_STILL.get()
                     || stack.getFluid() == ModFluids.WOOD_GAS_FLOWING.get();
         }
-
         @Override
         protected void onContentsChanged() {
             LOGGER.debug("[ICE] onContentsChanged → {} mB wood-gas", getFluidAmount());
@@ -45,16 +48,14 @@ public class InternalCombustionEngineBlockEntity extends BlockEntity {
         }
     };
 
-    // capacity=100_000, maxReceive=RF_PER_CYCLE, maxExtract=RF_PER_CYCLE
-    private final ModEnergyStorage energy =
-            new ModEnergyStorage(100_000, RF_PER_CYCLE, RF_PER_CYCLE) {
-                @Override protected void onEnergyChanged() {
-                    setChanged();
-                    LOGGER.debug("[ICE] Energy changed: {}/{} RF",
-                            getEnergyStored(), getMaxEnergyStored());
-                }
-            };
-
+    private final ModEnergyStorage energy = new ModEnergyStorage(100_000, RF_PER_CYCLE, RF_PER_CYCLE) {
+        @Override
+        protected void onEnergyChanged() {
+            setChanged();
+            LOGGER.debug("[ICE] Energy changed: {}/{} RF",
+                    getEnergyStored(), getMaxEnergyStored());
+        }
+    };
 
     private int burnCooldown = 0;
 
@@ -62,69 +63,98 @@ public class InternalCombustionEngineBlockEntity extends BlockEntity {
         super(ModBlockEntities.INTERNAL_COMBUSTION_ENGINE_BE.get(), pos, state);
     }
 
-    /** NeoForge will call this when pipes ask for IFluidHandler.BLOCK */
+    /** Expose fluid‐handler capability */
     public IFluidHandler getFluidHandler(@Nullable Direction side) {
-        LOGGER.debug("[ICE] getFluidHandler(side={}) → {} mB in tank",
-                side, tank.getFluidAmount());
         return tank;
     }
 
-    /** NeoForge will call this when neighbors ask for IEnergyStorage.BLOCK */
+    /** Expose energy capability */
     public IEnergyStorage getEnergyStorage(@Nullable Direction side) {
-        LOGGER.debug("[ICE] getEnergyStorage(side={}) → {}/{} RF",
-                side, energy.getEnergyStored(), energy.getMaxEnergyStored());
         return energy;
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state,
                             InternalCombustionEngineBlockEntity be) {
         if (level.isClientSide) return;
-        be.serverTick();
+        be.serverTick(state);
     }
 
-    private void serverTick() {
-        LOGGER.debug("[ICE] serverTick start: {} mB wood-gas, cooldown={}",
-                tank.getFluidAmount(), burnCooldown);
+    private void serverTick(BlockState state) {
+        // toggle LIT property based on whether we have gas
+        boolean lit = state.getValue(net.boulangermod.boulanger.block.InternalCombustionEngineBlock.LIT);
+        boolean shouldBeLit = tank.getFluidAmount() >= WOOD_GAS_PER_TICK;
+
+        if (lit != shouldBeLit) {
+            level.setBlock(worldPosition,
+                    state.setValue(
+                            net.boulangermod.boulanger.block.InternalCombustionEngineBlock.LIT,
+                            shouldBeLit
+                    ), 3
+            );
+        }
 
         if (burnCooldown > 0) {
             burnCooldown--;
         } else if (tank.getFluidAmount() >= WOOD_GAS_PER_TICK) {
-            // consume gas and generate RF
             tank.drain(WOOD_GAS_PER_TICK, IFluidHandler.FluidAction.EXECUTE);
             energy.receiveEnergy(RF_PER_CYCLE, false);
             burnCooldown = BURN_INTERVAL;
-            LOGGER.info("[ICE] Consumed {} mB wood-gas → produced {} RF; cooldown reset to {}",
-                    WOOD_GAS_PER_TICK, RF_PER_CYCLE, burnCooldown);
-        } else {
-            LOGGER.debug("[ICE] Not enough wood-gas: have {} mB, need {} mB",
-                    tank.getFluidAmount(), WOOD_GAS_PER_TICK);
+            LOGGER.info("[ICE] Consumed {} mB wood-gas → produced {} RF; cooldown reset",
+                    WOOD_GAS_PER_TICK, RF_PER_CYCLE);
         }
 
-        pushEnergyToNeighbors();
-    }
-
-    private void pushEnergyToNeighbors() {
+        // push out energy
         for (Direction dir : Direction.values()) {
-            BlockPos neighbour = worldPosition.relative(dir);
-            LOGGER.debug("[ICE] Pushing energy to {} side of {}",
-                    dir.getOpposite(), neighbour);
-
             IEnergyStorage target = level.getCapability(
                     Capabilities.EnergyStorage.BLOCK,
-                    neighbour,
+                    worldPosition.relative(dir),
                     dir.getOpposite()
             );
             if (target != null) {
                 int available = energy.extractEnergy(energy.getEnergyStored(), true);
-                int sent      = target.receiveEnergy(available, false);
+                int sent = target.receiveEnergy(available, false);
                 energy.extractEnergy(sent, false);
-                LOGGER.info("[ICE] Pushed {} RF to {} of {}; buffer now {}/{} RF",
-                        sent, dir.getOpposite(), neighbour,
-                        energy.getEnergyStored(), energy.getMaxEnergyStored());
-            } else {
-                LOGGER.debug("[ICE] No energy capability on {} side of {}",
-                        dir.getOpposite(), neighbour);
             }
         }
+    }
+
+    // —— NBT persistence & client sync —— //
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        // note: provider first, then the tag
+        CompoundTag tankTag = new CompoundTag();
+        tank.writeToNBT(registries, tankTag);
+        tag.put("ice.tank", tankTag);
+        tag.putInt("ice.energy", energy.getEnergyStored());
+        tag.putInt("ice.burnCooldown", burnCooldown);
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        // again: provider first
+        CompoundTag tankTag = tag.getCompound("ice.tank");
+        tank.readFromNBT(registries, tankTag);
+        energy.setEnergy(tag.getInt("ice.energy"));
+        burnCooldown = tag.getInt("ice.burnCooldown");
+    }
+
+
+    @Nullable
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider prov) {
+        return saveWithoutMetadata(prov);
+    }
+
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt,
+                             net.minecraft.core.HolderLookup.Provider prov) {
+        super.onDataPacket(net, pkt, prov);
     }
 }

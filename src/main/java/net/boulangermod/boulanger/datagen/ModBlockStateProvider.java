@@ -136,6 +136,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.MACHINE_HOUSING);
         blockWithItem(ModBlocks.TEST_MULTIBLOCK_MASTER);
         blockWithItem(ModBlocks.TEST_MULTIBLOCK_SLAVE);
+        blockWithItem(ModBlocks.WOOD_GASIFIER_SLAVE);
 
         // ─── WILD WHEAT & CROPS ───────────────────────────────────────────────
         simpleBlock(
@@ -230,17 +231,39 @@ public class ModBlockStateProvider extends BlockStateProvider {
                             .build();
                 });
 
-        // ─── WOOD GASIFIER ─────────────────────────────────────────────────────
-        ModelFile gasifierModel = models().getExistingFile(modLoc("block/wood_gasifier"));
-        simpleBlockItem(ModBlocks.WOOD_GASIFIER.get(), gasifierModel);
+
+            // single‐block cube, unlit
+            ModelFile gasifierCube     = models().cubeAll(
+                    "wood_gasifier",
+                    blockTexture(ModBlocks.WOOD_GASIFIER.get())
+            );
+            // single‐block cube, lit (if you want e.g. an emissive overlay)
+            ModelFile gasifierCubeLit  = models().cubeAll(
+                    "wood_gasifier_lit",
+                    blockTexture(ModBlocks.WOOD_GASIFIER.get())
+            );
+            // the full 2×1×2 multiblock
+            ModelFile gasifierMulti    = models().getExistingFile(modLoc("block/wood_gasifier_mb"));
+
+            // item always shows the small cube
+            simpleBlockItem(ModBlocks.WOOD_GASIFIER.get(), gasifierCube);
+
+            // now handle all 16 possible states: FACING × HIDDEN × LIT
         getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
-                .forAllStates(s -> {
-                    Direction dir = s.getValue(WoodGasifierBlock.FACING);
+                .forAllStates(state -> {
+                    Direction dir = state.getValue(WoodGasifierBlock.FACING);
                     return ConfiguredModel.builder()
-                            .modelFile(gasifierModel)
+                            .modelFile(gasifierMulti)
                             .rotationY((int) dir.toYRot())
                             .build();
                 });
+
+//            // …and if you also need to generate your WOOD_GAS fluid blockstates:
+//            getVariantBuilder(ModBlocks.WOOD_GAS.get())
+//                    .forAllStates(state -> ConfiguredModel.builder()
+//                            .modelFile(models().getExistingFile(modLoc("block/wood_gas_level" + state.getValue(WoodGasBlock.LEVEL))))
+//                            .build());
+
 
         ResourceLocation bedrockTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/bedrock");
 

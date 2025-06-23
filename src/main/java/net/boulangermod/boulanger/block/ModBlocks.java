@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.block;
 
 import net.boulangermod.boulanger.multiblock.TestMultiblockMasterBlock;
 import net.boulangermod.boulanger.multiblock.TestMultiblockSlaveBlock;
+import net.boulangermod.boulanger.multiblock.WoodGasifierSlaveBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
@@ -34,6 +35,9 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> WOOD_GASIFIER = registerBlock("wood_gasifier",
             () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
+    public static final DeferredBlock<WoodGasifierSlaveBlock> WOOD_GASIFIER_SLAVE = registerBlock("wood_gasifier_slave",
+            () -> new WoodGasifierSlaveBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
     public static final DeferredBlock<Block> WOOD_OVEN = registerBlock("wood_oven",
             () -> new WoodOvenBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));

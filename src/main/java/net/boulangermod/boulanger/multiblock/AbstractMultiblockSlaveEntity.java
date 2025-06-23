@@ -2,10 +2,15 @@ package net.boulangermod.boulanger.multiblock;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -64,4 +69,32 @@ public abstract class AbstractMultiblockSlaveEntity extends BlockEntity implemen
             masterPos = null;
         }
     }
+
+    /** Expose the master’s inventory on any slave. */
+    public IItemHandler getItemHandler(@Nullable Direction side) {
+        if (masterPos != null && level != null) {
+            var be = level.getBlockEntity(masterPos);
+            if (be instanceof AbstractMultiblockMachineEntity master) {
+                return master.getItemHandler(side);
+            }
+        }
+        // fallback to an empty handler
+        return new ItemStackHandler(0);
+    }
+
+    /** Expose the master’s tank on any slave. */
+    public IFluidHandler getFluidHandler(@Nullable Direction side) {
+        if (masterPos != null && level != null) {
+            var be = level.getBlockEntity(masterPos);
+            if (be instanceof AbstractMultiblockMachineEntity master) {
+                return master.getFluidHandler(side);
+            }
+        }
+        // fallback: zero-capacity tank that still marks the TE dirty on change
+        return new FluidTank(0, ignored -> {
+            setChanged();
+            return true;
+        });
+    }
+
 }

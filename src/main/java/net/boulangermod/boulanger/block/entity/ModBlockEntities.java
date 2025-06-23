@@ -2,6 +2,7 @@ package net.boulangermod.boulanger.block.entity;
 
 import net.boulangermod.boulanger.multiblock.TestMultiblockMasterBlockEntity;
 import net.boulangermod.boulanger.multiblock.TestMultiblockSlaveBlockEntity;
+import net.boulangermod.boulanger.multiblock.WoodGasifierSlaveBlockEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -39,11 +40,20 @@ public class ModBlockEntities {
                     ).build(null)
             );
 
+
     public static final Supplier<BlockEntityType<WoodGasifierBlockEntity>> WOOD_GASIFIER_BE =
             BLOCK_ENTITIES.register("wood_gasifier_be", () -> BlockEntityType.Builder.of(
                     WoodGasifierBlockEntity::new,
                     ModBlocks.WOOD_GASIFIER.get()
             ).build(null));
+
+    public static final Supplier<BlockEntityType<WoodGasifierSlaveBlockEntity>> WOOD_GASIFIER_SLAVE_BE =
+            BLOCK_ENTITIES.register("wood_gasifier_slave",
+                    () -> BlockEntityType.Builder
+                            .of(WoodGasifierSlaveBlockEntity::new,
+                                    ModBlocks.WOOD_GASIFIER_SLAVE.get())
+                            .build(null)
+            );
 
     public static final Supplier<BlockEntityType<TestMultiblockMasterBlockEntity>> TEST_MULTIBLOCK_MASTER_BE =
             BLOCK_ENTITIES.register("test_multiblock_master",

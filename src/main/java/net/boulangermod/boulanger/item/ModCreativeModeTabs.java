@@ -79,16 +79,18 @@ public class ModCreativeModeTabs {
 
                         // TILE ENTITIES
                         pOutput.accept(new ItemStack(ModBlocks.TREE_TAP.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.STONE_MILL_BLOCK.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.SCALE_BLOCK.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.MACHINE_HOUSING.get(), 1));
-// drop the explicit count; the 1-arg ctor also yields count==1
+                        pOutput.accept(new ItemStack(ModBlocks.STONE_MILL_BLOCK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.SCALE_BLOCK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PROOFING_BOX, 1));
+                        pOutput.accept(new ItemStack(ModBlocks.DOUGH_DIVIDER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.BAKERS_TABLE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.BATTERY .get()));
                         pOutput.accept(new ItemStack(ModBlocks.ENERGY_CABLE.get()));
                         pOutput.accept(new ItemStack(ModItems.GASIFIER_FILTER.get()));
+                        pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
 
 
                         //SPAWN EGGS
