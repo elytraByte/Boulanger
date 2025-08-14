@@ -12,6 +12,7 @@ import net.boulangermod.boulanger.item.PanType;
 import net.boulangermod.boulanger.util.ScaleLogic; // if needed
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;                 // NEW
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
@@ -20,6 +21,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomModelData;          // NEW
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -129,13 +131,18 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
                 true
         ));
 
+        // NEW: flip model to "full" (filled pan) based on PanType
+        var panTypeId = shapedPan.get(panComp).id();
+        PanType panType = PanType.fromId(panTypeId);
+        shapedPan.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(panType.getFullModelIndex()));
+
         // consume exactly one dough and one pan
         dough.shrink(1);
         pan.shrink(1);
 
         // write back remaining stacks (or empty if count == 0)
         if (dough.isEmpty()) handler.setStackInSlot(DOUGH_SLOT, ItemStack.EMPTY);
-        else              handler.setStackInSlot(DOUGH_SLOT, dough);
+        else                 handler.setStackInSlot(DOUGH_SLOT, dough);
 
         if (pan.isEmpty()) handler.setStackInSlot(PAN_SLOT, ItemStack.EMPTY);
         else               handler.setStackInSlot(PAN_SLOT, pan);

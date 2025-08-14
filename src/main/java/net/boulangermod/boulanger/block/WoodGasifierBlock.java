@@ -3,7 +3,6 @@ package net.boulangermod.boulanger.block;
 import com.mojang.serialization.MapCodec;
 import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
-import net.boulangermod.boulanger.multiblock.AbstractMultiblockSlaveEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -33,42 +32,49 @@ import org.jetbrains.annotations.Nullable;
 
 public class WoodGasifierBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final BooleanProperty    LIT     = BlockStateProperties.LIT;
+    public static final BooleanProperty    LIT    = BlockStateProperties.LIT;
+    public static final BooleanProperty FORMED = BooleanProperty.create("formed");
     public static final BooleanProperty HIDDEN = BooleanProperty.create("hidden");
 
     public WoodGasifierBlock(Properties props) {
-        super(props.lightLevel(state -> state.getValue(LIT) ? 13 : 0));
-        this.registerDefaultState(this.stateDefinition.any()
-                .setValue(FACING, Direction.NORTH)
-                .setValue(LIT, false)
-                .setValue(HIDDEN, false)
+        super(props.lightLevel(s -> s.getValue(LIT) ? 13 : 0));
+        this.registerDefaultState(
+                this.stateDefinition.any()
+                        .setValue(FACING, Direction.NORTH)
+                        .setValue(LIT, false)
+                        .setValue(HIDDEN, false)
+                        .setValue(FORMED, false)
         );
     }
 
     @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("unchecked")
     protected MapCodec<? extends BaseEntityBlock> codec() {
-        // raw cast lets the compiler accept it:
         return (MapCodec) CODEC;
     }
 
-
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> builder) {
-        builder.add(FACING, LIT, HIDDEN);
+        builder.add(FACING, LIT, HIDDEN, FORMED);
     }
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return state.getValue(HIDDEN)
-                ? RenderShape.INVISIBLE
-                : RenderShape.MODEL;
+        return state.getValue(HIDDEN) ? RenderShape.INVISIBLE : RenderShape.MODEL;
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
-        return defaultBlockState()
-                .setValue(FACING, ctx.getHorizontalDirection().getOpposite());
+        // player’s look direction → horizontal facing
+        Direction playerDir = ctx.getHorizontalDirection();
+        // we want the *front* of the block to point at the player, so take the opposite
+        Direction front = playerDir.getOpposite();
+
+        return this.defaultBlockState()
+                .setValue(FACING, front)
+                .setValue(FORMED, false)
+                .setValue(HIDDEN, false)
+                .setValue(LIT, false);
     }
 
     @Override
@@ -98,18 +104,25 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         if (level.isClientSide) {
             return ItemInteractionResult.SUCCESS;
         }
-        var be = level.getBlockEntity(pos);
+        BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof WoodGasifierBlockEntity gasifier)) {
             return super.useItemOn(stack, state, level, pos, player, hand, hit);
         }
-        if (stack.getItem() == Items.BREAD && !gasifier.isFormed()) {
-            boolean formed = gasifier.tryFormOrDismantle();
-            if (player instanceof ServerPlayer server) {
+        // toggle formation with bread
+        if (stack.getItem() == Items.BREAD) {
+            InteractionResult result = gasifier.tryToggleForm(player, hand, hit.getDirection());
+            if (result.consumesAction() && player instanceof ServerPlayer server) {
                 server.sendSystemMessage(
-                        Component.literal(formed ? "Multiblock formed!" : "Failed to form multiblock")
+                        Component.literal(
+                                gasifier.isFormed()
+                                        ? "Wood Gasifier multiblock formed!"
+                                        : "Wood Gasifier multiblock dismantled."
+                        )
                 );
             }
-            return ItemInteractionResult.SUCCESS;
+            return result == InteractionResult.CONSUME
+                    ? ItemInteractionResult.SUCCESS
+                    : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
         return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
@@ -123,24 +136,15 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
         }
-        if (!(player instanceof ServerPlayer server)) {
-            return InteractionResult.SUCCESS;
-        }
-        var be = level.getBlockEntity(pos);
+        BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof WoodGasifierBlockEntity gasifier) || !gasifier.isFormed()) {
             return InteractionResult.PASS;
         }
-        boolean valid = gasifier.getSlavePositions().stream().allMatch(sp -> {
-            var slaveBe = level.getBlockEntity(sp);
-            return slaveBe instanceof AbstractMultiblockSlaveEntity s
-                    && pos.equals(s.getMasterPos());
-        });
-        if (!valid) {
-            gasifier.tryFormOrDismantle();
-            server.sendSystemMessage(Component.literal("Multiblock invalid — dismantled."));
-            return InteractionResult.CONSUME;
+        // verify slave validity (optional)
+        // open UI
+        if (player instanceof ServerPlayer server) {
+            server.openMenu(gasifier, buf -> buf.writeBlockPos(pos));
         }
-        server.openMenu(gasifier, buf -> buf.writeBlockPos(pos));
         return InteractionResult.CONSUME;
     }
 
@@ -155,12 +159,16 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         return createTickerHelper(
                 type,
                 ModBlockEntities.WOOD_GASIFIER_BE.get(),
-                WoodGasifierBlockEntity::ticker
+                WoodGasifierBlockEntity::tick
         );
     }
 
     @Override
-    public void onRemove(BlockState oldState, Level level, BlockPos pos, BlockState newState, boolean moved) {
+    public void onRemove(BlockState oldState,
+                         Level level,
+                         BlockPos pos,
+                         BlockState newState,
+                         boolean moved) {
         if (oldState.getBlock() != newState.getBlock()) {
             super.onRemove(oldState, level, pos, newState, moved);
         }

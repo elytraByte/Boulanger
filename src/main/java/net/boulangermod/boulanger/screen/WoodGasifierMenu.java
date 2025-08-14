@@ -1,71 +1,61 @@
 package net.boulangermod.boulanger.screen;
 
-import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 import net.boulangermod.boulanger.block.ModBlocks;
+import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 import net.boulangermod.boulanger.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.*;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 public class WoodGasifierMenu extends AbstractContainerMenu {
     private final WoodGasifierBlockEntity blockEntity;
-    private final ContainerData data;
+    private final SimpleContainerData data;
     private final BlockPos pos;
 
     public WoodGasifierMenu(int windowId,
                             Inventory playerInv,
                             WoodGasifierBlockEntity be,
-                            ContainerData data) {
+                            SimpleContainerData data) {
         super(ModMenuTypes.WOOD_GASIFIER_MENU.get(), windowId);
         this.blockEntity = be;
         this.data        = data;
         this.pos         = be.getBlockPos();
 
-        IItemHandler h = be.getItemHandler(null);
+        IItemHandler h = be.getItemHandler();
 
         // ─── TE SLOTS ────────────────────────────────────────────────
-        // Slot 0: only split pine logs
         this.addSlot(new SlotItemHandler(h, 0, 26, 21) {
-            @Override
-            public boolean mayPlace(ItemStack stack) {
+            @Override public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() == ModItems.SPLIT_PINE_LOGS.get();
             }
         });
-
-        // Slot 1: any vanilla log
         this.addSlot(new SlotItemHandler(h, 1, 26, 57) {
-            @Override
-            public boolean mayPlace(ItemStack stack) {
+            @Override public boolean mayPlace(ItemStack stack) {
                 return stack.is(ItemTags.LOGS);
             }
         });
-
-            this.addSlot(new SlotItemHandler(h, 2, 56, 21) {
-                @Override
-                public boolean mayPlace(ItemStack stack) {
-                    return stack.getItem() == ModItems.GASIFIER_FILTER.get();
-                }
-            });
-
-            this.addSlot(new SlotItemHandler(h, 3, 56, 57) {
-                @Override
-                public boolean mayPlace(ItemStack stack) {
-                    return stack.getItem() == ModItems.GASIFIER_FILTER.get();
-                }
-            });
+        this.addSlot(new SlotItemHandler(h, 2, 56, 21) {
+            @Override public boolean mayPlace(ItemStack stack) {
+                return stack.getItem() == ModItems.GASIFIER_FILTER.get();
+            }
+        });
+        this.addSlot(new SlotItemHandler(h, 3, 56, 57) {
+            @Override public boolean mayPlace(ItemStack stack) {
+                return stack.getItem() == ModItems.GASIFIER_FILTER.get();
+            }
+        });
 
         // ─── PLAYER INV + HOTBAR ────────────────────────────────────
-        final int yOffset = 5;  // keep your GUI alignment tweak
-
-        // main inventory (3×9)
+        final int yOffset = 5;
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
                 this.addSlot(new Slot(
@@ -76,7 +66,6 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
                 ));
             }
         }
-        // hotbar (1×9)
         for (int col = 0; col < 9; ++col) {
             this.addSlot(new Slot(
                     playerInv,
@@ -89,7 +78,6 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
         this.addDataSlots(data);
     }
 
-    // client‐side ctor unchanged…
     public WoodGasifierMenu(int windowId,
                             Inventory playerInv,
                             FriendlyByteBuf buf) {
@@ -98,7 +86,8 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
                 (WoodGasifierBlockEntity) playerInv.player
                         .level()
                         .getBlockEntity(buf.readBlockPos()),
-                new SimpleContainerData(3));
+                new SimpleContainerData(3)
+        );
     }
 
     @Override
@@ -110,15 +99,13 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
         );
     }
 
-    // Quick‐move (shift‐click) logic
     private static final int HOTBAR_SLOT_COUNT             = 9;
     private static final int PLAYER_INVENTORY_ROW_COUNT    = 3;
     private static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
     private static final int PLAYER_INVENTORY_SLOT_COUNT   = PLAYER_INVENTORY_ROW_COUNT * PLAYER_INVENTORY_COLUMN_COUNT;
     private static final int VANILLA_SLOT_COUNT            = HOTBAR_SLOT_COUNT + PLAYER_INVENTORY_SLOT_COUNT;
-    private static final int VANILLA_FIRST_SLOT_INDEX      = 0;
-    private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
-    private static final int TE_INVENTORY_SLOT_COUNT       = 4; // input, fuel, output
+    private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_SLOT_COUNT;
+    private static final int TE_INVENTORY_SLOT_COUNT       = 4;
 
     @Override
     public ItemStack quickMoveStack(Player playerIn, int index) {
@@ -128,7 +115,6 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
         ItemStack copyStack = sourceStack.copy();
 
         if (index < VANILLA_SLOT_COUNT) {
-            // from player inventory → TE
             if (!moveItemStackTo(sourceStack,
                     TE_INVENTORY_FIRST_SLOT_INDEX,
                     TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT,
@@ -136,10 +122,9 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
                 return ItemStack.EMPTY;
             }
         } else if (index < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
-            // from TE → player inventory
             if (!moveItemStackTo(sourceStack,
-                    VANILLA_FIRST_SLOT_INDEX,
-                    VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT,
+                    0,
+                    VANILLA_SLOT_COUNT,
                     false)) {
                 return ItemStack.EMPTY;
             }
@@ -147,7 +132,7 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
             return ItemStack.EMPTY;
         }
 
-        if (sourceStack.getCount() == 0) {
+        if (sourceStack.isEmpty()) {
             sourceSlot.set(ItemStack.EMPTY);
         } else {
             sourceSlot.setChanged();
@@ -156,8 +141,12 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
         return copyStack;
     }
 
-public int   getBurnProgress()    { return data.get(0); }
-    public int   getEnergyStored()    { return data.get(1); }
-    public int   getMaxEnergyStored() { return data.get(2); }
-    public int   getMaxBurnProgress() { return WoodGasifierBlockEntity.BURN_TIME_PER_LOG; }
+    public int getBurnProgress()    { return data.get(0); }
+    public int getEnergyStored()    { return data.get(1); }
+    public int getMaxEnergyStored() { return data.get(2); }
+
+    // The total burn time for one log. Matches the BE's BURN_TIME_PER_LOG.
+    public int getMaxBurnProgress() {
+        return WoodGasifierBlockEntity.getBurnTimePerLog();
+    }
 }

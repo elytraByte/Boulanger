@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "boulanger:block/pine_pressure_plate_up"
+    },
+    "powered=true": {
+      "model": "boulanger:block/pine_pressure_plate_down"
+    }
+  }
+}

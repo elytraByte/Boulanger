@@ -92,6 +92,9 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     protected void generate() {
         // all your simple drops
         dropSelf(ModBlocks.WOOD_GASIFIER.get());
+        dropSelf(ModBlocks.SUGAR_REFINERY.get());
+        dropSelf(ModBlocks.IRON_FRAME.get());
+        dropSelf(ModBlocks.MOTIVATOR.get());
         dropSelf(ModBlocks.BATTERY.get());
         dropSelf(ModBlocks.ENERGY_CABLE.get());
         dropSelf(ModBlocks.INTERAL_COMUSTION_ENGINE.get());
@@ -104,14 +107,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.BAKERS_TABLE.get());
         dropSelf(ModBlocks.DOUGH_DIVIDER.get());
         dropSelf(ModBlocks.MACHINE_HOUSING.get());
-        dropSelf(ModBlocks.TEST_MULTIBLOCK_MASTER.get());
-        dropSelf(ModBlocks.TEST_MULTIBLOCK_SLAVE.get());
-        dropSelf(ModBlocks.WOOD_GASIFIER_SLAVE.get());
-        dropSelf(ModBlocks.TEST_MULTIBLOCK_SLAVE.get());
         dropSelf(ModBlocks.BLACK_TILE.get());
         dropSelf(ModBlocks.BLUE_TILE.get());
-        dropSelf(ModBlocks.DARK_BLUE_TILE.get());
-        dropSelf(ModBlocks.DARK_BLUE_WHITE_TILE.get());
+        dropSelf(ModBlocks.LIGHT_BLUE_TILE.get());
+        dropSelf(ModBlocks.BLUE_WHITE_TILE.get());
         dropSelf(ModBlocks.L3E_TILE.get());
         dropSelf(ModBlocks.WHITE_TILE.get());
         dropSelf(ModBlocks.STRIPPED_PINE_LOG.get());
@@ -137,6 +136,10 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.PINE_FENCE_GATE.get());
         dropSelf(ModBlocks.PINE_SLAB.get());
         dropSelf(ModBlocks.PINE_STAIRS.get());
+        dropSelf(ModBlocks.PINE_BUTTON.get());
+        dropSelf(ModBlocks.PINE_PRESSURE_PLATE.get());
+        dropSelf(ModBlocks.PINE_DOOR.get());
+        dropSelf(ModBlocks.PINE_TRAPDOOR.get());
 
         // your custom wheat crop:
         Block crop = ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get();

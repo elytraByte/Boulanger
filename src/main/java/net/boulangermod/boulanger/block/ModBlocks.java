@@ -1,17 +1,16 @@
 package net.boulangermod.boulanger.block;
 
 
-import net.boulangermod.boulanger.multiblock.TestMultiblockMasterBlock;
-import net.boulangermod.boulanger.multiblock.TestMultiblockSlaveBlock;
-import net.boulangermod.boulanger.multiblock.WoodGasifierSlaveBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -36,9 +35,6 @@ public class ModBlocks {
     public static final DeferredBlock<Block> WOOD_GASIFIER = registerBlock("wood_gasifier",
             () -> new WoodGasifierBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
-    public static final DeferredBlock<WoodGasifierSlaveBlock> WOOD_GASIFIER_SLAVE = registerBlock("wood_gasifier_slave",
-            () -> new WoodGasifierSlaveBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
-
     public static final DeferredBlock<Block> WOOD_OVEN = registerBlock("wood_oven",
             () -> new WoodOvenBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
@@ -51,6 +47,22 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STONE_MILL_BLOCK = registerBlock("stone_mill_block",
             () -> new StoneMillBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
+    public static final DeferredBlock<SugarRefineryBlock> SUGAR_REFINERY = registerBlock(
+            "sugar_refinery",
+            () -> new SugarRefineryBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F)
+                    .noOcclusion()                 // <-- important: don’t cull neighbors
+            )
+    );
+
+
+    public static final DeferredBlock<Block> MOTIVATOR =
+            registerBlock("motivator",
+                    () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)));
+
+    public static final DeferredBlock<Block> IRON_FRAME =
+            registerBlock("iron_frame", IronFrameBlock::new);
+
     public static final DeferredBlock<Block> KAOLINITE_CLAY = registerBlock("kaolinite_clay",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.CLAY)));
 
@@ -60,10 +72,10 @@ public class ModBlocks {
     public static final DeferredBlock<Block> BLUE_TILE = registerBlock("blue_tile",
             () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
 
-    public static final DeferredBlock<Block> DARK_BLUE_TILE = registerBlock("dark_blue_tile",
+    public static final DeferredBlock<Block> LIGHT_BLUE_TILE = registerBlock("light_blue_tile",
             () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
 
-    public static final DeferredBlock<Block> DARK_BLUE_WHITE_TILE = registerBlock("dark_blue_white_tile",
+    public static final DeferredBlock<Block> BLUE_WHITE_TILE = registerBlock("blue_white_tile",
             () -> new DecorativePorcelainTileBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.BRICKS)));
 
     public static final DeferredBlock<Block> L3E_TILE = registerBlock("l3e_tile",
@@ -75,14 +87,20 @@ public class ModBlocks {
     public static final DeferredBlock<Block> IRON_WEDGE = BLOCKS.register("iron_wedge",
             () -> new IronWedgeBlock(BlockBehaviour.Properties.of().strength(2f).noOcclusion()));
 
-    public static final DeferredBlock<Block> PROOFING_BOX = registerBlock("proofing_block",
+    public static final DeferredBlock<Block> PROOFING_BOX = registerBlock("proofing_box",
             () -> new ProofingBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
     public static final DeferredBlock<Block> BAKERS_TABLE = registerBlock("bakers_table",
             () -> new BakersTableBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
     public static final DeferredBlock<Block> DOUGH_DIVIDER = registerBlock("dough_divider",
-            () -> new DoughDividerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+            () -> new DoughDividerBlock(
+                    Block.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                            .noOcclusion()                 // ← important
+                            .strength(3.5F)
+                            .requiresCorrectToolForDrops()
+            )
+    );
 
     public static final DeferredBlock<Block> MACHINE_HOUSING = registerBlock("machine_housing",
             () -> new Block(
@@ -92,16 +110,6 @@ public class ModBlocks {
                             .requiresCorrectToolForDrops()    // needs pickaxe
             )
     );
-
-    public static final DeferredBlock<TestMultiblockMasterBlock> TEST_MULTIBLOCK_MASTER =
-            registerBlock("test_multiblock_master",
-                    () -> new TestMultiblockMasterBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
-
-    public static final DeferredBlock<TestMultiblockSlaveBlock> TEST_MULTIBLOCK_SLAVE =
-            registerBlock("test_multiblock_slave",
-                    () -> new TestMultiblockSlaveBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
-
-
 
     public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",
             () -> new HardRedSpringWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
@@ -120,6 +128,33 @@ public class ModBlocks {
                     .ofFullCopy(Blocks.OAK_LOG)
                     .strength(2.0f))
     );
+
+    public static final DeferredBlock<DoorBlock> PINE_DOOR = registerDoor("pine_door",
+            () -> new DoorBlock(BlockSetType.OAK,
+                    BlockBehaviour.Properties.of().strength(3.0F).noOcclusion()));
+
+    public static final DeferredBlock<TrapDoorBlock> PINE_TRAPDOOR = registerBlock("pine_trapdoor",
+            () -> new TrapDoorBlock(BlockSetType.OAK,
+                    BlockBehaviour.Properties.of().strength(3.0F).noOcclusion()));
+
+    public static final DeferredBlock<ButtonBlock> PINE_BUTTON = registerBlock("pine_button",
+            // Wooden button behavior: longer press time; no collision
+            () -> new ButtonBlock(BlockSetType.OAK, 30,
+                    BlockBehaviour.Properties.of().noCollission().strength(0.5F)));
+
+    public static final DeferredBlock<Block> PINE_PRESSURE_PLATE = registerBlock(
+            "pine_pressure_plate",
+            () -> new PressurePlateBlock(
+                    BlockSetType.OAK,                              // ← gives EVERYTHING sensitivity
+                    BlockBehaviour.Properties.of().strength(0.5F)
+            )
+    );
+
+    private static DeferredBlock<DoorBlock> registerDoor(String name, Supplier<DoorBlock> block) {
+        DeferredBlock<DoorBlock> ref = BLOCKS.register(name, block);
+        ModItems.ITEMS.register(name, () -> new DoubleHighBlockItem(ref.get(), new Item.Properties()));
+        return ref;
+    }
 
     public static final DeferredBlock<EnergyStorageBlock> BATTERY =
             registerBlock("battery",

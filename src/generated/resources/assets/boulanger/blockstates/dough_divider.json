@@ -1,7 +1,19 @@
 {
   "variants": {
-    "": {
+    "facing=east": {
+      "model": "boulanger:block/dough_divider",
+      "y": 90
+    },
+    "facing=north": {
       "model": "boulanger:block/dough_divider"
+    },
+    "facing=south": {
+      "model": "boulanger:block/dough_divider",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "boulanger:block/dough_divider",
+      "y": 270
     }
   }
 }

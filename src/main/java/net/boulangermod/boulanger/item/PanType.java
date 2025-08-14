@@ -3,15 +3,17 @@ package net.boulangermod.boulanger.item;
 import net.minecraft.resources.ResourceLocation;
 
 public enum PanType {
-    LOAF("loaf", 1),
-    BAGUETTE("baguette", 2);
+    // Use multiples of 4 so every type gets a clean block of indices.
+    LOAF("loaf", 0),
+    BAGUETTE("baguette", 4);
 
     private final String id;
-    private final int modelIndex;
+    /** Base (even) model index. Derived states are base+1 (full) and base+3 (proofed). */
+    private final int baseModelIndex;
 
-    PanType(String id, int modelIndex) {
+    PanType(String id, int baseModelIndex) {
         this.id = id;
-        this.modelIndex = modelIndex;
+        this.baseModelIndex = baseModelIndex;
     }
 
     /** The simple name (matches the JSON/datagen `pan_type` value). */
@@ -19,9 +21,29 @@ public enum PanType {
         return id;
     }
 
-    /** Used for model overrides in your item JSON. */
+    /** Even: empty state (render empty pan). */
+    public int getEmptyModelIndex() {
+        return baseModelIndex;
+    }
+
+    /** Odd: full state (render pan with dough). */
+    public int getFullModelIndex() {
+        return baseModelIndex + 1;
+    }
+
+    /** Odd: proofed state (render pan with proofed dough). */
+    public int getProofedModelIndex() {
+        return baseModelIndex + 3;
+    }
+
+    /** If you still need the legacy single index, treat it as 'empty'. */
     public int getModelIndex() {
-        return modelIndex;
+        return getEmptyModelIndex();
+    }
+
+    /** Expose the base in case you want to compute other variants later. */
+    public int getBaseModelIndex() {
+        return baseModelIndex;
     }
 
     /**

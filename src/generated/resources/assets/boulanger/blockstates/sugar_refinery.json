@@ -1,0 +1,24 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "boulanger:block/sugar_refinery_core"
+      }
+    },
+    {
+      "apply": {
+        "model": "boulanger:block/sugar_refinery_empty0"
+      }
+    },
+    {
+      "apply": {
+        "model": "boulanger:block/sugar_refinery_empty1"
+      }
+    },
+    {
+      "apply": {
+        "model": "boulanger:block/sugar_refinery_empty2"
+      }
+    }
+  ]
+}

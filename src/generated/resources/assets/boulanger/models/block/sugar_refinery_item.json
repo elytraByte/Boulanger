@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:item/brewing_stand",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "base": "minecraft:block/brewing_stand_base",
+    "particle": "boulanger:block/sugar_refinery",
+    "stand": "boulanger:block/sugar_refinery"
+  }
+}

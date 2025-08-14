@@ -1,9 +1,0 @@
-{
-  "parent": "minecraft:block/orientable",
-  "textures": {
-    "front": "boulanger:block/scale_front",
-    "particle": "boulanger:block/diorite_side",
-    "side": "boulanger:block/diorite_side",
-    "top": "boulanger:block/scale_top"
-  }
-}

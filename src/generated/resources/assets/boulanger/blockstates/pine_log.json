@@ -1,147 +1,75 @@
 {
   "variants": {
-    "axis=x,has_resin=false,resin_remaining=0": {
+    "axis=x,resin_remaining=0": {
       "model": "boulanger:block/pine_log",
       "x": 90,
       "y": 90
     },
-    "axis=x,has_resin=false,resin_remaining=1": {
-      "model": "boulanger:block/pine_log",
+    "axis=x,resin_remaining=1": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90,
       "y": 90
     },
-    "axis=x,has_resin=false,resin_remaining=2": {
-      "model": "boulanger:block/pine_log",
+    "axis=x,resin_remaining=2": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90,
       "y": 90
     },
-    "axis=x,has_resin=false,resin_remaining=3": {
-      "model": "boulanger:block/pine_log",
+    "axis=x,resin_remaining=3": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90,
       "y": 90
     },
-    "axis=x,has_resin=false,resin_remaining=4": {
-      "model": "boulanger:block/pine_log",
+    "axis=x,resin_remaining=4": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90,
       "y": 90
     },
-    "axis=x,has_resin=false,resin_remaining=5": {
-      "model": "boulanger:block/pine_log",
+    "axis=x,resin_remaining=5": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90,
       "y": 90
     },
-    "axis=x,has_resin=true,resin_remaining=0": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90,
-      "y": 90
-    },
-    "axis=x,has_resin=true,resin_remaining=1": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90,
-      "y": 90
-    },
-    "axis=x,has_resin=true,resin_remaining=2": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90,
-      "y": 90
-    },
-    "axis=x,has_resin=true,resin_remaining=3": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90,
-      "y": 90
-    },
-    "axis=x,has_resin=true,resin_remaining=4": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90,
-      "y": 90
-    },
-    "axis=x,has_resin=true,resin_remaining=5": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90,
-      "y": 90
-    },
-    "axis=y,has_resin=false,resin_remaining=0": {
+    "axis=y,resin_remaining=0": {
       "model": "boulanger:block/pine_log"
     },
-    "axis=y,has_resin=false,resin_remaining=1": {
-      "model": "boulanger:block/pine_log"
+    "axis=y,resin_remaining=1": {
+      "model": "boulanger:block/resin_pine_log"
     },
-    "axis=y,has_resin=false,resin_remaining=2": {
-      "model": "boulanger:block/pine_log"
+    "axis=y,resin_remaining=2": {
+      "model": "boulanger:block/resin_pine_log"
     },
-    "axis=y,has_resin=false,resin_remaining=3": {
-      "model": "boulanger:block/pine_log"
+    "axis=y,resin_remaining=3": {
+      "model": "boulanger:block/resin_pine_log"
     },
-    "axis=y,has_resin=false,resin_remaining=4": {
-      "model": "boulanger:block/pine_log"
+    "axis=y,resin_remaining=4": {
+      "model": "boulanger:block/resin_pine_log"
     },
-    "axis=y,has_resin=false,resin_remaining=5": {
-      "model": "boulanger:block/pine_log"
+    "axis=y,resin_remaining=5": {
+      "model": "boulanger:block/resin_pine_log"
     },
-    "axis=y,has_resin=true,resin_remaining=0": {
-      "model": "boulanger:block/pine_log_resin"
-    },
-    "axis=y,has_resin=true,resin_remaining=1": {
-      "model": "boulanger:block/pine_log_resin"
-    },
-    "axis=y,has_resin=true,resin_remaining=2": {
-      "model": "boulanger:block/pine_log_resin"
-    },
-    "axis=y,has_resin=true,resin_remaining=3": {
-      "model": "boulanger:block/pine_log_resin"
-    },
-    "axis=y,has_resin=true,resin_remaining=4": {
-      "model": "boulanger:block/pine_log_resin"
-    },
-    "axis=y,has_resin=true,resin_remaining=5": {
-      "model": "boulanger:block/pine_log_resin"
-    },
-    "axis=z,has_resin=false,resin_remaining=0": {
+    "axis=z,resin_remaining=0": {
       "model": "boulanger:block/pine_log",
       "x": 90
     },
-    "axis=z,has_resin=false,resin_remaining=1": {
-      "model": "boulanger:block/pine_log",
+    "axis=z,resin_remaining=1": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90
     },
-    "axis=z,has_resin=false,resin_remaining=2": {
-      "model": "boulanger:block/pine_log",
+    "axis=z,resin_remaining=2": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90
     },
-    "axis=z,has_resin=false,resin_remaining=3": {
-      "model": "boulanger:block/pine_log",
+    "axis=z,resin_remaining=3": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90
     },
-    "axis=z,has_resin=false,resin_remaining=4": {
-      "model": "boulanger:block/pine_log",
+    "axis=z,resin_remaining=4": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90
     },
-    "axis=z,has_resin=false,resin_remaining=5": {
-      "model": "boulanger:block/pine_log",
-      "x": 90
-    },
-    "axis=z,has_resin=true,resin_remaining=0": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90
-    },
-    "axis=z,has_resin=true,resin_remaining=1": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90
-    },
-    "axis=z,has_resin=true,resin_remaining=2": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90
-    },
-    "axis=z,has_resin=true,resin_remaining=3": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90
-    },
-    "axis=z,has_resin=true,resin_remaining=4": {
-      "model": "boulanger:block/pine_log_resin",
-      "x": 90
-    },
-    "axis=z,has_resin=true,resin_remaining=5": {
-      "model": "boulanger:block/pine_log_resin",
+    "axis=z,resin_remaining=5": {
+      "model": "boulanger:block/resin_pine_log",
       "x": 90
     }
   }

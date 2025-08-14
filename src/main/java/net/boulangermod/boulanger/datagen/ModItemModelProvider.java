@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.datagen;
 import net.boulangermod.boulanger.item.*;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
@@ -26,7 +27,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         for (FlourItemType type : FlourItemType.values()) {
             // Override for custom_model_data
             flour.override()
-                    .predicate(ResourceLocation.fromNamespaceAndPath("minecraft","custom_model_data"), type.getModelIndex())
+                    .predicate(ResourceLocation.fromNamespaceAndPath("minecraft", "custom_model_data"), type.getModelIndex())
                     .model(withExistingParent("flour/" + type.getId(), "item/generated"))
                     // flour/first_break_flour
                     .end();
@@ -76,21 +77,38 @@ public class ModItemModelProvider extends ItemModelProvider {
                 .texture("layer0", modLoc("item/loaf_pan")); // fallback texture
 
         for (PanType type : PanType.values()) {
-            String id = type.getId();              // e.g. "loaf"
-            int modelIndex = type.getModelIndex(); // e.g. 1
+            String id = type.getId();
 
-            // Override model with block texture
-            ItemModelBuilder overrideModel = withExistingParent("pan/" + id, mcLoc("item/generated"))
-                    .texture("layer0", modLoc("item/" + id + "_pan")); // → block/loaf_pan.png
+            int empty = type.getEmptyModelIndex();
+            int full = type.getFullModelIndex();
+            int proofed = type.getProofedModelIndex();
+
+            // Child models per state
+            ItemModelBuilder emptyModel = withExistingParent("pan/" + id + "/empty", mcLoc("item/generated"))
+                    .texture("layer0", modLoc("item/" + id + "_pan"));
+
+            ItemModelBuilder fullModel = withExistingParent("pan/" + id + "/full", mcLoc("item/generated"))
+                    .texture("layer0", modLoc("item/" + id + "_pan_full"));
+
+//            ItemModelBuilder proofedModel = withExistingParent("pan/" + id + "/proofed", mcLoc("item/generated"))
+//                    .texture("layer0", modLoc("item/" + id + "_pan_proofed"));
+
+            // Overrides on the base 'pan' item
+            pan.override()
+                    .predicate(mcLoc("custom_model_data"), empty)
+                    .model(emptyModel)
+                    .end();
 
             pan.override()
-                    .predicate(mcLoc("custom_model_data"), modelIndex)
-                    .model(overrideModel)
+                    .predicate(mcLoc("custom_model_data"), full)
+                    .model(fullModel)
                     .end();
+
+//            pan.override()
+//                    .predicate(mcLoc("custom_model_data"), proofed)
+//                    .model(proofedModel)
+//                    .end();
         }
-
-
-
 
 
         basicItem(ModItems.BUTTER.get());
@@ -131,6 +149,12 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.GILDED_PCB.get());
         basicItem(ModItems.REINFORCED_DIORITE_PLATE.get());
         basicItem(ModItems.UNFIRED_PORCELAIN_BRICK.get());
+        basicItem(ModItems.UNFIRED_BLACK_PORCELAIN_BRICK.get());
+        basicItem(ModItems.UNFIRED_BLUE_PORCELAIN_BRICK.get());
+        basicItem(ModItems.UNFIRED_LIGHT_BLUE_PORCELAIN_BRICK.get());
+        basicItem(ModItems.BLUE_PORCELAIN_BRICK.get());
+        basicItem(ModItems.LIGHT_BLUE_PORCELAIN_BRICK.get());
+        basicItem(ModItems.BLACK_PORCELAIN_BRICK.get());
         basicItem(ModItems.PORCELAIN_BRICK.get());
         basicItem(ModItems.GLASS_DUST.get());
         basicItem(ModItems.BONE_ASH.get());
@@ -144,6 +168,9 @@ public class ModItemModelProvider extends ItemModelProvider {
         saplingItem(ModBlocks.PINE_SAPLING);
         fenceItem(ModBlocks.PINE_FENCE, ModBlocks.PINE_PLANKS);
         basicItem(ModItems.MILLIGRAM_SCALE.get());
+
+
+
 
         // ─── PINE STAIRS, SLAB & FENCE GATE ITEM MODELS ───────────────────────
         // Stairs: use the 3D block model so it renders in‐world shape in your inventory
@@ -164,13 +191,43 @@ public class ModItemModelProvider extends ItemModelProvider {
                 modLoc("block/pine_fence_gate")
         );
 
+// Sized-down block items
+        machineItem("wood_oven",        "block/wood_oven_off",    0.62F);
+        machineItem("mixing_block",     "block/mixing_block",     0.62F);
+        machineItem("stone_mill_block", "block/stone_mill_block", 0.62F);
+        machineItem("scale_block",      "block/scale_block",      0.62F);
+        machineItem("proofing_box", "block/proofing_box", 0.62F);
+        machineItem("machine_housing",  "block/machine_housing",  0.62F);
+        machineItem("dough_divider",    "block/dough_divider",    0.62F); // add this one
 
-        withExistingParent("wood_oven", modLoc("block/wood_oven_off"));
-        withExistingParent("mixing_block", modLoc("block/mixing_block"));
-        withExistingParent("stone_mill_block", modLoc("block/stone_mill_block"));
-        withExistingParent("scale_block", modLoc("block/scale_block"));
-        withExistingParent("proofing_box", modLoc("block/proofing_block"));
-        withExistingParent("machine_housing", modLoc("block/machine_housing"));
+    }
+
+    private ItemModelBuilder machineItem(String itemId, String blockModelPath, float guiScale) {
+        ItemModelBuilder b = withExistingParent(itemId, modLoc(blockModelPath));
+        b.transforms()
+                .transform(ItemDisplayContext.GUI)
+                .rotation(30, 225, 0).scale(guiScale) // try 0.65–0.75
+                .end()
+                .transform(ItemDisplayContext.GROUND)
+                .translation(0, 3, 0).scale(0.35F)
+                .end()
+                .transform(ItemDisplayContext.FIXED)
+                .scale(0.50F)
+                .end()
+                .transform(ItemDisplayContext.THIRD_PERSON_RIGHT_HAND)
+                .rotation(75, 45, 0).translation(0, 2.5F, 0).scale(0.40F)
+                .end()
+                .transform(ItemDisplayContext.THIRD_PERSON_LEFT_HAND)
+                .rotation(75, 45, 0).translation(0, 2.5F, 0).scale(0.40F)
+                .end()
+                .transform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND)
+                .rotation(0, 45, 0).scale(0.55F)
+                .end()
+                .transform(ItemDisplayContext.FIRST_PERSON_LEFT_HAND)
+                .rotation(0, 315, 0).scale(0.55F)
+                .end()
+                .end();
+        return b;
     }
 
     private ItemModelBuilder saplingItem(DeferredBlock<Block> item) {

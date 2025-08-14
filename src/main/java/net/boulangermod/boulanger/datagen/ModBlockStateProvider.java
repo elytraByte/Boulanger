@@ -6,13 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.RotatedPillarBlock;
-import net.minecraft.world.level.block.SlabBlock;
-import net.minecraft.world.level.block.StairBlock;
-import net.minecraft.world.level.block.FenceBlock;
-import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
@@ -31,50 +25,60 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        // ─── PINE LOGS & WOOD ────────────────────────────────────────────────
-        ResourceLocation side       = modLoc("block/pine_log");
-        ResourceLocation sideResin  = modLoc("block/resin_pine_log");
-        ResourceLocation end        = modLoc("block/pine_log_top");
 
-// build two models for us
-        ModelFile pineLog      = models().cubeColumn("pine_log",      side,      end);
-        ModelFile pineLogResin = models().cubeColumn("pine_log_resin", sideResin, end);
+// textures
+        ResourceLocation side      = modLoc("block/pine_log");
+        ResourceLocation sideResin = modLoc("block/resin_pine_log");
+        ResourceLocation end       = modLoc("block/pine_log_top");
 
-// then wire them up in your variant builder as before...
+// models (name the resin model EXACTLY like your blockstate expects)
+        ModelFile pineLog      = models().cubeColumn("pine_log",        side,      end);
+        ModelFile pineLogResin = models().cubeColumn("resin_pine_log",  sideResin, end);
+
+// variants: resin_remaining==0 -> pineLog, >0 -> pineLogResin
         getVariantBuilder(ModBlocks.PINE_LOG.get())
-                .forAllStates(state -> {
-                    boolean hasResin = state.getValue(PineResinLogBlock.HAS_RESIN);
+                .forAllStatesExcept(state -> {
+                    int remaining = state.getValue(PineResinLogBlock.RESIN_REMAINING);
                     Direction.Axis axis = state.getValue(RotatedPillarBlock.AXIS);
+                    ModelFile pick = (remaining == 0) ? pineLog : pineLogResin;
 
-                    ModelFile file = hasResin ? pineLogResin : pineLog;
-                    ConfiguredModel.Builder<?> b = ConfiguredModel.builder()
-                            .modelFile(file);
-
-                    if (axis == Direction.Axis.X) {
-                        b.rotationX(90).rotationY(90);
-                    } else if (axis == Direction.Axis.Z) {
-                        b.rotationX(90);
-                    }
+                    var b = ConfiguredModel.builder().modelFile(pick);
+                    if (axis == Direction.Axis.X) b.rotationX(90).rotationY(90);
+                    else if (axis == Direction.Axis.Z) b.rotationX(90);
                     return b.build();
-                });
+                }, PineResinLogBlock.HAS_RESIN);
 
-// item model still points at the no-resin version
         simpleBlockItem(ModBlocks.PINE_LOG.get(), pineLog);
+
+
+// Stripped pine log: pillar-style mapping (unchanged)
         logBlock((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_LOG.get());
         simpleBlockItem(ModBlocks.STRIPPED_PINE_LOG.get(),
                 models().getExistingFile(modLoc("block/stripped_pine_log")));
 
-        logBlock((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_WOOD.get());
-        simpleBlockItem(ModBlocks.STRIPPED_PINE_WOOD.get(),
-                models().getExistingFile(modLoc("block/stripped_pine_wood")));
+// Stripped pine wood uses ONE texture for all faces
+        axisBlock(
+                (RotatedPillarBlock) ModBlocks.STRIPPED_PINE_WOOD.get(),
+                blockTexture(ModBlocks.STRIPPED_PINE_LOG.get()),
+                blockTexture(ModBlocks.STRIPPED_PINE_LOG.get())
+        );
 
+// Matching item (cube-all) for stripped pine wood
+        simpleBlockItem(
+                ModBlocks.STRIPPED_PINE_WOOD.get(),
+                models().cubeAll("stripped_pine_wood", blockTexture(ModBlocks.STRIPPED_PINE_LOG.get()))
+        );
+
+// Pine wood (bark on all faces) uses the regular pine_log texture for all faces
         axisBlock(
                 (RotatedPillarBlock) ModBlocks.PINE_WOOD.get(),
                 blockTexture(ModBlocks.PINE_LOG.get()),
                 blockTexture(ModBlocks.PINE_LOG.get())
         );
-        simpleBlockItem(ModBlocks.PINE_WOOD.get(),
-                models().getExistingFile(modLoc("block/pine_wood")));
+        simpleBlockItem(
+                ModBlocks.PINE_WOOD.get(),
+                models().getExistingFile(modLoc("block/pine_wood"))
+        );
 
         // ─── PINE PLANKS, STAIRS, SLAB, FENCES ───────────────────────────────
         // Planks as a simple cube + item
@@ -107,6 +111,74 @@ public class ModBlockStateProvider extends BlockStateProvider {
         leavesBlock(ModBlocks.PINE_LEAVES);
         saplingBlock(ModBlocks.PINE_SAPLING);
 
+// ─── PRESSURE PLATE (explicit models + state mapping) ───────────────────────
+        {
+            PressurePlateBlock plate = (PressurePlateBlock) ModBlocks.PINE_PRESSURE_PLATE.get();
+            String n = BuiltInRegistries.BLOCK.getKey(plate).getPath();
+            ResourceLocation tex = blockTexture(ModBlocks.PINE_PLANKS.get());
+
+            // create block models so …_up / …_down ALWAYS exist
+            ModelFile up   = models().pressurePlate(n + "_up", tex);
+            ModelFile down = models().pressurePlateDown(n + "_down", tex);
+
+            // POWERED=false -> up ; POWERED=true -> down
+            getVariantBuilder(plate).forAllStates(s ->
+                    ConfiguredModel.builder()
+                            .modelFile(s.getValue(PressurePlateBlock.POWERED) ? down : up)
+                            .build()
+            );
+
+            // item → parent the UP model
+            itemModels().withExistingParent(n, modLoc("block/" + n + "_up"));
+        }
+
+        {
+            ButtonBlock btn = (ButtonBlock) ModBlocks.PINE_BUTTON.get();
+            ResourceLocation tex = blockTexture(ModBlocks.PINE_PLANKS.get());
+
+            // This generates all floor/wall/ceiling + powered variants and the two block models
+            buttonBlock(btn, tex);
+
+            // Item model (same as tutorial)
+            simpleBlockItem(
+                    ModBlocks.PINE_BUTTON.get(),
+                    models().buttonInventory(
+                            ModBlocks.PINE_BUTTON.getId().getPath(),
+                            tex
+                    )
+            );
+        }
+
+        trapdoorBlockWithRenderType(
+                (TrapDoorBlock) ModBlocks.PINE_TRAPDOOR.get(),
+                modLoc("block/pine_trapdoor"),
+                true,
+                "cutout"
+        );
+        simpleBlockItem(
+                ModBlocks.PINE_TRAPDOOR.get(),
+                models().getExistingFile(modLoc("block/pine_trapdoor_bottom"))
+        );
+
+// ─── DOOR (bottom/top textures + cutout render type) ────────────────────────
+        {
+            DoorBlock door = (DoorBlock) ModBlocks.PINE_DOOR.get();
+
+            // If you have separate textures:
+            ResourceLocation bottom = modLoc("block/pine_door_bottom");
+            ResourceLocation top    = modLoc("block/pine_door_top");
+
+            // If you only have one texture image, you can point both to the same file:
+            // ResourceLocation bottom = modLoc("block/pine_door");
+            // ResourceLocation top    = bottom;
+
+            doorBlockWithRenderType(door, bottom, top, "cutout");
+        }
+
+// Item is already correct:
+        itemModels().basicItem(ModBlocks.PINE_DOOR.get().asItem());
+
+
         // ─── IRON WEDGE ───────────────────────────────────────────────────────
         getVariantBuilder(ModBlocks.IRON_WEDGE.get())
                 .forAllStates(s -> ConfiguredModel.builder()
@@ -117,9 +189,10 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 models().getExistingFile(modLoc("block/iron_wedge"))
         );
 
-
-        proofingBoxBlock(ModBlocks.PROOFING_BOX);
-        doughDividerBlock(ModBlocks.DOUGH_DIVIDER);
+        horizontal(ModBlocks.MIXING_BLOCK.get(),     "mixing_block");
+        horizontal(ModBlocks.SCALE_BLOCK.get(),      "scale_block");
+        horizontal(ModBlocks.PROOFING_BOX.get(),   "proofing_box");
+        horizontal(ModBlocks.DOUGH_DIVIDER.get(),    "dough_divider");
 
 
 
@@ -127,16 +200,87 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.STONE_MILL_BLOCK);
         blockWithItem(ModBlocks.KAOLINITE_CLAY);
         blockWithItem(ModBlocks.BLACK_TILE);
+        blockWithItem(ModBlocks.LIGHT_BLUE_TILE);
         blockWithItem(ModBlocks.BLUE_TILE);
-        blockWithItem(ModBlocks.DARK_BLUE_TILE);
-        blockWithItem(ModBlocks.DARK_BLUE_WHITE_TILE);
+        blockWithItem(ModBlocks.BLUE_WHITE_TILE);
         blockWithItem(ModBlocks.L3E_TILE);
         blockWithItem(ModBlocks.WHITE_TILE);
-        scaleBlockWithCustomSides(ModBlocks.SCALE_BLOCK.get());
+//        scaleBlockWithCustomSides(ModBlocks.SCALE_BLOCK.get());
         blockWithItem(ModBlocks.MACHINE_HOUSING);
-        blockWithItem(ModBlocks.TEST_MULTIBLOCK_MASTER);
-        blockWithItem(ModBlocks.TEST_MULTIBLOCK_SLAVE);
-        blockWithItem(ModBlocks.WOOD_GASIFIER_SLAVE);
+
+// Core (rod + base): vanilla geo, your stand texture
+        ModelFile core = models()
+                .withExistingParent("sugar_refinery_core", mcLoc("block/brewing_stand"))
+                .texture("base",     mcLoc("block/brewing_stand_base")) // vanilla base
+                .texture("stand",    modLoc("block/sugar_refinery"))    // your main texture
+                .texture("particle", modLoc("block/sugar_refinery"))
+                .renderType("cutout");                                   // <-- important
+
+// Arms (three radial plates). If you want your texture on them too:
+        ModelFile arm0 = models()
+                .withExistingParent("sugar_refinery_empty0", mcLoc("block/brewing_stand_empty0"))
+                .texture("stand", modLoc("block/sugar_refinery"))
+                .renderType("cutout");
+        ModelFile arm1 = models()
+                .withExistingParent("sugar_refinery_empty1", mcLoc("block/brewing_stand_empty1"))
+                .texture("stand", modLoc("block/sugar_refinery"))
+                .renderType("cutout");
+        ModelFile arm2 = models()
+                .withExistingParent("sugar_refinery_empty2", mcLoc("block/brewing_stand_empty2"))
+                .texture("stand", modLoc("block/sugar_refinery"))
+                .renderType("cutout");
+
+// Multipart blockstate = core + all three arms
+        getMultipartBuilder(ModBlocks.SUGAR_REFINERY.get())
+                .part().modelFile(core).addModel().end()
+                .part().modelFile(arm0).addModel().end()
+                .part().modelFile(arm1).addModel().end()
+                .part().modelFile(arm2).addModel().end();
+
+// Item model (uses vanilla brewing-stand item geo, with your stand texture)
+        simpleBlockItem(
+                ModBlocks.SUGAR_REFINERY.get(),
+                models()
+                        .withExistingParent("sugar_refinery_item", mcLoc("item/brewing_stand"))
+                        .texture("base",     mcLoc("block/brewing_stand_base"))
+                        .texture("stand",    modLoc("block/sugar_refinery"))
+                        .texture("particle", modLoc("block/sugar_refinery"))
+                        .renderType("cutout")
+        );
+
+        // iron_frame: stage 0..7 -> iron_frame_0..7
+        var builder = getVariantBuilder(ModBlocks.IRON_FRAME.get());
+        for (int stage = 0; stage <= IronFrameBlock.MAX_STAGE; stage++) {
+            ModelFile model = models().getExistingFile(modLoc("block/iron_frame_" + stage));
+            builder.partialState()
+                    .with(IronFrameBlock.STAGE, stage)
+                    .modelForState()
+                    .modelFile(model)
+                    .addModel();
+        }
+
+        // Block item uses stage 0 in inventory
+        itemModels().withExistingParent("iron_frame", modLoc("block/iron_frame_0"));
+
+        // Item model (show stage 0 in inventory)
+        itemModels().withExistingParent("iron_frame", modLoc("block/iron_frame_0"));
+
+
+        // MOTIVATOR: bottom/top/side
+        String name = "motivator"; // your block id: assets/boulanger/models/block/motivator.json, etc.
+
+        ModelFile motivatorModel = models().cubeBottomTop(
+                name,
+                modLoc("block/motivator_side"),   // side
+                modLoc("block/motivator_bottom"), // bottom
+                modLoc("block/motivator_top")     // top
+        );
+
+        simpleBlock(ModBlocks.MOTIVATOR.get(), motivatorModel);
+
+        // Item model points to the block model
+        itemModels().withExistingParent(name, modLoc("block/" + name));
+
 
         // ─── WILD WHEAT & CROPS ───────────────────────────────────────────────
         simpleBlock(
@@ -201,24 +345,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
                             .build();
                 });
 
-        // ─── MIXING BLOCK ──────────────────────────────────────────────────────
-        String mixerName = ModBlocks.MIXING_BLOCK.getId().getPath();
-        ModelFile mixerModel = models().orientable(
-                mixerName,
-                modLoc("block/machine_side_1"),
-                modLoc("block/mixer_front"),
-                modLoc("block/mixer_top")
-        );
-        simpleBlockItem(ModBlocks.MIXING_BLOCK.get(), mixerModel);
-        getVariantBuilder(ModBlocks.MIXING_BLOCK.get())
-                .forAllStates(s -> {
-                    Direction dir = s.getValue(MixingBlock.FACING).getOpposite();
-                    return ConfiguredModel.builder()
-                            .modelFile(mixerModel)
-                            .rotationY((int) dir.toYRot())
-                            .build();
-                });
-
         // ─── TREE TAP ─────────────────────────────────────────────────────────
         ModelFile tapModel = models().getExistingFile(modLoc("block/tree_tap"));
         simpleBlockItem(ModBlocks.TREE_TAP.get(), tapModel);
@@ -232,31 +358,42 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 });
 
 
-            // single‐block cube, unlit
-            ModelFile gasifierCube     = models().cubeAll(
-                    "wood_gasifier",
-                    blockTexture(ModBlocks.WOOD_GASIFIER.get())
-            );
-            // single‐block cube, lit (if you want e.g. an emissive overlay)
-            ModelFile gasifierCubeLit  = models().cubeAll(
-                    "wood_gasifier_lit",
-                    blockTexture(ModBlocks.WOOD_GASIFIER.get())
-            );
-            // the full 2×1×2 multiblock
-            ModelFile gasifierMulti    = models().getExistingFile(modLoc("block/wood_gasifier_mb"));
+        ModelFile cubeUnlit = models().cubeAll(
+                "wood_gasifier",
+                modLoc("block/burnished_steel")
+        );
+        ModelFile cubeLit   = models().cubeAll(
+                "wood_gasifier_lit",
+                modLoc("block/burnished_steel")
+        );
+        ModelFile multi     = models().getExistingFile(modLoc("block/wood_gasifier_mb"));
 
-            // item always shows the small cube
-            simpleBlockItem(ModBlocks.WOOD_GASIFIER.get(), gasifierCube);
+        simpleBlockItem(ModBlocks.WOOD_GASIFIER.get(), cubeUnlit);
 
-            // now handle all 16 possible states: FACING × HIDDEN × LIT
         getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
                 .forAllStates(state -> {
-                    Direction dir = state.getValue(WoodGasifierBlock.FACING);
+                    Direction dir    = state.getValue(WoodGasifierBlock.FACING);
+                    boolean formed   = state.getValue(WoodGasifierBlock.FORMED);
+                    boolean hidden   = state.getValue(WoodGasifierBlock.HIDDEN);
+                    boolean lit      = state.getValue(WoodGasifierBlock.LIT);
+
+                    if (formed && !hidden) {
+                        // this is the “master” corner — flip it over on X
+                        return ConfiguredModel.builder()
+                                .modelFile(multi)
+                                .rotationY(((int)dir.toYRot() + 180) % 360)                   // ← flip upside-down
+                                .rotationY((int) dir.toYRot())    // orient to FACING
+                                .uvLock(true)                     // keeps UVs aligned
+                                .build();
+                    }
+
+                    ModelFile pick = lit ? cubeLit : cubeUnlit;
                     return ConfiguredModel.builder()
-                            .modelFile(gasifierMulti)
+                            .modelFile(pick)
                             .rotationY((int) dir.toYRot())
                             .build();
                 });
+
 
 //            // …and if you also need to generate your WOOD_GAS fluid blockstates:
 //            getVariantBuilder(ModBlocks.WOOD_GAS.get())
@@ -453,34 +590,14 @@ public class ModBlockStateProvider extends BlockStateProvider {
         horizontalBlock(block, model);
     }
 
-    private void proofingBoxBlock(DeferredBlock<? extends Block> block) {
-        String name = block.get().builtInRegistryHolder().key().location().getPath();
-        ModelFile proofingModel = models().cubeBottomTop(
-                name,
-                modLoc("block/proofing_box_side"), // side stays as proofing_box_side
-                modLoc("block/pine_planks"),       // new bottom texture
-                modLoc("block/proofing_box_top")   // switched top to proofing_box_top
-        ).texture("particle", modLoc("block/proofing_box_side"));
-        simpleBlockWithItem(block.get(), proofingModel);
+    private void horizontal(Block block, String name) {
+        ModelFile model = models().getExistingFile(modLoc("block/" + name));
+        horizontalBlock(block, model); // y=0/90/180/270 for N/E/S/W
     }
 
-
-    private void doughDividerBlock(DeferredBlock<? extends Block> block) {
-        // e.g. "dough_divider"
-        String name = block.get().builtInRegistryHolder().key().location().getPath();
-
-        // sides: diorite_side, bottom: diorite_side, top: dough_divider_top
-        ModelFile model = models().cubeBottomTop(
-                name,
-                modLoc("block/diorite_side"),        // side texture
-                modLoc("block/diorite_side"),        // bottom texture
-                modLoc("block/dough_divider_top")    // top texture
-        ).texture("particle", modLoc("block/diorite_side"));
-
-        simpleBlockWithItem(block.get(), model);
+    private void simple(Block block, String name) {
+        simpleBlock(block, models().getExistingFile(modLoc("block/" + name)));
     }
-
-
 
     private void blockWithItem(DeferredBlock<? extends Block> block) {
         simpleBlockWithItem(block.get(), cubeAll(block.get()));

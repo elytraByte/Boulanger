@@ -21,6 +21,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<WoodOvenMenu>> WOOD_OVEN_MENU =
             registerMenuType("wood_oven_menu", WoodOvenMenu::new);
 
+    public static final DeferredHolder<MenuType<?>, MenuType<SugarRefineryMenu>> SUGAR_REFINERY_MENU =
+            registerMenuType("sugar_refinery_menu", SugarRefineryMenu::new);
+
     public static final DeferredHolder<MenuType<?>, MenuType<MixingBlockMenu>> MIXING_BLOCK_MENU =
             registerMenuType("mixing_block_menu", MixingBlockMenu::new);
 

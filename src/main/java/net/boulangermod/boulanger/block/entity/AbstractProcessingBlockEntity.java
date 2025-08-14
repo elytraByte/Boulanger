@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger.block.entity;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,5 +100,9 @@ public abstract class AbstractProcessingBlockEntity extends BlockEntity implemen
 
     public ItemStackHandler getItemHandler() {
         return this.itemHandler;
+    }
+
+    public @Nullable IFluidHandler getFluidHandler(Direction side) {
+        return this.getFluidHandler(side);
     }
 }

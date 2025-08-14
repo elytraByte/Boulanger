@@ -1,13 +1,8 @@
 package net.boulangermod.boulanger.block.entity;
 
-import net.boulangermod.boulanger.multiblock.TestMultiblockMasterBlockEntity;
-import net.boulangermod.boulanger.multiblock.TestMultiblockSlaveBlockEntity;
-import net.boulangermod.boulanger.multiblock.WoodGasifierSlaveBlockEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
@@ -21,6 +16,10 @@ public class ModBlockEntities {
     public static final Supplier<BlockEntityType<WoodOvenBlockEntity>> WOOD_OVEN_BE =
             BLOCK_ENTITIES.register("wood_oven_be", () -> BlockEntityType.Builder.of(
                     WoodOvenBlockEntity::new, ModBlocks.WOOD_OVEN.get()).build(null));
+
+    public static final Supplier<BlockEntityType<SugarRefineryBlockEntity>> SUGAR_REFINERY_BE =
+            BLOCK_ENTITIES.register("sugar_refinery_be", () -> BlockEntityType.Builder.of(
+                    SugarRefineryBlockEntity::new, ModBlocks.SUGAR_REFINERY.get()).build(null));
 
     public static final Supplier<BlockEntityType<MixingBlockEntity>> MIXING_BLOCK_BE =
             BLOCK_ENTITIES.register("mixing_block_be", () -> BlockEntityType.Builder.of(
@@ -40,36 +39,11 @@ public class ModBlockEntities {
                     ).build(null)
             );
 
-
     public static final Supplier<BlockEntityType<WoodGasifierBlockEntity>> WOOD_GASIFIER_BE =
             BLOCK_ENTITIES.register("wood_gasifier_be", () -> BlockEntityType.Builder.of(
                     WoodGasifierBlockEntity::new,
                     ModBlocks.WOOD_GASIFIER.get()
             ).build(null));
-
-    public static final Supplier<BlockEntityType<WoodGasifierSlaveBlockEntity>> WOOD_GASIFIER_SLAVE_BE =
-            BLOCK_ENTITIES.register("wood_gasifier_slave",
-                    () -> BlockEntityType.Builder
-                            .of(WoodGasifierSlaveBlockEntity::new,
-                                    ModBlocks.WOOD_GASIFIER_SLAVE.get())
-                            .build(null)
-            );
-
-    public static final Supplier<BlockEntityType<TestMultiblockMasterBlockEntity>> TEST_MULTIBLOCK_MASTER_BE =
-            BLOCK_ENTITIES.register("test_multiblock_master",
-                    () -> BlockEntityType.Builder
-                            .of(TestMultiblockMasterBlockEntity::new,
-                                    ModBlocks.TEST_MULTIBLOCK_MASTER.get())
-                            .build(null)
-            );
-
-    public static final Supplier<BlockEntityType<TestMultiblockSlaveBlockEntity>> TEST_MULTIBLOCK_SLAVE_BE =
-            BLOCK_ENTITIES.register("test_multiblock_slave",
-                    () -> BlockEntityType.Builder
-                            .of(TestMultiblockSlaveBlockEntity::new,
-                                    ModBlocks.TEST_MULTIBLOCK_SLAVE.get())
-                            .build(null)
-            );
 
     public static final Supplier<BlockEntityType<EnergyStorageBlockEntity>> ENERGY_STORAGE_BE =
             BLOCK_ENTITIES.register("energy_storage_be", () -> BlockEntityType.Builder.of(
@@ -112,7 +86,6 @@ public class ModBlockEntities {
                     DoughDividerBlockEntity::new,
                     ModBlocks.DOUGH_DIVIDER.get()
             ).build(null));
-
 
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);

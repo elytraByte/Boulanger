@@ -30,7 +30,7 @@ public class PineResinLogBlock extends RotatedPillarBlock {
         this.registerDefaultState(this.defaultBlockState()
                 .setValue(AXIS, Axis.Y)
                 .setValue(HAS_RESIN, false)
-                .setValue(RESIN_REMAINING, MAX_CHARGES)
+                .setValue(RESIN_REMAINING, 0) // ← was MAX_CHARGES
         );
     }
 
@@ -38,6 +38,14 @@ public class PineResinLogBlock extends RotatedPillarBlock {
     protected void createBlockStateDefinition(Builder<Block,BlockState> b) {
         super.createBlockStateDefinition(b);
         b.add(HAS_RESIN, RESIN_REMAINING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext ctx) {
+        return this.defaultBlockState()
+                .setValue(AXIS, ctx.getClickedFace().getAxis())
+                .setValue(HAS_RESIN, false)
+                .setValue(RESIN_REMAINING, 0);
     }
 
     @Override

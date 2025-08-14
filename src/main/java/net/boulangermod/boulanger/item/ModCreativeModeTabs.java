@@ -46,6 +46,10 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.PINE_FENCE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_FENCE_GATE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_LEAVES.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_BUTTON.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_PRESSURE_PLATE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_DOOR.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_TRAPDOOR.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_SAPLING.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SPLIT_PINE_LOGS.get(), 1));
 
@@ -71,9 +75,9 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.IRON_WEDGE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SLEDGEHAMMER.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.L3E_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.LIGHT_BLUE_TILE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.BLUE_TILE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.DARK_BLUE_TILE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.DARK_BLUE_WHITE_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.BLUE_WHITE_TILE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.BLACK_TILE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WHITE_TILE.get(), 1));
 
@@ -83,14 +87,18 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.STONE_MILL_BLOCK.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.SCALE_BLOCK.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.MIXING_BLOCK.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.PROOFING_BOX, 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PROOFING_BOX.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.DOUGH_DIVIDER.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.BAKERS_TABLE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_OVEN.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.BATTERY .get()));
-                        pOutput.accept(new ItemStack(ModBlocks.ENERGY_CABLE.get()));
-                        pOutput.accept(new ItemStack(ModItems.GASIFIER_FILTER.get()));
+                        pOutput.accept(new ItemStack(ModBlocks.BATTERY.get(),1));
+                        pOutput.accept(new ItemStack(ModBlocks.ENERGY_CABLE.get(),1));
+                        pOutput.accept(new ItemStack(ModItems.GASIFIER_FILTER.get(),1));
+                        pOutput.accept(new ItemStack(ModBlocks.SUGAR_REFINERY.get(),1));
                         pOutput.accept(new ItemStack(ModBlocks.WOOD_GASIFIER.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.MOTIVATOR.get(), 1));
+                        pOutput.accept((new ItemStack(ModItems.MILLIGRAM_SCALE.get(), 1)));
+                        pOutput.accept((new ItemStack(ModBlocks.IRON_FRAME.get(), 1)));
 
 
                         //SPAWN EGGS

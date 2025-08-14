@@ -2,15 +2,27 @@
   "parent": "minecraft:item/generated",
   "overrides": [
     {
-      "model": "boulanger:pan/loaf",
+      "model": "boulanger:pan/loaf/empty",
+      "predicate": {
+        "minecraft:custom_model_data": 0.0
+      }
+    },
+    {
+      "model": "boulanger:pan/loaf/full",
       "predicate": {
         "minecraft:custom_model_data": 1.0
       }
     },
     {
-      "model": "boulanger:pan/baguette",
+      "model": "boulanger:pan/baguette/empty",
       "predicate": {
-        "minecraft:custom_model_data": 2.0
+        "minecraft:custom_model_data": 4.0
+      }
+    },
+    {
+      "model": "boulanger:pan/baguette/full",
+      "predicate": {
+        "minecraft:custom_model_data": 5.0
       }
     }
   ],

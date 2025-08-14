@@ -38,9 +38,20 @@ public class ModItems {
     public static final DeferredItem<Item> GLASS_DUST = ITEMS.registerSimpleItem("glass_dust");
     public static final DeferredItem<Item> PORCELAIN_MIX = ITEMS.registerSimpleItem("porcelain_mix");
     public static final DeferredItem<Item> UNFIRED_PORCELAIN_BRICK = ITEMS.registerSimpleItem("unfired_porcelain_brick");
+    public static final DeferredItem<Item> UNFIRED_LIGHT_BLUE_PORCELAIN_BRICK = ITEMS.registerSimpleItem("unfired_light_blue_porcelain_brick");
+    public static final DeferredItem<Item> UNFIRED_BLUE_PORCELAIN_BRICK = ITEMS.registerSimpleItem("unfired_blue_porcelain_brick");
+    public static final DeferredItem<Item> UNFIRED_BLACK_PORCELAIN_BRICK = ITEMS.registerSimpleItem("unfired_black_porcelain_brick");
     public static final DeferredItem<Item> PORCELAIN_BRICK = ITEMS.registerSimpleItem("porcelain_brick");
+    public static final DeferredItem<Item> LIGHT_BLUE_PORCELAIN_BRICK = ITEMS.registerSimpleItem("light_blue_porcelain_brick");
+    public static final DeferredItem<Item> BLUE_PORCELAIN_BRICK = ITEMS.registerSimpleItem("blue_porcelain_brick");
+    public static final DeferredItem<Item> BLACK_PORCELAIN_BRICK = ITEMS.registerSimpleItem("black_porcelain_brick");
     public static final DeferredItem<Item> SPLIT_PINE_LOGS = ITEMS.registerSimpleItem("split_pine_logs");
-    public static final DeferredItem<Item> BRICK_MOLD = ITEMS.registerSimpleItem("brick_mold");
+    public static final DeferredItem<BrickMoldItem> BRICK_MOLD =
+            ITEMS.register("brick_mold",
+                    () -> new BrickMoldItem(new Item.Properties()
+                            .durability(256)
+                    )
+            );
     public static final DeferredItem<Item> DIORITE_PLATE = ITEMS.registerSimpleItem("diorite_plate");
     public static final DeferredItem<Item> PINE_RESIN = ITEMS.registerSimpleItem("pine_resin");
     public static final DeferredItem<Item> COPPER_CHANNEL = ITEMS.registerSimpleItem("copper_channel");

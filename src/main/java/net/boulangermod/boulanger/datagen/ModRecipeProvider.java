@@ -43,6 +43,73 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL.get()))
                 .save(pRecipeOutput);
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.UNFIRED_BLUE_PORCELAIN_BRICK, 8)
+                .pattern("PPP")
+                .pattern("PBP")
+                .pattern("PPP")
+                .define('P', ModItems.UNFIRED_PORCELAIN_BRICK.get())
+                .define('B', Items.BLUE_DYE)
+                .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL.get()))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.UNFIRED_LIGHT_BLUE_PORCELAIN_BRICK, 8)
+                .pattern("PPP")
+                .pattern("PBP")
+                .pattern("PPP")
+                .define('P', ModItems.UNFIRED_PORCELAIN_BRICK.get())
+                .define('B', Items.LIGHT_BLUE_DYE)
+                .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL.get()))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModItems.UNFIRED_BLACK_PORCELAIN_BRICK, 8)
+                .pattern("PPP")
+                .pattern("PBP")
+                .pattern("PPP")
+                .define('P', ModItems.UNFIRED_PORCELAIN_BRICK.get())
+                .define('B', Items.BLACK_DYE)
+                .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL.get()))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.BLUE_WHITE_TILE, 9)
+                .pattern("BWB")
+                .pattern("WBW")
+                .pattern("BWB")
+                .define('W', ModBlocks.WHITE_TILE)
+                .define('B', ModBlocks.BLUE_TILE)
+                .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL.get()))
+                .save(pRecipeOutput);
+
+        // 4 × BLUE_PORCELAIN_BRICK -> 1 × BLUE_TILE
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.BLUE_TILE.get(), 1)
+                .pattern("PP")
+                .pattern("PP")
+                .define('P', ModItems.BLUE_PORCELAIN_BRICK.get())
+                .unlockedBy("has_blue_porcelain_brick", has(ModItems.BLUE_PORCELAIN_BRICK.get()))
+                .save(pRecipeOutput, ResourceLocation.fromNamespaceAndPath(MODID, "blue_tile_from_bricks"));
+
+        // 4 × LIGHT_BLUE_PORCELAIN_BRICK -> 1 × LIGHT_BLUE_TILE
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.LIGHT_BLUE_TILE.get(), 1)
+                .pattern("PP")
+                .pattern("PP")
+                .define('P', ModItems.LIGHT_BLUE_PORCELAIN_BRICK.get())
+                .unlockedBy("has_light_blue_porcelain_brick", has(ModItems.LIGHT_BLUE_PORCELAIN_BRICK.get()))
+                .save(pRecipeOutput, ResourceLocation.fromNamespaceAndPath(MODID, "light_blue_tile_from_bricks"));
+
+        // 4 × BLACK_PORCELAIN_BRICK -> 1 × BLACK_TILE
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.BLACK_TILE.get(), 1)
+                .pattern("PP")
+                .pattern("PP")
+                .define('P', ModItems.BLACK_PORCELAIN_BRICK.get())
+                .unlockedBy("has_black_porcelain_brick", has(ModItems.BLACK_PORCELAIN_BRICK.get()))
+                .save(pRecipeOutput, ResourceLocation.fromNamespaceAndPath(MODID, "black_tile_from_bricks"));
+        // 4 × PORCELAIN_BRICK -> 1 × WHITE_TILE
+        ShapedRecipeBuilder.shaped(RecipeCategory.DECORATIONS, ModBlocks.WHITE_TILE.get(), 1)
+                .pattern("PP")
+                .pattern("PP")
+                .define('P', ModItems.PORCELAIN_BRICK.get())
+                .unlockedBy("has_porcelain_brick", has(ModItems.PORCELAIN_BRICK.get()))
+                .save(pRecipeOutput, ResourceLocation.fromNamespaceAndPath(MODID, "white_tile_from_bricks"));
+
         ShapedRecipeBuilder.shaped(RecipeCategory.TOOLS, ModItems.SLEDGEHAMMER.get())
                 .pattern("  B")
                 .pattern(" S ")
@@ -50,6 +117,59 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('B', Items.IRON_BLOCK)
                 .define('S', Items.STICK)
                 .unlockedBy("has_iron_block", has(Items.IRON_BLOCK))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.SUGAR_REFINERY.get())
+                .pattern(" B ")
+                .pattern(" F ")
+                .pattern("SSS")
+                .define('F', ModBlocks.WOOD_OVEN)
+                .define('B', Blocks.BREWING_STAND)
+                .define('S', ModItems.DIORITE_PLATE)
+                .unlockedBy("has_wood_oven", has(ModBlocks.WOOD_OVEN))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.MOTIVATOR.get())
+                .pattern("PPP")
+                .pattern("DCD")
+                .pattern("XGX")
+                .define('P', ModBlocks.PINE_PLANKS)
+                .define('D', ModItems.DIORITE_PLATE)
+                .define('C', ModBlocks.MACHINE_HOUSING)
+                .define('X', Blocks.PISTON)
+                .define('G', ModItems.GILDED_PCB)
+                .unlockedBy("has_machine_housing", has(ModBlocks.MACHINE_HOUSING))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.BAKERS_TABLE.get())
+                .pattern("PPP")
+                .pattern(" C ")
+                .pattern(" O ")
+                .define('P', Blocks.BLUE_CARPET)
+                .define('C', Blocks.CRAFTING_TABLE)
+                .define('O', ModItems.PAN)
+                .unlockedBy("has_pan", has(ModItems.PAN))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.DOUGH_DIVIDER)
+                .pattern("PPP")
+                .pattern("DCD")
+                .pattern("DMD")
+                .define('P', ModBlocks.PINE_PLANKS)
+                .define('C', Items.IRON_SWORD)
+                .define('D', ModItems.DIORITE_PLATE)
+                .define('M', ModBlocks.MACHINE_HOUSING)
+                .unlockedBy("has_proofing_box", has(ModBlocks.PROOFING_BOX))
+                .save(pRecipeOutput);
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MILLIGRAM_SCALE)
+                .pattern("LIL")
+                .pattern("ISI")
+                .pattern("LIL")
+                .define('L', Items.LAPIS_LAZULI)
+                .define('I', Items.IRON_INGOT)
+                .define('S', ModBlocks.SCALE_BLOCK)
+                .unlockedBy("has_scale", has(ModBlocks.SCALE_BLOCK))
                 .save(pRecipeOutput);
 
         SimpleCookingRecipeBuilder.blasting(Ingredient.of(Items.BONE), RecipeCategory.MISC, ModItems.BONE_ASH.get(), 0.35f, 100)
@@ -114,6 +234,18 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL))
                 .save(pRecipeOutput);
 
+        SimpleCookingRecipeBuilder.blasting(Ingredient.of(ModItems.UNFIRED_BLUE_PORCELAIN_BRICK), RecipeCategory.MISC, ModItems.BLUE_PORCELAIN_BRICK.get(), 0.35f, 100)
+                .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL))
+                .save(pRecipeOutput);
+
+        SimpleCookingRecipeBuilder.blasting(Ingredient.of(ModItems.UNFIRED_LIGHT_BLUE_PORCELAIN_BRICK), RecipeCategory.MISC, ModItems.LIGHT_BLUE_PORCELAIN_BRICK.get(), 0.35f, 100)
+                .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL))
+                .save(pRecipeOutput);
+
+        SimpleCookingRecipeBuilder.blasting(Ingredient.of(ModItems.UNFIRED_BLACK_PORCELAIN_BRICK), RecipeCategory.MISC, ModItems.BLACK_PORCELAIN_BRICK.get(), 0.35f, 100)
+                .unlockedBy("has_kaolinite_clay", has(ModItems.KAOLINITE_CLAY_BALL))
+                .save(pRecipeOutput);
+
         SimpleCookingRecipeBuilder.blasting(Ingredient.of(Blocks.DIORITE), RecipeCategory.MISC, ModItems.DIORITE_BRICK.get(), 0.35f, 100)
                 .unlockedBy("has_diorite", has(Blocks.DIORITE))
                 .save(pRecipeOutput);
@@ -144,7 +276,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('W', Items.CLOCK)
                 .define('D', ModItems.DIORITE_PLATE)
                 .define('P', Blocks.PISTON)
-                .define('E', ModItems.PCB)
+                .define('E', ModItems.GILDED_PCB)
                 .define('R', Items.REDSTONE)
                 .unlockedBy("has_pcb", has(ModItems.PCB))
                 .save(pRecipeOutput);
@@ -153,7 +285,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .pattern("PDP")
                 .pattern("DXD")
                 .pattern("PDP")
-                .define('P', ModItems.PORCELAIN_BRICK)
+                .define('P', Items.IRON_INGOT)
                 .define('X', ModItems.PCB)
                 .define('D', ModItems.DIORITE_PLATE)
                 .unlockedBy("has_pcb", has(ModItems.PCB))
@@ -167,7 +299,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .define('D', ModItems.DIORITE_PLATE)
                 .define('C', ModBlocks.MACHINE_HOUSING)
                 .define('X', ModBlocks.PINE_PLANKS)
-                .define('B', ModItems.PCB)
+                .define('B', ModItems.GILDED_PCB)
                 .unlockedBy("has_machine_housing", has(ModBlocks.MACHINE_HOUSING))
                 .save(pRecipeOutput);
 

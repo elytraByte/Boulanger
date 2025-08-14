@@ -1,19 +1,23 @@
 package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
-import net.boulangermod.boulanger.client.renderer.WoodGasifierRenderer;
+import net.boulangermod.boulanger.block.WoodGasifierBlock;
+import net.boulangermod.boulanger.client.renderer.SugarRefineryRenderer;
 import net.boulangermod.boulanger.command.RecipeWeightsCommand;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
 import net.boulangermod.boulanger.fluid.ModFluids;
 import net.boulangermod.boulanger.item.ModCreativeModeTabs;
+import net.boulangermod.boulanger.multiblock.MultiblockRegistry;
+import net.boulangermod.boulanger.multiblock.SimpleMultiblock;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.screen.*;
 import net.boulangermod.boulanger.util.MyModLootFunctions;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -74,6 +78,15 @@ public class Boulanger {
 
         LOGGER.info(Config.magicNumberIntroduction + Config.magicNumber);
         Config.items.forEach(item -> LOGGER.info("ITEM >> {}", item));
+
+
+        MultiblockRegistry.register(
+                SimpleMultiblock.builder("wood_gasifier")
+                        .aisle("WW")   // bottom layer (2 wide × 1 deep)
+                        .aisle("WW")   // top   layer
+                        .where('W', inWorld -> inWorld.getState().getBlock() instanceof WoodGasifierBlock)
+                        .build()
+        );
     }
 
     @SubscribeEvent
@@ -93,8 +106,11 @@ public class Boulanger {
         public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerEntityRenderer(ModEntities.HEN.get(), HenRenderer::new);
             event.registerEntityRenderer(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), HolsteinFriesianCowRenderer::new);
-            event.registerBlockEntityRenderer(ModBlockEntities.WOOD_GASIFIER_BE.get(),
-                    WoodGasifierRenderer::new);
+            // 🔧 block entity renderer
+            event.registerBlockEntityRenderer(
+                    ModBlockEntities.SUGAR_REFINERY_BE.get(),
+                    SugarRefineryRenderer::new
+            );
         }
 
         @SubscribeEvent
@@ -108,7 +124,7 @@ public class Boulanger {
             event.register(ModMenuTypes.BAKERS_TABLE_MENU.get(), BakersTableScreen::new);
             event.register(ModMenuTypes.DOUGH_DIVIDER_MENU.get(), DoughDividerScreen::new);
             event.register(ModMenuTypes.MILLIGRAM_SCALE_MENU.get(), MilligramScaleScreen::new);
-
+            event.register(ModMenuTypes.SUGAR_REFINERY_MENU.get(), SugarRefineryScreen::new);
         }
     }
 

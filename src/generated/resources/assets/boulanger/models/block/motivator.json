@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "boulanger:block/motivator_bottom",
+    "side": "boulanger:block/motivator_side",
+    "top": "boulanger:block/motivator_top"
+  }
+}
