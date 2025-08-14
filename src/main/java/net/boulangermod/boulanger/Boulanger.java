@@ -2,7 +2,9 @@ package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.WoodGasifierBlock;
+import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 import net.boulangermod.boulanger.client.renderer.SugarRefineryRenderer;
+import net.boulangermod.boulanger.client.renderer.WoodGasifierRenderer;
 import net.boulangermod.boulanger.command.RecipeWeightsCommand;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
@@ -106,7 +108,9 @@ public class Boulanger {
         public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerEntityRenderer(ModEntities.HEN.get(), HenRenderer::new);
             event.registerEntityRenderer(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), HolsteinFriesianCowRenderer::new);
-            // 🔧 block entity renderer
+            event.registerBlockEntityRenderer(
+                    ModBlockEntities.WOOD_GASIFIER_BE.get(),
+                    WoodGasifierRenderer::new);
             event.registerBlockEntityRenderer(
                     ModBlockEntities.SUGAR_REFINERY_BE.get(),
                     SugarRefineryRenderer::new

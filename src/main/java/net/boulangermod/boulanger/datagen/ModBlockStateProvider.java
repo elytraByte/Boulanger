@@ -197,7 +197,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
 
         // ─── STONE MILL & TILES ───────────────────────────────────────────────
-        blockWithItem(ModBlocks.STONE_MILL_BLOCK);
         blockWithItem(ModBlocks.KAOLINITE_CLAY);
         blockWithItem(ModBlocks.BLACK_TILE);
         blockWithItem(ModBlocks.LIGHT_BLUE_TILE);

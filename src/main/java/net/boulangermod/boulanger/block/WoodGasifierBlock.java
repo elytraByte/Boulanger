@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -28,6 +29,9 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class WoodGasifierBlock extends BaseEntityBlock {
@@ -37,7 +41,7 @@ public class WoodGasifierBlock extends BaseEntityBlock {
     public static final BooleanProperty HIDDEN = BooleanProperty.create("hidden");
 
     public WoodGasifierBlock(Properties props) {
-        super(props.lightLevel(s -> s.getValue(LIT) ? 13 : 0));
+        super(props.noOcclusion().lightLevel(s -> s.getValue(LIT) ? 13 : 0));
         this.registerDefaultState(
                 this.stateDefinition.any()
                         .setValue(FACING, Direction.NORTH)
@@ -46,6 +50,16 @@ public class WoodGasifierBlock extends BaseEntityBlock {
                         .setValue(FORMED, false)
         );
     }
+
+    @Override
+    public @NotNull VoxelShape getOcclusionShape(@NotNull BlockState state,
+                                                 @NotNull BlockGetter level,
+                                                 @NotNull BlockPos pos) {
+        // When hidden (multiblock formed), don't occlude anything.
+        return state.getValue(HIDDEN) ? Shapes.empty()
+                : super.getOcclusionShape(state, level, pos);
+    }
+
 
     @Override
     @SuppressWarnings("unchecked")
@@ -94,33 +108,19 @@ public class WoodGasifierBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack,
-                                              BlockState state,
-                                              Level level,
-                                              BlockPos pos,
-                                              Player player,
-                                              InteractionHand hand,
-                                              BlockHitResult hit) {
-        if (level.isClientSide) {
-            return ItemInteractionResult.SUCCESS;
-        }
-        BlockEntity be = level.getBlockEntity(pos);
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level,
+                                              BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (level.isClientSide) return ItemInteractionResult.SUCCESS;
+
+        BlockPos anchorPos = WoodGasifierBlockEntity.resolveAnchor(level, pos);
+        var be = level.getBlockEntity(anchorPos);
         if (!(be instanceof WoodGasifierBlockEntity gasifier)) {
-            return super.useItemOn(stack, state, level, pos, player, hand, hit);
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        // toggle formation with bread
+
         if (stack.getItem() == Items.BREAD) {
-            InteractionResult result = gasifier.tryToggleForm(player, hand, hit.getDirection());
-            if (result.consumesAction() && player instanceof ServerPlayer server) {
-                server.sendSystemMessage(
-                        Component.literal(
-                                gasifier.isFormed()
-                                        ? "Wood Gasifier multiblock formed!"
-                                        : "Wood Gasifier multiblock dismantled."
-                        )
-                );
-            }
-            return result == InteractionResult.CONSUME
+            var result = gasifier.tryToggleForm(player, hand, hit.getDirection());
+            return result.consumesAction()
                     ? ItemInteractionResult.SUCCESS
                     : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
@@ -128,24 +128,19 @@ public class WoodGasifierBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected InteractionResult useWithoutItem(BlockState state,
-                                               Level level,
-                                               BlockPos pos,
-                                               Player player,
-                                               BlockHitResult hit) {
-        if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
+                                               Player player, BlockHitResult hit) {
+        if (level.isClientSide) return InteractionResult.SUCCESS;
+
+        BlockPos anchorPos = WoodGasifierBlockEntity.resolveAnchor(level, pos);
+        var be = level.getBlockEntity(anchorPos);
+        if (be instanceof WoodGasifierBlockEntity gasifier && gasifier.isFormed() && gasifier.isAnchor()) {
+            if (player instanceof net.minecraft.server.level.ServerPlayer server) {
+                server.openMenu(gasifier, buf -> buf.writeBlockPos(anchorPos)); // send anchor to client
+            }
+            return InteractionResult.CONSUME;
         }
-        BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof WoodGasifierBlockEntity gasifier) || !gasifier.isFormed()) {
-            return InteractionResult.PASS;
-        }
-        // verify slave validity (optional)
-        // open UI
-        if (player instanceof ServerPlayer server) {
-            server.openMenu(gasifier, buf -> buf.writeBlockPos(pos));
-        }
-        return InteractionResult.CONSUME;
+        return InteractionResult.PASS;
     }
 
     @Nullable
@@ -164,13 +159,12 @@ public class WoodGasifierBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void onRemove(BlockState oldState,
-                         Level level,
-                         BlockPos pos,
-                         BlockState newState,
-                         boolean moved) {
-        if (oldState.getBlock() != newState.getBlock()) {
-            super.onRemove(oldState, level, pos, newState, moved);
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            var be = level.getBlockEntity(pos);
+            if (be instanceof WoodGasifierBlockEntity gas) gas.dismantleMultiblock();
         }
+        super.onRemove(state, level, pos, newState, isMoving);
     }
+
 }

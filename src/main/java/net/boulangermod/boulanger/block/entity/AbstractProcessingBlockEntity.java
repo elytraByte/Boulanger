@@ -102,7 +102,8 @@ public abstract class AbstractProcessingBlockEntity extends BlockEntity implemen
         return this.itemHandler;
     }
 
-    public @Nullable IFluidHandler getFluidHandler(Direction side) {
-        return this.getFluidHandler(side);
+    @Nullable
+    public IFluidHandler getFluidHandler(Direction side) {
+        return null; // subclasses return their tank capability if needed
     }
 }
