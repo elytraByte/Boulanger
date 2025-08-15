@@ -60,7 +60,6 @@ public class WoodGasifierBlock extends BaseEntityBlock {
                 : super.getOcclusionShape(state, level, pos);
     }
 
-
     @Override
     @SuppressWarnings("unchecked")
     protected MapCodec<? extends BaseEntityBlock> codec() {
@@ -157,6 +156,58 @@ public class WoodGasifierBlock extends BaseEntityBlock {
                 WoodGasifierBlockEntity::tick
         );
     }
+
+    @Override
+    public void animateTick(BlockState state, Level level, BlockPos pos, net.minecraft.util.RandomSource random) {
+        // Only the anchor should spawn particles
+        BlockPos anchorPos = WoodGasifierBlockEntity.resolveAnchor(level, pos);
+        if (!pos.equals(anchorPos)) return;
+
+        BlockEntity be = level.getBlockEntity(anchorPos);
+        if (!(be instanceof WoodGasifierBlockEntity gasifier)) return;
+        if (!gasifier.isFormed()) return;
+
+        // Only render when "on" (ensure BE sets LIT while burning/has gas)
+        if (!state.getValue(LIT)) return;
+
+        // LEFT-OF-FRONT in model space (port side), honoring any front flip inside the BE
+        Direction port   = gasifier.getPortSide();
+        Direction facing = state.getValue(FACING);
+
+        // Find the cell on the footprint whose port-side neighbor is outside the multiblock.
+        BlockPos external = null;
+        for (BlockPos cell : WoodGasifierBlockEntity.footprintFromMin(anchorPos, facing)) {
+            BlockPos n = cell.relative(port);
+            if (!gasifier.isInFootprint(n)) {  // outside -> this is the external neighbor we want
+                external = n;
+                break;
+            }
+        }
+        if (external == null) external = anchorPos.relative(port); // fallback (shouldn't happen)
+
+        // Place the particle ON the gasifier's left outer face:
+        // start at the center of the external block, then move back toward the gasifier face by (0.5 + eps)
+        final double epsOut = 0.02;      // just outside the face
+        final double yMid   = 0.50;      // mid-height (tweak to 0.35 if you want lower)
+        double bx = external.getX() + 0.5 - port.getStepX() * (0.5 + epsOut);
+        double by = anchorPos.getY() + yMid;
+        double bz = external.getZ() + 0.5 - port.getStepZ() * (0.5 + epsOut);
+
+        // Optional: slight push toward the front if your nozzle protrudes forward
+        // Direction front = gasifier.getFrontFacing();
+        // bx += front.getStepX() * 0.10;
+        // bz += front.getStepZ() * 0.10;
+
+        // Mild jitter + gentle rise
+        double jx = (random.nextDouble() - 0.5) * 0.10;
+        double jz = (random.nextDouble() - 0.5) * 0.10;
+        double vx = (random.nextDouble() - 0.5) * 0.02;
+        double vz = (random.nextDouble() - 0.5) * 0.02;
+        double vy = 0.02 + random.nextDouble() * 0.02;
+
+        level.addParticle(net.minecraft.core.particles.ParticleTypes.SMOKE, bx + jx, by, bz + jz, vx, vy, vz);
+    }
+
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {

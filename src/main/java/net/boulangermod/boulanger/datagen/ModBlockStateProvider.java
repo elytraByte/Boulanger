@@ -402,6 +402,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
 
         ResourceLocation bedrockTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/bedrock");
+        // WOODGAS PIPES
+        woodgasPipeStates();
 
 // 2) Generate one shared cube-all model named “energy_bedrock”
         ModelFile energyModel = models().cubeAll(
@@ -431,91 +433,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
         ResourceLocation coalTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/coal_block");
 
-// Models
-        ModelFile endModel      = models().getExistingFile(modLoc("block/woodgas_pipe_end"));
-        ModelFile straightModel = models().getExistingFile(modLoc("block/woodgas_pipe_straight"));
-        ModelFile cornerModel   = models().getExistingFile(modLoc("block/woodgas_pipe_north_bend"));
-        ModelFile tModel        = models().getExistingFile(modLoc("block/woodgas_pipe_t"));
-        ModelFile crossModel    = models().getExistingFile(modLoc("block/woodgas_pipe_cross"));
 
-        var pipe = getMultipartBuilder(ModBlocks.WOODGAS_PIPE.get());
 
-        // 4-way “+”
-        pipe.part()
-                .modelFile(crossModel)
-                .addModel()
-                .condition(WoodGasPipe.NORTH, true)
-                .condition(WoodGasPipe.SOUTH, true)
-                .condition(WoodGasPipe.EAST,  true)
-                .condition(WoodGasPipe.WEST,  true)
-                .end();
-
-        // 3-way Ts
-        int[] tsY = {0, 90, 180, 270};
-        BooleanProperty[][] tsConds = {
-                {WoodGasPipe.NORTH, WoodGasPipe.SOUTH, WoodGasPipe.EAST},
-                {WoodGasPipe.SOUTH, WoodGasPipe.EAST,  WoodGasPipe.WEST},
-                {WoodGasPipe.EAST,  WoodGasPipe.WEST,  WoodGasPipe.NORTH},
-                {WoodGasPipe.WEST,  WoodGasPipe.NORTH, WoodGasPipe.SOUTH}
-        };
-        for (int i = 0; i < 4; i++) {
-            pipe.part()
-                    .modelFile(tModel).rotationY(tsY[i])
-                    .addModel()
-                    .condition(tsConds[i][0], true)
-                    .condition(tsConds[i][1], true)
-                    .condition(tsConds[i][2], true)
-                    .end();
-        }
-
-        // 2-way straights
-        pipe.part()
-                .modelFile(straightModel)
-                .addModel()
-                .condition(WoodGasPipe.NORTH, true)
-                .condition(WoodGasPipe.SOUTH, true)
-                .end();
-        pipe.part()
-                .modelFile(straightModel).rotationY(90)
-                .addModel()
-                .condition(WoodGasPipe.EAST, true)
-                .condition(WoodGasPipe.WEST, true)
-                .end();
-
-        // 2-way corners
-        int[] crY = {0, 90, 180, 270};
-        BooleanProperty[][] crConds = {
-                {WoodGasPipe.NORTH, WoodGasPipe.EAST},
-                {WoodGasPipe.EAST,  WoodGasPipe.SOUTH},
-                {WoodGasPipe.SOUTH, WoodGasPipe.WEST},
-                {WoodGasPipe.WEST,  WoodGasPipe.NORTH}
-        };
-        for (int i = 0; i < 4; i++) {
-            pipe.part()
-                    .modelFile(cornerModel).rotationY(crY[i])
-                    .addModel()
-                    .condition(crConds[i][0], true)
-                    .condition(crConds[i][1], true)
-                    .end();
-        }
-
-        // 1-way ends
-        Direction[] ends = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST, Direction.UP, Direction.DOWN};
-        int[] rotY =    {0, 90,  180,    270,    0,   0};
-        int[] rotX =    {0, 0,    0,      0,     90, 270};
-        for (int i = 0; i < ends.length; i++) {
-            pipe.part()
-                    .modelFile(endModel)
-                    .rotationY(rotY[i])
-                    .rotationX(rotX[i])
-                    .addModel()
-                    .condition(getProp(ends[i]), true)
-                    .end();
-        }
-
-        // Default item model
-        simpleBlockItem(ModBlocks.WOODGAS_PIPE.get(),
-                models().getExistingFile(modLoc("block/woodgas_pipe_straight")));
 
         // Internal Combustion Engine
         ModelFile engineModel = models().cubeAll("internal_combustion_engine", coalTex);
@@ -600,5 +519,115 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     private void blockWithItem(DeferredBlock<? extends Block> block) {
         simpleBlockWithItem(block.get(), cubeAll(block.get()));
+    }
+
+    private void woodgasPipeStates() {
+        // Models
+        final ModelFile DEFAULT  = models().getExistingFile(modLoc("block/woodgas_pipe"));
+        final ModelFile STRAIGHT = models().getExistingFile(modLoc("block/woodgas_pipe_straight")); // default axis: N–S
+        final ModelFile CORNER   = models().getExistingFile(modLoc("block/woodgas_pipe_corner"));   // default corner: N+E
+        final ModelFile TRI      = models().getExistingFile(modLoc("block/woodgas_pipe_tri"));      // default tri: N+E+S (missing W)
+
+        // Properties
+        final BooleanProperty N = WoodGasPipe.NORTH;
+        final BooleanProperty E = WoodGasPipe.EAST;
+        final BooleanProperty S = WoodGasPipe.SOUTH;
+        final BooleanProperty W = WoodGasPipe.WEST;
+        final BooleanProperty U = WoodGasPipe.UP;
+        final BooleanProperty D = WoodGasPipe.DOWN;
+
+        var pipe = getMultipartBuilder(ModBlocks.WOODGAS_PIPE.get());
+
+        // ----- 4-way horizontal cross (all four, no verticals) -> DEFAULT
+        pipe.part().modelFile(DEFAULT).uvLock(true).addModel()
+                .condition(N, true).condition(E, true).condition(S, true).condition(W, true)
+                .condition(U, false).condition(D, false)
+                .end();
+
+        // ----- Straights (exact)
+        // N + S only
+        pipe.part().modelFile(STRAIGHT).rotationY(0).uvLock(true).addModel()
+                .condition(N, true).condition(S, true)
+                .condition(E, false).condition(W, false)
+                .condition(U, false).condition(D, false)
+                .end();
+        // E + W only
+        pipe.part().modelFile(STRAIGHT).rotationY(90).uvLock(true).addModel()
+                .condition(E, true).condition(W, true)
+                .condition(N, false).condition(S, false)
+                .condition(U, false).condition(D, false)
+                .end();
+
+        // ----- Single-side only (use STRAIGHT)
+        pipe.part().modelFile(STRAIGHT).rotationY(0).uvLock(true).addModel()
+                .condition(N, true).condition(E, false).condition(S, false).condition(W, false)
+                .condition(U, false).condition(D, false)
+                .end(); // N only
+        pipe.part().modelFile(STRAIGHT).rotationY(0).uvLock(true).addModel()
+                .condition(S, true).condition(N, false).condition(E, false).condition(W, false)
+                .condition(U, false).condition(D, false)
+                .end(); // S only
+        pipe.part().modelFile(STRAIGHT).rotationY(90).uvLock(true).addModel()
+                .condition(E, true).condition(N, false).condition(S, false).condition(W, false)
+                .condition(U, false).condition(D, false)
+                .end(); // E only
+        pipe.part().modelFile(STRAIGHT).rotationY(90).uvLock(true).addModel()
+                .condition(W, true).condition(N, false).condition(E, false).condition(S, false)
+                .condition(U, false).condition(D, false)
+                .end(); // W only
+
+        // ----- Corners (exact L bends, no verticals) -> CORNER
+        pipe.part().modelFile(CORNER).rotationY(0).uvLock(true).addModel()
+                .condition(N, true).condition(E, true)
+                .condition(S, false).condition(W, false)
+                .condition(U, false).condition(D, false)
+                .end(); // N + E
+        pipe.part().modelFile(CORNER).rotationY(90).uvLock(true).addModel()
+                .condition(E, true).condition(S, true)
+                .condition(N, false).condition(W, false)
+                .condition(U, false).condition(D, false)
+                .end(); // E + S
+        pipe.part().modelFile(CORNER).rotationY(180).uvLock(true).addModel()
+                .condition(S, true).condition(W, true)
+                .condition(N, false).condition(E, false)
+                .condition(U, false).condition(D, false)
+                .end(); // S + W
+        pipe.part().modelFile(CORNER).rotationY(270).uvLock(true).addModel()
+                .condition(W, true).condition(N, true)
+                .condition(E, false).condition(S, false)
+                .condition(U, false).condition(D, false)
+                .end(); // W + N
+
+        // ----- T junctions (exact horizontal 3-way) -> TRI
+        pipe.part().modelFile(TRI).rotationY(0).uvLock(true).addModel()
+                .condition(N, true).condition(E, true).condition(S, true).condition(W, false)
+                .condition(U, false).condition(D, false)
+                .end(); // missing W
+        pipe.part().modelFile(TRI).rotationY(90).uvLock(true).addModel()
+                .condition(E, true).condition(S, true).condition(W, true).condition(N, false)
+                .condition(U, false).condition(D, false)
+                .end(); // missing N
+        pipe.part().modelFile(TRI).rotationY(180).uvLock(true).addModel()
+                .condition(S, true).condition(W, true).condition(N, true).condition(E, false)
+                .condition(U, false).condition(D, false)
+                .end(); // missing E
+        pipe.part().modelFile(TRI).rotationY(270).uvLock(true).addModel()
+                .condition(W, true).condition(N, true).condition(E, true).condition(S, false)
+                .condition(U, false).condition(D, false)
+                .end(); // missing S
+
+        // ----- Default / fallbacks
+        // No connections at all -> DEFAULT (so a lone placed pipe is visible)
+        pipe.part().modelFile(DEFAULT).uvLock(true).addModel()
+                .condition(N, false).condition(E, false).condition(S, false).condition(W, false)
+                .condition(U, false).condition(D, false)
+                .end();
+
+        // Any vertical present (until vertical models exist) -> also show DEFAULT
+        pipe.part().modelFile(DEFAULT).uvLock(true).addModel().condition(U, true).end();
+        pipe.part().modelFile(DEFAULT).uvLock(true).addModel().condition(D, true).end();
+
+        // Item model
+        simpleBlockItem(ModBlocks.WOODGAS_PIPE.get(), DEFAULT);
     }
 }

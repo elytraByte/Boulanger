@@ -27,9 +27,9 @@ import org.jetbrains.annotations.Nullable;
 public class InternalCombustionEngineBlockEntity extends BlockEntity {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private static final int WOOD_GAS_PER_TICK = 1;
-    private static final int RF_PER_CYCLE      = 1000;
-    private static final int BURN_INTERVAL     = 1;
+    private static final int WOOD_GAS_PER_TICK = 125;
+    private static final int RF_PER_CYCLE      = 10;
+    private static final int BURN_INTERVAL     = 20;
 
     // 8,000 mB wood-gas buffer
     private final FluidTank tank = new FluidTank(8_000) {
