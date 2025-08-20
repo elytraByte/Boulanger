@@ -28,17 +28,16 @@ public class WoodGasEngineBlockEntity extends BlockEntity {
 
     // ---- Tuning knobs ----
     // Amount of wood-gas the engine attempts to burn each server tick.
-    private static final int DRAIN_MB_PER_TICK   = 10;   // was 25
+    private static final int DRAIN_MB_PER_TICK   = 25;   // was 25
     // RF generated per tick while running.
-    private static final int RF_PER_TICK         = 20;   // was 5 per "cycle"
+    private static final int RF_PER_TICK         = 5;   // was 5 per "cycle"
     // Hysteresis thresholds to avoid on/off flicker.
     private static final int START_THRESHOLD_MB  = 100;  // must reach this to turn on
-    private static final int STOP_THRESHOLD_MB   = 10;   // falls below this to turn off
+    private static final int STOP_THRESHOLD_MB   = 50;   // falls below this to turn off
     // Try to "pull" up to this much from neighbors each tick before deciding to run.
-    private static final int PULL_PER_TICK_MB    = 200;
+    private static final int PULL_PER_TICK_MB    = 250;
 
-    // 8,000 mB wood-gas buffer
-    private final FluidTank tank = new FluidTank(8_000) {
+    private final FluidTank tank = new FluidTank(1000) {
         @Override
         public boolean isFluidValid(FluidStack stack) {
             return stack.getFluid() == ModFluids.WOOD_GAS_STILL.get()
@@ -54,7 +53,7 @@ public class WoodGasEngineBlockEntity extends BlockEntity {
         }
     };
 
-    private final ModEnergyStorage energy = new ModEnergyStorage(100_000, RF_PER_TICK, RF_PER_TICK) {
+    private final ModEnergyStorage energy = new ModEnergyStorage(1000, RF_PER_TICK, RF_PER_TICK) {
         @Override
         protected void onEnergyChanged() {
             setChanged();

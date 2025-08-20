@@ -34,69 +34,43 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
 
         // ─── TE SLOTS ────────────────────────────────────────────────
         this.addSlot(new SlotItemHandler(h, 0, 26, 21) {
-            @Override public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() == ModItems.SPLIT_PINE_LOGS.get();
-            }
+            @Override public boolean mayPlace(ItemStack stack) { return stack.getItem() == ModItems.SPLIT_PINE_LOGS.get(); }
         });
         this.addSlot(new SlotItemHandler(h, 1, 26, 57) {
-            @Override public boolean mayPlace(ItemStack stack) {
-                return stack.is(ItemTags.LOGS);
-            }
+            @Override public boolean mayPlace(ItemStack stack) { return stack.is(ItemTags.LOGS); }
         });
         this.addSlot(new SlotItemHandler(h, 2, 56, 21) {
-            @Override public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() == ModItems.GASIFIER_FILTER.get();
-            }
+            @Override public boolean mayPlace(ItemStack stack) { return stack.getItem() == ModItems.GASIFIER_FILTER.get(); }
         });
         this.addSlot(new SlotItemHandler(h, 3, 56, 57) {
-            @Override public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() == ModItems.GASIFIER_FILTER.get();
-            }
+            @Override public boolean mayPlace(ItemStack stack) { return stack.getItem() == ModItems.GASIFIER_FILTER.get(); }
         });
 
         // ─── PLAYER INV + HOTBAR ────────────────────────────────────
-        final int yOffset = 5;
+        final int yOffset = 6;
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
-                this.addSlot(new Slot(
-                        playerInv,
-                        col + row * 9 + 9,
-                        8  + col * 18,
-                        84 + row * 18 + yOffset
-                ));
+                this.addSlot(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 84 + row * 18 + yOffset));
             }
         }
         for (int col = 0; col < 9; ++col) {
-            this.addSlot(new Slot(
-                    playerInv,
-                    col,
-                    8  + col * 18,
-                    142 + yOffset
-            ));
+            this.addSlot(new Slot(playerInv, col, 8 + col * 18, 142 + yOffset));
         }
 
         this.addDataSlots(data);
     }
 
-    public WoodGasifierMenu(int windowId,
-                            Inventory playerInv,
-                            FriendlyByteBuf buf) {
+    public WoodGasifierMenu(int windowId, Inventory playerInv, FriendlyByteBuf buf) {
         this(windowId,
                 playerInv,
-                (WoodGasifierBlockEntity) playerInv.player
-                        .level()
-                        .getBlockEntity(buf.readBlockPos()),
-                new SimpleContainerData(3)
+                (WoodGasifierBlockEntity) playerInv.player.level().getBlockEntity(buf.readBlockPos()),
+                new SimpleContainerData(5)   // ← expanded: burn, energy, maxEnergy, gas, gasCap
         );
     }
 
     @Override
     public boolean stillValid(Player player) {
-        return stillValid(
-                ContainerLevelAccess.create(blockEntity.getLevel(), pos),
-                player,
-                ModBlocks.WOOD_GASIFIER.get()
-        );
+        return stillValid(ContainerLevelAccess.create(blockEntity.getLevel(), pos), player, ModBlocks.WOOD_GASIFIER.get());
     }
 
     private static final int HOTBAR_SLOT_COUNT             = 9;
@@ -115,35 +89,30 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
         ItemStack copyStack = sourceStack.copy();
 
         if (index < VANILLA_SLOT_COUNT) {
-            if (!moveItemStackTo(sourceStack,
-                    TE_INVENTORY_FIRST_SLOT_INDEX,
-                    TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT,
-                    false)) {
+            if (!moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (index < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
-            if (!moveItemStackTo(sourceStack,
-                    0,
-                    VANILLA_SLOT_COUNT,
-                    false)) {
+            if (!moveItemStackTo(sourceStack, 0, VANILLA_SLOT_COUNT, false)) {
                 return ItemStack.EMPTY;
             }
         } else {
             return ItemStack.EMPTY;
         }
 
-        if (sourceStack.isEmpty()) {
-            sourceSlot.set(ItemStack.EMPTY);
-        } else {
-            sourceSlot.setChanged();
-        }
+        if (sourceStack.isEmpty()) sourceSlot.set(ItemStack.EMPTY);
+        else sourceSlot.setChanged();
+
         sourceSlot.onTake(playerIn, sourceStack);
         return copyStack;
     }
 
+    // ─── Data accessors ─────────────────────────────────────────────
     public int getBurnProgress()    { return data.get(0); }
     public int getEnergyStored()    { return data.get(1); }
     public int getMaxEnergyStored() { return data.get(2); }
+    public int getGasAmount()       { return data.get(3); } // mB
+    public int getGasCapacity()     { return data.get(4); } // mB
 
     // The total burn time for one log. Matches the BE's BURN_TIME_PER_LOG.
     public int getMaxBurnProgress() {

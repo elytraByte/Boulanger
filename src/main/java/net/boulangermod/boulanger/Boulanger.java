@@ -109,9 +109,9 @@ public class Boulanger {
         public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerEntityRenderer(ModEntities.HEN.get(), HenRenderer::new);
             event.registerEntityRenderer(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), HolsteinFriesianCowRenderer::new);
-            event.registerBlockEntityRenderer(
-                    ModBlockEntities.WOOD_GASIFIER_BE.get(),
-                    WoodGasifierRenderer::new);
+//            event.registerBlockEntityRenderer(
+//                    ModBlockEntities.WOOD_GASIFIER_BE.get(),
+//                    WoodGasifierRenderer::new);
             event.registerBlockEntityRenderer(
                     ModBlockEntities.SUGAR_REFINERY_BE.get(),
                     SugarRefineryRenderer::new

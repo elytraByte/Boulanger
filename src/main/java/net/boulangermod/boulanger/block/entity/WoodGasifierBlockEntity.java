@@ -10,19 +10,17 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
@@ -47,8 +45,8 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     private static final int FILTER_A     = 2;  // filter canister #1
     private static final int FILTER_B     = 3;  // filter canister #2
 
-    private static final int BURN_TIME_PER_LOG = 20; // In ticks
-    private static final int WOOD_GAS_PER_COOK = 1725; // mB
+    private static final int BURN_TIME_PER_LOG = 200;   // In ticks
+    private static final int WOOD_GAS_PER_COOK = 3750; // mB
 
     private static boolean isAnyLog(ItemStack s) { return s.is(net.minecraft.tags.ItemTags.LOGS); }
     private boolean isUsableFilter(ItemStack s) {
@@ -71,6 +69,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     public BlockPos getMinCorner() { return isFormed() ? anchorPos : worldPosition; }
 
     /* ────────────────────────────────── runtime ───────────────────────────────── */
+    /** Counts DOWN while a single log “burns”. */
     private int burnTime = 0;
 
     /** Private tank; we expose a drain-only view on the port face. */
@@ -89,11 +88,45 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         @Override public FluidStack drain(int maxDrain, FluidAction action) { return woodGasTank.drain(maxDrain, action); }
     };
 
+    /** Data synced to the Screen via the Menu.
+     *  0=burnElapsed, 1=energyStored, 2=maxEnergy, 3=gasAmount, 4=gasCapacity */
+    private final ContainerData syncData = new ContainerData() {
+        @Override public int get(int idx) {
+            return switch (idx) {
+                case 0 -> getBurnElapsed();         // elapsed ticks 0..BURN_TIME_PER_LOG
+                case 1 -> 0;                        // energy stored (gasifier has none)
+                case 2 -> 0;                        // max energy
+                case 3 -> woodGasTank.getFluidAmount();
+                case 4 -> woodGasTank.getCapacity();
+                default -> 0;
+            };
+        }
+        @Override public void set(int idx, int val) {
+            // Client copy only; keep harmless. If someone writes burnElapsed, invert back to remaining.
+            if (idx == 0) {
+                int clamped = Math.max(0, Math.min(BURN_TIME_PER_LOG, val));
+                burnTime = Math.max(0, BURN_TIME_PER_LOG - clamped);
+            } else if (idx == 3) {
+                // allow client copy to reflect value locally without changing type
+                if (!woodGasTank.getFluid().isEmpty()) {
+                    woodGasTank.setFluid(woodGasTank.getFluid().copyWithAmount(val));
+                }
+            }
+        }
+        @Override public int getCount() { return 5; }
+    };
+
     public WoodGasifierBlockEntity(BlockPos pos, BlockState st) {
         super(ModBlockEntities.WOOD_GASIFIER_BE.get(), pos, st, 4);
     }
 
     public static int getBurnTimePerLog() { return BURN_TIME_PER_LOG; }
+
+    /** Burn elapsed = how much of the current log we’ve consumed (0..BURN_TIME_PER_LOG). */
+    private int getBurnElapsed() {
+        if (burnTime <= 0) return 0;
+        return Math.max(0, Math.min(BURN_TIME_PER_LOG, BURN_TIME_PER_LOG - burnTime));
+    }
 
     /* ─────────────────────── rendering helper (used by BER) ───────────────────── */
     public AABB getFootprintAABBForRender() {
@@ -216,7 +249,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
 
     /** Port = left of front (after optional flip). */
     public Direction getPortSide() {
-        Direction port = getFrontFacing().getCounterClockWise();
+        Direction port = getFrontFacing().getClockWise();
         LogUtils.getLogger().info("[Gasifier] facing={} (flip={}) -> port={}",
                 getBlockState().getValue(WoodGasifierBlock.FACING), FLIP_MODEL_FRONT, port);
         return port;
@@ -239,14 +272,20 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         return anchor.relative(port);
     }
 
-    private void setFormedAt(BlockPos anchor, boolean formed) {
+    private void setFormedAt(BlockPos anchor, boolean forming) {
         if (level == null) return;
+
         Direction facing = getBlockState().hasProperty(WoodGasifierBlock.FACING)
                 ? getBlockState().getValue(WoodGasifierBlock.FACING) : Direction.NORTH;
-        dbg("setFormedAt formed={} anchor={} facing={}", formed, anchor, facing);
 
-        // Cache footprint cells once
-        java.util.List<BlockPos> cells = footprintFromMin(anchor, facing);
+        var cells = footprintFromMin(anchor, facing);
+
+        // If your model renders one block to the RIGHT of the anchor,
+        // make THAT cell the visible one:
+        Direction right = facing.getClockWise();
+        BlockPos visibleCell = anchor.relative(right); // ← try this first
+        // If it ends up on the wrong side, switch to counterclockwise:
+        // BlockPos visibleCell = anchor.relative(right.getOpposite());
 
         for (BlockPos p : cells) {
             BlockState st = level.getBlockState(p);
@@ -254,72 +293,73 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
 
             BlockState upd = st;
             if (upd.hasProperty(WoodGasifierBlock.FACING)) upd = upd.setValue(WoodGasifierBlock.FACING, facing);
-            if (upd.hasProperty(WoodGasifierBlock.HIDDEN))  upd = upd.setValue(WoodGasifierBlock.HIDDEN,  formed);
-            if (upd.hasProperty(WoodGasifierBlock.FORMED))  upd = upd.setValue(WoodGasifierBlock.FORMED,  formed);
+
+            if (forming) {
+                boolean isVisible = p.equals(visibleCell);
+                // Only the visible cell shows the big model
+                if (upd.hasProperty(WoodGasifierBlock.FORMED)) upd = upd.setValue(WoodGasifierBlock.FORMED, isVisible);
+                if (upd.hasProperty(WoodGasifierBlock.HIDDEN)) upd = upd.setValue(WoodGasifierBlock.HIDDEN, !isVisible);
+            } else {
+                if (upd.hasProperty(WoodGasifierBlock.FORMED)) upd = upd.setValue(WoodGasifierBlock.FORMED, false);
+                if (upd.hasProperty(WoodGasifierBlock.HIDDEN)) upd = upd.setValue(WoodGasifierBlock.HIDDEN, false);
+            }
+
             if (upd != st) level.setBlock(p, upd, 3);
 
             var other = level.getBlockEntity(p);
             if (other instanceof WoodGasifierBlockEntity o) {
-                o.anchorPos = formed ? anchor : null;
+                o.anchorPos = forming ? anchor : null; // keep logical anchor unchanged
                 o.setChanged();
                 level.sendBlockUpdated(p, upd, upd, 3);
-                dbg("  wrote anchorPos={} into BE at {}", o.anchorPos, p);
-            } else {
-                dbg("  no BE at {} (expected WoodGasifierBlockEntity)", p);
             }
-
-            // Important: invalidate capabilities on each cell so queries refresh
             level.invalidateCapabilities(p);
         }
 
-        this.anchorPos = formed ? anchor : null;
+        this.anchorPos = forming ? anchor : null;
         setChanged();
-        dbg("setFormedAt done; this.anchorPos={}", this.anchorPos);
-
-        // Also invalidate the external neighbor at the port face so adjacent pipes refresh their cached view.
-        try {
-            Direction port = getPortSide(); // uses current state + flip
-            BlockPos external = null;
-            for (BlockPos cell : cells) {
-                BlockPos n = cell.relative(port);
-                if (!isInFootprint(n)) { external = n; break; }
-            }
-            if (external == null) external = anchor.relative(port); // fallback
-            level.invalidateCapabilities(external);
-        } catch (Exception ignored) {
-            // safe to ignore; just a best-effort invalidation
-        }
-
-        if (formed) debugPortLayout();
     }
 
 
-    /* ────────────────────────────────── toggling ──────────────────────────────── */
-    public InteractionResult tryToggleForm(Player player, InteractionHand hand, Direction faceClicked) {
-        if (level == null || level.isClientSide) return InteractionResult.SUCCESS;
+
+
+    // ───────────────────────────── toggling ─────────────────────────────
+    public net.minecraft.world.InteractionResult tryToggleForm(
+            net.minecraft.world.entity.player.Player player,
+            net.minecraft.world.InteractionHand hand,
+            @org.jetbrains.annotations.Nullable net.minecraft.core.Direction faceClicked
+    ) {
+        if (level == null || level.isClientSide) {
+            return net.minecraft.world.InteractionResult.SUCCESS;
+        }
 
         dbg("tryToggleForm at {} formed={} anchorPos={} hand={} faceClicked={}",
                 worldPosition, isFormed(), anchorPos, hand, faceClicked);
 
-        BlockPos anchor = resolveAnchor(level, worldPosition);
-        Direction facing = getBlockState().hasProperty(WoodGasifierBlock.FACING)
-                ? getBlockState().getValue(WoodGasifierBlock.FACING) : Direction.NORTH;
+        // Find the true anchor for this multiblock based on current facing
+        net.minecraft.core.BlockPos anchor = resolveAnchor(level, worldPosition);
+        net.minecraft.core.Direction facing = getBlockState().hasProperty(net.boulangermod.boulanger.block.WoodGasifierBlock.FACING)
+                ? getBlockState().getValue(net.boulangermod.boulanger.block.WoodGasifierBlock.FACING)
+                : net.minecraft.core.Direction.NORTH;
+
         dbg("  resolved anchor={} using facing={}", anchor, facing);
 
         if (!isFormed()) {
             if (!matchesFootprint(level, anchor, facing)) {
-                dbg("  footprint mismatch (rot) at anchor={}, PASS", anchor);
-                return InteractionResult.PASS;
+                dbg("  footprint mismatch at anchor={}, PASS", anchor);
+                return net.minecraft.world.InteractionResult.PASS;
             }
             setFormedAt(anchor, true);
-            if (player instanceof ServerPlayer sp)
-                sp.sendSystemMessage(Component.literal("Gasifier FORMED at " + anchor.toShortString()));
-            return InteractionResult.CONSUME;
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                sp.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "Gasifier FORMED at " + anchor.toShortString()));
+            }
+            return net.minecraft.world.InteractionResult.CONSUME;
         } else {
             setFormedAt(anchorPos != null ? anchorPos : anchor, false);
-            if (player instanceof ServerPlayer sp)
-                sp.sendSystemMessage(Component.literal("Gasifier DISMANTLED"));
-            return InteractionResult.CONSUME;
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                sp.sendSystemMessage(net.minecraft.network.chat.Component.literal("Gasifier DISMANTLED"));
+            }
+            return net.minecraft.world.InteractionResult.CONSUME;
         }
     }
 
@@ -449,18 +489,12 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
 
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new WoodGasifierMenu(id, inv, this, createSyncData());
-    }
-
-    private net.minecraft.world.inventory.SimpleContainerData createSyncData() {
-        return new net.minecraft.world.inventory.SimpleContainerData(2) {
-            @Override public int get(int i) { return (i == 0) ? burnTime : (i == 1 ? woodGasTank.getFluidAmount() : 0); }
-            @Override public void set(int i, int v) {
-                if (i == 0) burnTime = v;
-                else if (i == 1) woodGasTank.setFluid(woodGasTank.getFluid().copyWithAmount(v));
-            }
-            @Override public int getCount() { return 2; }
-        };
+        // Bridge our ContainerData to the Menu’s SimpleContainerData type
+        return new WoodGasifierMenu(id, inv, this, new SimpleContainerData(5) {
+            @Override public int get(int i) { return syncData.get(i); }
+            @Override public void set(int i, int v) { syncData.set(i, v); }
+            @Override public int getCount() { return syncData.getCount(); }
+        });
     }
 
     private void updateLitFlag() {

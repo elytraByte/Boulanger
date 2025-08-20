@@ -5,6 +5,9 @@ import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
@@ -153,12 +156,9 @@ public class WoodGasifierBlock extends BaseEntityBlock {
                 WoodGasifierBlockEntity::tick
         );
     }
-
-
-
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, net.minecraft.util.RandomSource random) {
-        // Only the anchor should spawn particles
+        // Only the anchor should handle client effects
         BlockPos anchorPos = WoodGasifierBlockEntity.resolveAnchor(level, pos);
         if (!pos.equals(anchorPos)) return;
 
@@ -166,45 +166,76 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         if (!(be instanceof WoodGasifierBlockEntity gasifier)) return;
         if (!gasifier.isFormed()) return;
 
-        // Only render when "on" (ensure BE sets LIT while burning/has gas)
+        // Only run when visually "on"
         if (!state.getValue(LIT)) return;
 
-        // LEFT-OF-FRONT in model space (port side), honoring any front flip inside the BE
-        Direction port   = gasifier.getPortSide();
-        Direction facing = state.getValue(FACING);
+        // Orientation
+        final Direction front = gasifier.getFrontFacing();      // model front (respects FLIP)
+        final Direction port  = gasifier.getPortSide();         // RIGHT-of-front (new outlet)
+        final Direction left  = front.getCounterClockWise();    // still useful for flame placement
+        final Direction right = front.getClockWise();
 
-        // Find the cell on the footprint whose port-side neighbor is outside the multiblock.
+        /* ───────── sounds ───────── */
+        double sx = anchorPos.getX() + 0.5, sy = anchorPos.getY() + 0.5, sz = anchorPos.getZ() + 0.5;
+        if (random.nextInt(6) == 0) {
+            level.playLocalSound(sx, sy, sz, SoundEvents.FURNACE_FIRE_CRACKLE, SoundSource.BLOCKS,
+                    0.35f, 1.0f + (random.nextFloat() - 0.5f) * 0.2f, false);
+        }
+        if (random.nextInt(24) == 0) {
+            level.playLocalSound(sx, sy, sz, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS,
+                    0.25f, 1.0f + (random.nextFloat() - 0.5f) * 0.25f, false);
+        }
+
+        /* ───────── exhaust SMOKE on the PORT (RIGHT) face ───────── */
         BlockPos external = null;
+        Direction facing = state.getValue(FACING);
         for (BlockPos cell : WoodGasifierBlockEntity.footprintFromMin(anchorPos, facing)) {
             BlockPos n = cell.relative(port);
-            if (!gasifier.isInFootprint(n)) {  // outside -> this is the external neighbor we want
-                external = n;
-                break;
-            }
+            if (!gasifier.isInFootprint(n)) { external = n; break; }
         }
-        if (external == null) external = anchorPos.relative(port); // fallback (shouldn't happen)
+        if (external == null) external = anchorPos.relative(port);
 
-        // Place the particle ON the gasifier's left outer face:
-        // start at the center of the external block, then move back toward the gasifier face by (0.5 + eps)
-        final double epsOut = 0.02;      // just outside the face
-        final double yMid   = 0.50;      // mid-height (tweak to 0.35 if you want lower)
+        final double epsOut = 0.02, yMid = 0.50;
         double bx = external.getX() + 0.5 - port.getStepX() * (0.5 + epsOut);
         double by = anchorPos.getY() + yMid;
         double bz = external.getZ() + 0.5 - port.getStepZ() * (0.5 + epsOut);
 
-        // Optional: slight push toward the front if your nozzle protrudes forward
-        // Direction front = gasifier.getFrontFacing();
-        // bx += front.getStepX() * 0.10;
-        // bz += front.getStepZ() * 0.10;
-
-        // Mild jitter + gentle rise
         double jx = (random.nextDouble() - 0.5) * 0.10;
         double jz = (random.nextDouble() - 0.5) * 0.10;
         double vx = (random.nextDouble() - 0.5) * 0.02;
         double vz = (random.nextDouble() - 0.5) * 0.02;
         double vy = 0.02 + random.nextDouble() * 0.02;
+        level.addParticle(ParticleTypes.SMOKE, bx + jx, by, bz + jz, vx, vy, vz);
 
-        level.addParticle(net.minecraft.core.particles.ParticleTypes.SMOKE, bx + jx, by, bz + jz, vx, vy, vz);
+    /* ───────── FLAME placement (kept independent of port) ─────────
+       This is the tuned front/left flame you already liked; adjust the
+       constants if you want it elsewhere. */
+        BlockPos bottomLeftCell = null;
+        int baseY = anchorPos.getY();
+        for (BlockPos cell : WoodGasifierBlockEntity.footprintFromMin(anchorPos, facing)) {
+            if (cell.getY() != baseY) continue;                    // bottom row only
+            if (!gasifier.isInFootprint(cell.relative(left))) {    // left edge of the footprint
+                bottomLeftCell = cell; break;
+            }
+        }
+        if (bottomLeftCell == null) bottomLeftCell = anchorPos;
+
+        final double OUT_FROM_FRONT = 0.49; // push out of front face
+        final double SHIFT_RIGHT    = 0.12; // slide a bit toward center from the left edge
+        final double Y_BASE         = 0.09; // low to the ground
+        final double Y_JITTER       = 0.04;
+        final double XZ_JITTER      = 0.01;
+
+        double cx = bottomLeftCell.getX() + 0.5, cz = bottomLeftCell.getZ() + 0.5;
+        double fx = cx - front.getStepX() * OUT_FROM_FRONT
+                + right.getStepX() * SHIFT_RIGHT
+                + (random.nextDouble() - 0.5) * XZ_JITTER;
+        double fz = cz - front.getStepZ() * OUT_FROM_FRONT
+                + right.getStepZ() * SHIFT_RIGHT
+                + (random.nextDouble() - 0.5) * XZ_JITTER;
+        double fy = bottomLeftCell.getY() + Y_BASE + random.nextDouble() * Y_JITTER;
+
+        level.addParticle(ParticleTypes.FLAME, fx, fy, fz, 0.0, 0.0, 0.0);
     }
 
 

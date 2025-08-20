@@ -24,15 +24,11 @@ public class WoodGasPipeBlockEntity extends BlockEntity {
 
     /* ─────────────────────────── config / constants ─────────────────────────── */
     private static final int TANK_CAPACITY_MB        = 1000;
-    private static final int TRANSFER_PER_TICK_MB    = 10;
+    private static final int TRANSFER_PER_TICK_MB    = 100;
 
     /* ──────────────────────────────── tank / state ──────────────────────────── */
-    /**
-     * Pipe tank:
-     * - capacity 4 000 mB
-     * - server-side onContentsChanged() triggers a block update → client stays in sync
-     * - only accepts wood-gas (change isFluidValid() if you want “any fluid”)
-     */
+
+
     private final FluidTank tank = new FluidTank(TANK_CAPACITY_MB) {
         @Override
         protected void onContentsChanged() {

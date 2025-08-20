@@ -261,10 +261,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         // Block item uses stage 0 in inventory
         itemModels().withExistingParent("iron_frame", modLoc("block/iron_frame_0"));
 
-        // Item model (show stage 0 in inventory)
-        itemModels().withExistingParent("iron_frame", modLoc("block/iron_frame_0"));
-
-
         // MOTIVATOR: bottom/top/side
         String name = "motivator"; // your block id: assets/boulanger/models/block/motivator.json, etc.
 
@@ -356,64 +352,56 @@ public class ModBlockStateProvider extends BlockStateProvider {
                             .build();
                 });
 
-
-        ModelFile cubeUnlit = models().cubeAll(
-                "wood_gasifier",
-                modLoc("block/burnished_steel")
-        );
-        ModelFile cubeLit = models().cubeAll(
-                "wood_gasifier_lit",
-                modLoc("block/burnished_steel")
-        );
-        ModelFile multi = models().getExistingFile(modLoc("block/wood_gasifier_mb"));
-
-        simpleBlockItem(ModBlocks.WOOD_GASIFIER.get(), cubeUnlit);
+        ModelFile base = models().cubeAll("wood_gasifier_base", modLoc("block/burnished_steel"));
+        ModelFile big  = models().getExistingFile(modLoc("block/wood_gasifier"));
 
         getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
-                .forAllStates(state -> {
-                    Direction dir = state.getValue(WoodGasifierBlock.FACING);
-                    boolean formed = state.getValue(WoodGasifierBlock.FORMED);
-                    boolean hidden = state.getValue(WoodGasifierBlock.HIDDEN);
-                    boolean lit = state.getValue(WoodGasifierBlock.LIT);
+                .forAllStates(st -> {
+                    Direction dir   = st.getValue(WoodGasifierBlock.FACING);
+                    boolean formed  = st.getValue(WoodGasifierBlock.FORMED);
+                    boolean hidden  = st.getValue(WoodGasifierBlock.HIDDEN);
+                    ModelFile file  = (formed && !hidden) ? big : base;
 
-                    if (formed && !hidden) {
-                        // this is the “master” corner — flip it over on X
-                        return ConfiguredModel.builder()
-                                .modelFile(multi)
-                                .rotationY(((int) dir.toYRot() + 180) % 360)                   // ← flip upside-down
-                                .rotationY((int) dir.toYRot())    // orient to FACING
-                                .uvLock(true)                     // keeps UVs aligned
-                                .build();
-                    }
-
-                    ModelFile pick = lit ? cubeLit : cubeUnlit;
                     return ConfiguredModel.builder()
-                            .modelFile(pick)
+                            .modelFile(file)
                             .rotationY((int) dir.toYRot())
+                            .uvLock(true)                 // ← prevents face UVs from warping
                             .build();
                 });
 
+// Item = base cube
+        itemModels().withExistingParent(
+                BuiltInRegistries.BLOCK.getKey(ModBlocks.WOOD_GASIFIER.get()).getPath(),
+                modLoc("block/wood_gasifier_base")
+        );
+
+
+
+// Item = base cube
+        itemModels().withExistingParent(
+                BuiltInRegistries.BLOCK.getKey(ModBlocks.WOOD_GASIFIER.get()).getPath(),
+                modLoc("block/wood_gasifier_base")
+        );
+
+
         ResourceLocation bedrockTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/bedrock");
 
-// 2) Generate one shared cube-all model named “energy_bedrock”
+
         ModelFile energyModel = models().cubeAll(
                 "energy_bedrock",
                 bedrockTex
         );
 
-// 3) ENERGY CABLE: full-cube Bedrock for both blockstate & item
         simpleBlockWithItem(
                 ModBlocks.ENERGY_CABLE.get(),
                 energyModel
         );
 
-// 4) ENERGY STORAGE (“Battery”):
-//    – item uses the same Bedrock cube
         simpleBlockItem(
                 ModBlocks.BATTERY.get(),
                 energyModel
         );
-//    – blockstate maps ALL (lit/unlit) variants to the same model
+
         getVariantBuilder(ModBlocks.BATTERY.get())
                 .forAllStates(s -> ConfiguredModel.builder()
                         .modelFile(energyModel)
