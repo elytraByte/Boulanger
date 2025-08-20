@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "boulanger:block/woodgas_engine_off",
+    "side": "boulanger:block/woodgas_engine_side",
+    "top": "boulanger:block/woodgas_engine_top"
+  }
+}

@@ -43,8 +43,8 @@ public final class ModCapabilities {
 
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
-                ModBlockEntities.WOODGAS_ENGINE_BE.get(),
-                (WoodGasEngineBlockEntity be, @Nullable Direction querySide) -> be.getEnergyStorage(querySide)
+                ModBlockEntities.ENERGY_CABLE_BE.get(),
+                (EnergyCableBlockEntity be, @Nullable Direction side) -> be.getEnergyStorage(side)
         );
 
         event.registerBlockEntity(

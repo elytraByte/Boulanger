@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "boulanger:item/unfired_light_blue_porcelain_brick"
+  }
+}

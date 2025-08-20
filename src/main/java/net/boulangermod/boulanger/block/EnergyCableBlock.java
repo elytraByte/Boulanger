@@ -15,33 +15,29 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 public class EnergyCableBlock extends BaseEntityBlock {
+    public static final MapCodec<EnergyCableBlock> CODEC = simpleCodec(EnergyCableBlock::new);
+
     public EnergyCableBlock(Properties props) {
         super(props.noOcclusion());
     }
 
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
-        return null;
+        return CODEC;
     }
 
     @Override
     public RenderShape getRenderShape(BlockState st) {
         return RenderShape.MODEL;
     }
-    // in EnergyCableBlock.java
+
     @Override
     public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(
-            Level level,
-            BlockState state,
-            BlockEntityType<T> type
+            Level level, BlockState state, BlockEntityType<T> type
     ) {
-        return createTickerHelper(
-                type,
-                ModBlockEntities.ENERGY_CABLE_BE.get(),
-                EnergyCableBlockEntity::tick
-        );
+        return level.isClientSide() ? null
+                : createTickerHelper(type, ModBlockEntities.ENERGY_CABLE_BE.get(), EnergyCableBlockEntity::tick);
     }
-
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState st) {

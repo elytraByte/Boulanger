@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "boulanger:block/stone_mill_block",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "boulanger:block/stone_mill_block"
+    },
+    "facing=south": {
+      "model": "boulanger:block/stone_mill_block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "boulanger:block/stone_mill_block",
+      "y": 270
+    }
+  }
+}

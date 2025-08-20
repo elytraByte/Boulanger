@@ -67,7 +67,32 @@ public class WoodGasEngineBlockEntity extends BlockEntity {
 
     // ---- Cap exposure helpers (your pipeline already queries by block) ----
     public IFluidHandler getFluidHandler(@Nullable Direction side) { return tank; }
-    public IEnergyStorage getEnergyStorage(@Nullable Direction side) { return energy; }
+
+    // Extract-only view for neighbors. Internal code still uses `energy`.
+    private final IEnergyStorage outOnlyView = new IEnergyStorage() {
+        @Override public int receiveEnergy(int maxReceive, boolean simulate) { return 0; } // no input
+        @Override public int extractEnergy(int maxExtract, boolean simulate) {
+            return energy.extractEnergy(maxExtract, simulate);
+        }
+        @Override public int getEnergyStored()      { return energy.getEnergyStored(); }
+        @Override public int getMaxEnergyStored()   { return energy.getMaxEnergyStored(); }
+        @Override public boolean canExtract()       { return true; }
+        @Override public boolean canReceive()       { return false; }
+    };
+
+    private Direction getBackSide() {
+        BlockState st = getBlockState();
+        Direction facing = Direction.NORTH;
+        if (st.hasProperty(WoodGasEngineBlock.FACING)) {
+            facing = st.getValue(WoodGasEngineBlock.FACING);
+        }
+        return facing.getOpposite(); // "back" is opposite the facing/front
+    }
+
+    public IEnergyStorage getEnergyStorage(@Nullable Direction side) {
+        if (side == null) return null;                  // no unsided access
+        return side == getBackSide() ? outOnlyView : null;
+    }
 
     public static void tick(Level level, BlockPos pos, BlockState state, WoodGasEngineBlockEntity be) {
         if (level.isClientSide) return;

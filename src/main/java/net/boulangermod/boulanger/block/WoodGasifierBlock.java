@@ -179,7 +179,7 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         double sx = anchorPos.getX() + 0.5, sy = anchorPos.getY() + 0.5, sz = anchorPos.getZ() + 0.5;
         if (random.nextInt(6) == 0) {
             level.playLocalSound(sx, sy, sz, SoundEvents.FURNACE_FIRE_CRACKLE, SoundSource.BLOCKS,
-                    0.35f, 1.0f + (random.nextFloat() - 0.5f) * 0.2f, false);
+                    0.5f, 1.0f + (random.nextFloat() - 0.5f) * 0.2f, false);
         }
         if (random.nextInt(24) == 0) {
             level.playLocalSound(sx, sy, sz, SoundEvents.LAVA_EXTINGUISH, SoundSource.BLOCKS,
@@ -207,35 +207,52 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         double vy = 0.02 + random.nextDouble() * 0.02;
         level.addParticle(ParticleTypes.SMOKE, bx + jx, by, bz + jz, vx, vy, vz);
 
-    /* ───────── FLAME placement (kept independent of port) ─────────
-       This is the tuned front/left flame you already liked; adjust the
-       constants if you want it elsewhere. */
-        BlockPos bottomLeftCell = null;
-        int baseY = anchorPos.getY();
-        for (BlockPos cell : WoodGasifierBlockEntity.footprintFromMin(anchorPos, facing)) {
-            if (cell.getY() != baseY) continue;                    // bottom row only
-            if (!gasifier.isInFootprint(cell.relative(left))) {    // left edge of the footprint
-                bottomLeftCell = cell; break;
+        /* ───────── FLAME placement: front grate (shift left, narrower) ───────── */
+        {
+            BlockPos bottomLeftCell = null;
+            int baseY = anchorPos.getY();
+            for (BlockPos cell : WoodGasifierBlockEntity.footprintFromMin(anchorPos, facing)) {
+                if (cell.getY() != baseY) continue;
+                if (!gasifier.isInFootprint(cell.relative(left))) { bottomLeftCell = cell; break; }
+            }
+            if (bottomLeftCell == null) bottomLeftCell = anchorPos;
+
+            // front width in cells
+            int widthCells = 1;
+            BlockPos sweep = bottomLeftCell;
+            while (gasifier.isInFootprint(sweep.relative(right))) { sweep = sweep.relative(right); widthCells++; }
+
+            // ——— knobs ———
+            final double OUT_FROM_FRONT = 0.49;
+            final double GRATE_Y        = 0.45;
+            final double GRATE_W        = Math.min(0.55 * widthCells, 0.85); // narrower band
+            final double GRATE_H        = 0.20;
+            final double LEFT_SHIFT     = 1.0; // move flames left on the grate
+
+            // center of front face (bottom row), shifted left
+            double cx = bottomLeftCell.getX() + 0.5 + right.getStepX() * (widthCells / 2.0)
+                    - right.getStepX() * LEFT_SHIFT;
+            double cz = bottomLeftCell.getZ() + 0.5 + right.getStepZ() * (widthCells / 2.0)
+                    - right.getStepZ() * LEFT_SHIFT;
+            double cy = baseY + GRATE_Y;
+
+            // furnace-style scattered flames in the rectangle
+            int flames = 2 + random.nextInt(2);
+            for (int i = 0; i < flames; i++) {
+                double rx = (random.nextDouble() - 0.5) * GRATE_W;  // left/right inside the narrower grate
+                double ry = (random.nextDouble() - 0.5) * GRATE_H;  // up/down
+
+                double px = cx - front.getStepX() * OUT_FROM_FRONT + right.getStepX() * rx;
+                double pz = cz - front.getStepZ() * OUT_FROM_FRONT + right.getStepZ() * rx;
+                double py = cy + ry;
+
+                level.addParticle(ParticleTypes.FLAME, px, py, pz, 0.0, 0.0, 0.0);
+                if (random.nextFloat() < 0.25f) {
+                    level.addParticle(ParticleTypes.SMOKE, px, py + 0.02, pz, 0.0, 0.012, 0.0);
+                }
             }
         }
-        if (bottomLeftCell == null) bottomLeftCell = anchorPos;
 
-        final double OUT_FROM_FRONT = 0.49; // push out of front face
-        final double SHIFT_RIGHT    = 0.12; // slide a bit toward center from the left edge
-        final double Y_BASE         = 0.09; // low to the ground
-        final double Y_JITTER       = 0.04;
-        final double XZ_JITTER      = 0.01;
-
-        double cx = bottomLeftCell.getX() + 0.5, cz = bottomLeftCell.getZ() + 0.5;
-        double fx = cx - front.getStepX() * OUT_FROM_FRONT
-                + right.getStepX() * SHIFT_RIGHT
-                + (random.nextDouble() - 0.5) * XZ_JITTER;
-        double fz = cz - front.getStepZ() * OUT_FROM_FRONT
-                + right.getStepZ() * SHIFT_RIGHT
-                + (random.nextDouble() - 0.5) * XZ_JITTER;
-        double fy = bottomLeftCell.getY() + Y_BASE + random.nextDouble() * Y_JITTER;
-
-        level.addParticle(ParticleTypes.FLAME, fx, fy, fz, 0.0, 0.0, 0.0);
     }
 
 
