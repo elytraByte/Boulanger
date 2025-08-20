@@ -1,7 +1,6 @@
 package net.boulangermod.boulanger.block;
 
 import com.mojang.serialization.MapCodec;
-import net.boulangermod.boulanger.block.entity.EnergyStorageBlockEntity;
 import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.block.entity.WoodGasPipeBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -9,8 +8,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -26,9 +28,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 
 public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
@@ -79,10 +84,9 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
 
     public WoodGasPipe(Properties props) {
         super(props
-                .noOcclusion()     // don't treat as a solid cube for face culling
-                .randomTicks()     // you had this; okay to keep
+                .noOcclusion()
+                .randomTicks()
         );
-        // default state: no connections
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(NORTH, false).setValue(EAST,  false)
                 .setValue(SOUTH, false).setValue(WEST,  false)
@@ -129,7 +133,6 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
     @Override
     public boolean skipRendering(BlockState state, BlockState adjacentState, Direction side) {
         if (adjacentState.getBlock() instanceof WoodGasPipe) {
-            // only skip if both blocks say they connect to each other on that side
             boolean a = state.getValue(prop(side));
             boolean b = adjacentState.getValue(prop(side.getOpposite()));
             if (a && b) return true;
@@ -150,7 +153,7 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
 
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
-        return null; // (datagen/runtime codec is optional here; keep null if you're not using it)
+        return null; // keep as-is if you’re not using map codecs for this block
     }
 
     @Override
@@ -158,27 +161,46 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
         b.add(NORTH, EAST, SOUTH, WEST, UP, DOWN);
     }
 
+    // ----- CONNECTIVITY (updated) -----
+
+    // checks a specific direction and neighbor face
+    private static boolean connects(LevelAccessor level, BlockPos pos, Direction dir) {
+        BlockPos adjPos = pos.relative(dir);
+        BlockState adj  = level.getBlockState(adjPos);
+
+        // 1) Connect to other pipes
+        if (adj.getBlock() instanceof WoodGasPipe) return true;
+
+        // 2) Connect to any block exposing a fluid handler on the face toward this pipe
+        BlockEntity be = level.getBlockEntity(adjPos);
+        if (level instanceof Level lvl) {
+            var cap = lvl.getCapability(
+                    Capabilities.FluidHandler.BLOCK,
+                    adjPos, adj, be, dir.getOpposite()
+            );
+            if (cap != null) return true;
+        }
+
+        return false;
+    }
+
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         Level w = ctx.getLevel();
         BlockPos p = ctx.getClickedPos();
         return defaultBlockState()
-                .setValue(NORTH, connectsTo(w, p.relative(Direction.NORTH)))
-                .setValue(EAST,  connectsTo(w, p.relative(Direction.EAST)))
-                .setValue(SOUTH, connectsTo(w, p.relative(Direction.SOUTH)))
-                .setValue(WEST,  connectsTo(w, p.relative(Direction.WEST)))
-                .setValue(UP,    connectsTo(w, p.above()))
-                .setValue(DOWN,  connectsTo(w, p.below()));
+                .setValue(NORTH, connects(w, p, Direction.NORTH))
+                .setValue(EAST,  connects(w, p, Direction.EAST))
+                .setValue(SOUTH, connects(w, p, Direction.SOUTH))
+                .setValue(WEST,  connects(w, p, Direction.WEST))
+                .setValue(UP,    connects(w, p, Direction.UP))
+                .setValue(DOWN,  connects(w, p, Direction.DOWN));
     }
 
     @Override
     public BlockState updateShape(BlockState s, Direction dir, BlockState neighbor,
                                   LevelAccessor w, BlockPos pos, BlockPos neighborPos) {
-        return s.setValue(prop(dir), connectsTo(w, neighborPos));
-    }
-
-    private static boolean connectsTo(LevelAccessor w, BlockPos pos) {
-        return w.getBlockState(pos).getBlock() instanceof WoodGasPipe;
+        return s.setValue(prop(dir), connects(w, pos, dir));
     }
 
     @Override
@@ -212,5 +234,38 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
     // tiny helper so we can declare boxes with ints
     private static VoxelShape box(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
         return Block.box(minX, minY, minZ, maxX, maxY, maxZ);
+    }
+
+    // Let item-uses (even when holding something) fall through to the block's default interaction
+    @Override
+    public ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+                                           Player player, InteractionHand hand, BlockHitResult hit) {
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+
+    // Right-click interaction that doesn't depend on the held item
+    @Override
+    public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
+                                            Player player, BlockHitResult hit) {
+        if (level.isClientSide) return InteractionResult.SUCCESS;
+
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof WoodGasPipeBlockEntity pipe) {
+            int amt = pipe.getTank().getFluidAmount();
+            int cap = pipe.getTank().getCapacity();
+            FluidStack stack = pipe.getTank().getFluid();
+
+            Component fluidName = stack.isEmpty() ? Component.literal("empty") : stack.getHoverName();
+            Component msg = Component.literal("Pipe: ")
+                    .append(Component.literal(Integer.toString(amt)))
+                    .append(Component.literal(" / "))
+                    .append(Component.literal(Integer.toString(cap)))
+                    .append(Component.literal(" mB "))
+                    .append(fluidName.copy());
+
+            player.displayClientMessage(msg, false);
+        }
+
+        return InteractionResult.CONSUME;
     }
 }

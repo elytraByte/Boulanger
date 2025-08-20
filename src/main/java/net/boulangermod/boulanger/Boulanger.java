@@ -89,6 +89,7 @@ public class Boulanger {
                         .where('W', inWorld -> inWorld.getState().getBlock() instanceof WoodGasifierBlock)
                         .build()
         );
+
     }
 
     @SubscribeEvent

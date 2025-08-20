@@ -44,8 +44,11 @@ public class ModBlocks {
     public static final DeferredBlock<Block> SCALE_BLOCK = registerBlock("scale_block",
             () -> new ScaleBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
-    public static final DeferredBlock<Block> STONE_MILL_BLOCK = registerBlock("stone_mill_block",
-            () -> new StoneMillBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+    public static final DeferredBlock<StoneMillBlock> STONE_MILL_BLOCK = registerBlock("stone_mill",
+            () -> new StoneMillBlock(BlockBehaviour.Properties.of()
+                    .strength(3.0F)
+                    .noOcclusion()
+            ));
 
     public static final DeferredBlock<SugarRefineryBlock> SUGAR_REFINERY = registerBlock(
             "sugar_refinery",
@@ -140,7 +143,7 @@ public class ModBlocks {
     public static final DeferredBlock<ButtonBlock> PINE_BUTTON = registerBlock("pine_button",
             // Wooden button behavior: longer press time; no collision
             () -> new ButtonBlock(BlockSetType.OAK, 30,
-                    BlockBehaviour.Properties.of().noCollission().strength(0.5F)));
+                    BlockBehaviour.Properties.of().noCollission().strength(0.5F).ignitedByLava()));
 
     public static final DeferredBlock<Block> PINE_PRESSURE_PLATE = registerBlock(
             "pine_pressure_plate",
@@ -172,9 +175,9 @@ public class ModBlocks {
                     () -> new WoodGasPipe(Block.Properties.of().strength(1f).noOcclusion())
             );
 
-    public static final DeferredBlock<InternalCombustionEngineBlock> INTERAL_COMUSTION_ENGINE =
-            registerBlock("internal_combustion_engine",
-                    () -> new InternalCombustionEngineBlock(Block.Properties.of().strength(1f).noOcclusion())
+    public static final DeferredBlock<WoodGasEngineBlock> WOODGAS_ENGINE =
+            registerBlock("woodgas_engine",
+                    () -> new WoodGasEngineBlock(Block.Properties.of().strength(1f).noOcclusion())
             );
 
     public static final DeferredBlock<Block> PINE_SAPLING = registerBlock("pine_sapling",

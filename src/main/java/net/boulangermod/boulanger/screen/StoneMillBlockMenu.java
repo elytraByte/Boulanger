@@ -33,8 +33,8 @@ public class StoneMillBlockMenu extends AbstractContainerMenu {
         this.blockEntity = mixer;
 
         // --- TileEntity slots ---
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), INPUT_SLOT,  44, 35)); // input bowl
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), OUTPUT_SLOT,   116, 35)); // output bowl
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), INPUT_SLOT,  44, 35)); // input bowl
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), OUTPUT_SLOT,   116, 35)); // output bowl
         // --- Player inventory slots ---
         // main inventory, 3 rows × 9 cols
         for (int row = 0; row < 3; ++row) {

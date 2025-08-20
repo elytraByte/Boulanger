@@ -6,7 +6,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -18,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ScaleBlockEntity extends AbstractProcessingBlockEntity implements MenuProvider {
+public class ScaleBlockEntity extends AbstractProcessingBlockEntity {
     public static final int SLOT_BULK     = 0;
     public static final int SLOT_BOWL_IN  = 1;
     public static final int SLOT_BOWL_OUT = 2;

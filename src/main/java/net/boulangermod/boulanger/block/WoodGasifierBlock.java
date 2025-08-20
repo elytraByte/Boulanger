@@ -5,8 +5,6 @@ import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
@@ -35,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class WoodGasifierBlock extends BaseEntityBlock {
+    public static final MapCodec<WoodGasifierBlock> CODEC = simpleCodec(WoodGasifierBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty    LIT    = BlockStateProperties.LIT;
     public static final BooleanProperty FORMED = BooleanProperty.create("formed");
@@ -52,6 +51,11 @@ public class WoodGasifierBlock extends BaseEntityBlock {
     }
 
     @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
+    }
+
+    @Override
     public @NotNull VoxelShape getOcclusionShape(@NotNull BlockState state,
                                                  @NotNull BlockGetter level,
                                                  @NotNull BlockPos pos) {
@@ -59,13 +63,6 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         return state.getValue(HIDDEN) ? Shapes.empty()
                 : super.getOcclusionShape(state, level, pos);
     }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return (MapCodec) CODEC;
-    }
-
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> builder) {
         builder.add(FACING, LIT, HIDDEN, FORMED);
@@ -156,6 +153,8 @@ public class WoodGasifierBlock extends BaseEntityBlock {
                 WoodGasifierBlockEntity::tick
         );
     }
+
+
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, net.minecraft.util.RandomSource random) {

@@ -22,10 +22,10 @@ public class WoodOvenMenu extends AbstractContainerMenu {
         super(ModMenuTypes.WOOD_OVEN_MENU.get(), id);
         this.blockEntity = (WoodOvenBlockEntity) be;
 
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 56, 17)); // Input
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 56, 53)); // Fuel
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 116, 35)); // Output
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 3, 145, 35)); // Output
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 0, 56, 17)); // Input
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 1, 56, 53)); // Fuel
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 2, 116, 35)); // Output
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 3, 145, 35)); // Output
 
         // Player inventory
         for (int row = 0; row < 3; ++row) {

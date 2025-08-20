@@ -1,39 +1,33 @@
 package net.boulangermod.boulanger.block.entity;
 
+import net.boulangermod.boulanger.block.AbstractProcessingBlock;
 import net.boulangermod.boulanger.screen.BakersTableMenu;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.PanTypeComponent;
 import net.boulangermod.boulanger.component.ProofingStateComponent;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.recipe.ProcessingStep;
 import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.item.PanType;
-import net.boulangermod.boulanger.util.ScaleLogic; // if needed
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;                 // NEW
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomModelData;          // NEW
+import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 import java.util.List;
 import java.util.Optional;
 
-public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implements MenuProvider {
+public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
     public static final int DOUGH_SLOT  = 0;
     public static final int PAN_SLOT    = 1;
     public static final int OUTPUT_SLOT = 2;
@@ -57,19 +51,10 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
         return new BakersTableMenu(id, inv, this);
     }
 
-    /** Ticker registration from block class */
-    public static <T extends BlockEntity> BlockEntityTicker<T> getTicker(BlockEntityType<T> type) {
-        return (lvl, pos, st, be) -> ((BakersTableBlockEntity) be).tryShape();
-    }
-
-    public static void tick(
-            Level level,
-            BlockPos pos,
-            BlockState state,
-            BakersTableBlockEntity be
-    ) {
+    @Override
+    public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide()) return;
-        be.tryShape();
+        tryShape();
     }
 
     @SuppressWarnings("unchecked")
@@ -90,7 +75,7 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
     }
 
     public boolean tryShape() {
-        var handler = getItemHandler();
+        var handler = getItemHandler(null);
         ItemStack dough  = handler.getStackInSlot(DOUGH_SLOT);
         ItemStack pan    = handler.getStackInSlot(PAN_SLOT);
         ItemStack output = handler.getStackInSlot(OUTPUT_SLOT);
@@ -157,12 +142,12 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.saveAdditional(tag, provider);
-        tag.put("inventory", getItemHandler().serializeNBT(provider));
+        tag.put("inventory", getItemHandler(null).serializeNBT(provider));
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.loadAdditional(tag, provider);
-        getItemHandler().deserializeNBT(provider, tag.getCompound("inventory"));
+        getItemHandler(null).deserializeNBT(provider, tag.getCompound("inventory"));
     }
 }

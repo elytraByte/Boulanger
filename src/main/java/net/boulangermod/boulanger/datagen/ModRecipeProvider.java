@@ -353,6 +353,17 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_pine_logs", has(ModBlocks.PINE_LOG))
                 .save(pRecipeOutput);
 
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModBlocks.WOOD_GASIFIER.get(), 1)
+                .pattern("ICI")
+                .pattern("IFI")
+                .pattern("CBC")
+                .define('C', Blocks.CAULDRON)
+                .define('I', Items.IRON_INGOT)
+                .define('F', Blocks.CAMPFIRE)
+                .define('B', ModItems.PCB)
+                .unlockedBy("has_pine_logs", has(ModBlocks.PINE_LOG))
+                .save(pRecipeOutput);
+
         // ——— Baguette ———
         new RatioRecipeBuilder(
                 ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "baguette"),

@@ -35,23 +35,38 @@ public class SugarRefineryBlock extends AbstractProcessingBlock {
 
     @Override protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
 
-    @Override public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
+    }
+
+    // Outline / selection box (adjust numbers to your model)
+    private static final VoxelShape SHAPE = Shapes.or(
+            Block.box(4, 0, 4, 12, 2, 12),  // base
+            Block.box(3, 2, 3, 13, 10, 13), // frame/body
+            Block.box(5,10, 5, 11, 13, 11)  // upper stone/wheel
+    );
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
-        // Approx brewing-stand shape: thin base + center rod
-        // base: 4..12 x 0..2 x 4..12  |  rod: 7..9 x 0..14 x 7..9
-        return Shapes.or(
-                Block.box(4, 0, 4, 12, 2, 12),
-                Block.box(7, 0, 7, 9, 14, 9)
-        );
+        return SHAPE;
     }
 
-    // Make light-occlusion match the visible shape (prevents dark-culling)
+    // Prevent neighbor-face culling as if we were a full block (shows “holes” correctly)
     @Override
     public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.empty();
     }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
+        return SHAPE;
+    }
+
+    @Override
+    public boolean useShapeForLightOcclusion(BlockState state) { return true; }
+
+
 
     @Nullable
     @Override

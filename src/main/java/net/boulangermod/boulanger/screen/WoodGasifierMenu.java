@@ -30,7 +30,7 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
         this.data        = data;
         this.pos         = be.getBlockPos();
 
-        IItemHandler h = be.getItemHandler();
+        IItemHandler h = be.getItemHandler(null);
 
         // ─── TE SLOTS ────────────────────────────────────────────────
         this.addSlot(new SlotItemHandler(h, 0, 26, 21) {

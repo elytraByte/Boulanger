@@ -436,6 +436,6 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     }
 
     @Override public void drops() {
-        AbstractProcessingBlockEntity.drops(level, worldPosition, itemHandler);
+        super.drops();
     }
 }

@@ -18,20 +18,14 @@ public final class ModCapabilities {
     public static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
         LOGGER.debug("[ModCapabilities] RegisterCapabilitiesEvent fired");
 
-        /* ── Wood Gasifier: expose ONLY the port on the anchor when formed ── */
         event.registerBlockEntity(
-                Capabilities.FluidHandler.BLOCK,
-                ModBlockEntities.WOOD_GASIFIER_BE.get(),
-                (WoodGasifierBlockEntity be, @Nullable Direction querySide) -> {
-                    if (!be.isFormed() || !be.isAnchor()) return null;
-
-                    Direction port = be.getPortSide();
-
-                    // If you do visual checks with side == null, expose so the probe can “see” it
-                    if (querySide == null) return be.getPortFluidHandler();
-
-                    // Real sided exposure
-                    return (querySide == port) ? be.getPortFluidHandler() : null;
+                net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+                net.boulangermod.boulanger.block.entity.ModBlockEntities.WOOD_GASIFIER_BE.get(),
+                (be, side) -> {
+                    if (side == null) return null;                // sided
+                    if (!be.isFormed()) return null;              // only when formed
+                    if (!isPortCell(be)) return null;             // only the port cell BE
+                    return side == be.getPortSide() ? be.getPortFluidHandler() : null; // drain-only
                 }
         );
 
@@ -43,14 +37,14 @@ public final class ModCapabilities {
 
         event.registerBlockEntity(
                 Capabilities.FluidHandler.BLOCK,
-                ModBlockEntities.INTERNAL_COMBUSTION_ENGINE_BE.get(),
-                (InternalCombustionEngineBlockEntity be, @Nullable Direction querySide) -> be.getFluidHandler(querySide)
+                ModBlockEntities.WOODGAS_ENGINE_BE.get(),
+                (WoodGasEngineBlockEntity be, @Nullable Direction querySide) -> be.getFluidHandler(querySide)
         );
 
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
-                ModBlockEntities.INTERNAL_COMBUSTION_ENGINE_BE.get(),
-                (InternalCombustionEngineBlockEntity be, @Nullable Direction querySide) -> be.getEnergyStorage(querySide)
+                ModBlockEntities.WOODGAS_ENGINE_BE.get(),
+                (WoodGasEngineBlockEntity be, @Nullable Direction querySide) -> be.getEnergyStorage(querySide)
         );
 
         event.registerBlockEntity(
@@ -58,5 +52,34 @@ public final class ModCapabilities {
                 ModBlockEntities.ENERGY_STORAGE_BE.get(),
                 (EnergyStorageBlockEntity be, @Nullable Direction querySide) -> be.getEnergyStorage(querySide)
         );
+
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.STONE_MILL_BE.get(),
+                (be, side) -> {
+                    // DEBUG: prove provider is hit
+                    LogUtils.getLogger().debug("[Cap] Query Energy for StoneMill @ {} side={}", be.getBlockPos(), side);
+                    return be.getEnergyStorage(side);
+                }
+        );
     }
+
+    static boolean isPortCell(net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity be) {
+        if (!be.isFormed()) return false;
+        var level  = be.getLevel();
+        var anchor = be.getMinCorner();
+        var state  = be.getBlockState();
+        var facing = state.getValue(net.boulangermod.boulanger.block.WoodGasifierBlock.FACING);
+        var port   = be.getPortSide();
+
+        for (var cell : net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity.footprintFromMin(anchor, facing)) {
+            var outside = cell.relative(port);
+            if (!be.isInFootprint(outside)) {
+                return be.getBlockPos().equals(cell); // this BE is the port cell
+            }
+        }
+        return be.isAnchor(); // fallback
+    }
+
+
 }

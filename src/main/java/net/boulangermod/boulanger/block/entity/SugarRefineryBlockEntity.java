@@ -164,7 +164,7 @@ public class SugarRefineryBlockEntity extends AbstractProcessingBlockEntity
 
     @Override
     public void drops() {
-        drops(level, worldPosition, itemHandler);
+        super.drops();
     }
 
     private static int fuelTime(ItemStack stack) {

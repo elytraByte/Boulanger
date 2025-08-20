@@ -63,11 +63,12 @@ public class ModBlockEntities {
                     ModBlocks.WOODGAS_PIPE.get()
             ).build(null));
 
-    public static final Supplier<BlockEntityType<InternalCombustionEngineBlockEntity>> INTERNAL_COMBUSTION_ENGINE_BE =
-            BLOCK_ENTITIES.register("ice_be", () -> BlockEntityType.Builder.of(
-                    InternalCombustionEngineBlockEntity::new,
-                    ModBlocks.INTERAL_COMUSTION_ENGINE.get()
+    public static final Supplier<BlockEntityType<WoodGasEngineBlockEntity>> WOODGAS_ENGINE_BE =
+            BLOCK_ENTITIES.register("woodgas_engine_be", () -> BlockEntityType.Builder.of(
+                    WoodGasEngineBlockEntity::new,
+                    ModBlocks.WOODGAS_ENGINE.get()
             ).build(null));
+
 
     public static final Supplier<BlockEntityType<ProofingBoxBlockEntity>> PROOFING_BOX =
             BLOCK_ENTITIES.register("proofing_box", () -> BlockEntityType.Builder.of(

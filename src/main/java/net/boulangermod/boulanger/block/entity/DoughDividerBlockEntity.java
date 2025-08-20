@@ -1,5 +1,6 @@
 package net.boulangermod.boulanger.block.entity;
 
+import net.boulangermod.boulanger.block.AbstractProcessingBlock;
 import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
@@ -8,7 +9,6 @@ import net.boulangermod.boulanger.recipe.ProcessingStep;
 import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.screen.DoughDividerMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -24,11 +24,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 
-public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity {
+public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 

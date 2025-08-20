@@ -1,5 +1,7 @@
+// StoneMillBlockEntity.java
 package net.boulangermod.boulanger.block.entity;
 
+import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
 import net.boulangermod.boulanger.component.FlourType;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
@@ -7,30 +9,52 @@ import net.boulangermod.boulanger.item.FlourItemType;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.screen.StoneMillBlockMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
-public class StoneMillBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
+public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
+        implements AbstractProcessingBlock.Tickable, MenuProvider {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final int MAX_MILL_TIME     = 200;   // ticks for one operation
+    private static final int FE_COST_PER_TICK  = 20;    // FE/t while milling
+    private static final int FE_CAPACITY       = 20000; // total FE buffer
+    private static final int FE_MAX_RECEIVE    = 200;   // FE/t accepted
+
     private int millProgress = 0;
     private boolean milling = false;
-    private static final int MAX_MILL_TIME = 200;
+    private int logCooldown = 0; // throttle repeated tick logs
 
     public StoneMillBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.STONE_MILL_BE.get(), pos, state, 2);
+        super(
+                ModBlockEntities.STONE_MILL_BE.get(),
+                pos, state,
+                /*slots=*/2,               // 0: input, 1: output
+                FE_CAPACITY,
+                FE_MAX_RECEIVE,
+                FE_COST_PER_TICK
+        );
+    }
+
+    public @Nullable IEnergyStorage getEnergyStorage(@Nullable Direction side) {
+        return energy; // allow all sides for now
     }
 
     @Override
@@ -38,108 +62,211 @@ public class StoneMillBlockEntity extends AbstractProcessingBlockEntity implemen
         return ModBlockEntities.STONE_MILL_BE.get();
     }
 
-
-    public void startMilling() {
-        ItemStack inputStack = itemHandler.getStackInSlot(0);
-        if (!inputStack.isEmpty()) {
-            Item inputItem = inputStack.getItem();
-            // Example: If input is wheat, produce your mod’s flour item.
-            if (inputItem == Items.WHEAT) {
-                // Create new output stack – here we assume ModItems.FLOUR_ITEM is your custom flour.
-                ItemStack outputStack = new ItemStack(ModItems.FLOUR_ITEM.get(), 1);
-                // Convert the whole wheat flour enum value into a FlourType instance.
-                FlourType wholeWheatType = FlourItemType.WHOLE_WHEAT_FLOUR.toFlourType();
-                // Attach the FlourType to the output stack using your data component system.
-                // This ensures that the modelIndex (e.g. 17 for whole wheat flour) is stored.
-                outputStack.set(ModDataComponentTypes.FLOUR_TYPE.get(), wholeWheatType);
-                // Place the output stack into the output slot.
-                itemHandler.setStackInSlot(1, outputStack);
-                // Consume one unit from the input stack.
-                inputStack.shrink(1);
-                setChanged();
-            }
-        }
+    // --- Helpers ---
+    private static String idOf(ItemStack stack) {
+        if (stack.isEmpty()) return "(empty)";
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return id != null ? id.toString() : stack.getItem().toString();
     }
 
-    /**
-     * Resets the milling progress and state.
-     */
+    // --- Machine state ---
+    private boolean canMill() {
+        ItemStack in  = itemHandler.getStackInSlot(0);
+        ItemStack out = itemHandler.getStackInSlot(1);
+
+        if (in.isEmpty()) {
+            return false;
+        }
+        if (!in.is(Items.WHEAT)) {
+            return false;
+        }
+
+        if (out.isEmpty()) {
+            return true;
+        }
+
+        if (out.getItem() == ModItems.FLOUR_ITEM.get()) {
+            FlourType target   = FlourItemType.WHOLE_WHEAT_FLOUR.toFlourType();
+            FlourType existing = out.get(ModDataComponentTypes.FLOUR_TYPE.get());
+            boolean sameType   = existing != null && existing.equals(target);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void craftResult() {
+        ItemStack in  = itemHandler.getStackInSlot(0);
+        ItemStack out = itemHandler.getStackInSlot(1);
+        if (in.isEmpty() || !in.is(Items.WHEAT)) return;
+
+        ItemStack result = new ItemStack(ModItems.FLOUR_ITEM.get(), 1);
+        result.set(ModDataComponentTypes.FLOUR_TYPE.get(), FlourItemType.WHOLE_WHEAT_FLOUR.toFlourType());
+
+        if (out.isEmpty()) {
+            itemHandler.setStackInSlot(1, result);
+        } else {
+            out.grow(1);
+        }
+        in.shrink(1);
+    }
+
     public void resetMilling() {
         millProgress = 0;
         milling = false;
         setChanged();
     }
 
-    /**
-     * Helper method called by the menu to show progress.
-     * This method is used interchangeably with getMixProgress() in your menu logic.
-     */
-    public int getMixProgress() {
-        return millProgress;
-    }
+    public int getMixProgress() { return millProgress; }
+    public boolean isMilling() { return milling; }
+    public static int getMaxMixTime() { return MAX_MILL_TIME; }
 
-    /**
-     * Helper method called by the menu to determine if the mill is active.
-     */
-    public boolean isMilling() {
-        return milling;
-    }
-
-    /**
-     * Optional method for useItemOn in the menu to get the total cycle time.
-     */
-    public static int getMaxMixTime() {
-        return MAX_MILL_TIME;
-    }
-
+    // --- Persistence ---
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.put("Inventory", itemHandler.serializeNBT(registries));
         tag.putInt("MillProgress", millProgress);
         tag.putBoolean("Milling", milling);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super .loadAdditional(tag, registries);
-        itemHandler.deserializeNBT(registries, tag.getCompound("Inventory"));
+        super.loadAdditional(tag, registries);
         millProgress = tag.getInt("MillProgress");
         milling = tag.getBoolean("Milling");
     }
 
+    // --- MenuProvider ---
     @Override
     public Component getDisplayName() {
         return Component.translatable("stone_mill.boulanger");
     }
 
     @Override
-    public @Nullable AbstractContainerMenu createMenu(int i, Inventory inventory, Player player) {
-        return new StoneMillBlockMenu(i, inventory, this);
+    public @Nullable AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+        return new StoneMillBlockMenu(id, inv, this);
     }
 
+    // --- Ticking ---
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide()) return;
 
-        // Check if there is valid input and we are not already milling
-        if (!milling && !itemHandler.getStackInSlot(0).isEmpty()) {
-            startMilling();
+        boolean dirty = false;
 
-            setChanged();
-            getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+        // 0) Auto-pull FE from neighbors (up to FE_MAX_RECEIVE)
+        {
+            int movedTotal = 0;
+            int free = energy.getMaxEnergyStored() - energy.getEnergyStored();
+            if (free > 0 && FE_MAX_RECEIVE > 0) {
+                for (Direction dir : Direction.values()) {
+                    if (movedTotal >= FE_MAX_RECEIVE) break;
+
+                    BlockPos npos = pos.relative(dir);
+                    var src = level.getCapability(
+                            net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
+                            npos,
+                            dir.getOpposite()
+                    );
+                    if (src == null) continue;
+
+                    int want = Math.min(FE_MAX_RECEIVE - movedTotal, free);
+                    int canExtract = src.extractEnergy(want, true);
+                    if (canExtract <= 0) continue;
+
+                    int received = energy.receiveEnergy(canExtract, false);
+                    if (received <= 0) continue;
+
+                    int actuallyExtracted = src.extractEnergy(received, false);
+                    if (actuallyExtracted > 0) {
+                        movedTotal += actuallyExtracted;
+                        free      -= actuallyExtracted;
+                    }
+                }
+                if (movedTotal > 0) {
+                    dirty = true;
+                }
+            }
         }
 
-        // When milling has started, progress the process.
-        if (milling) {
-            millProgress++;
-            // When milling is complete, process the crafting step.
-            if (millProgress >= MAX_MILL_TIME) {
-                startMilling();
-                resetMilling();
+        // 1) Throttled heartbeat (once per second)
+        if (logCooldown-- <= 0) {
+            ItemStack in  = itemHandler.getStackInSlot(0);
+            ItemStack out = itemHandler.getStackInSlot(1);
+            logCooldown = 20; // ~1s
+        }
+
+        // 2) If idle, try to start
+        if (!milling) {
+            boolean can = canMill();
+            boolean hasPower = hasPowerForTick();
+
+            if (can && hasPower) {
+                milling = true;
+                dirty = true;
             }
+        }
+
+        // 3) If running, consume power & progress
+        if (milling) {
+            // If we dipped under the per-tick cost, try to pull again right now
+            if (!hasPowerForTick()) {
+                int movedTotal = 0;
+                int free = energy.getMaxEnergyStored() - energy.getEnergyStored();
+                if (free > 0 && FE_MAX_RECEIVE > 0) {
+                    for (Direction dir : Direction.values()) {
+                        if (movedTotal >= FE_MAX_RECEIVE) break;
+
+                        BlockPos npos = pos.relative(dir);
+                        var src = level.getCapability(
+                                net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
+                                npos,
+                                dir.getOpposite()
+                        );
+                        if (src == null) continue;
+
+                        int want = Math.min(FE_MAX_RECEIVE - movedTotal, free);
+                        int canExtract = src.extractEnergy(want, true);
+                        if (canExtract <= 0) continue;
+
+                        int received = energy.receiveEnergy(canExtract, false);
+                        if (received <= 0) continue;
+
+                        int actuallyExtracted = src.extractEnergy(received, false);
+                        if (actuallyExtracted > 0) {
+                            movedTotal += actuallyExtracted;
+                            free      -= actuallyExtracted;
+                        }
+                    }
+                    if (movedTotal > 0) {
+                        dirty = true;
+                    }
+                }
+            }
+
+            if (!tryConsumePowerForTick()) {
+                milling = false; // pause until power returns
+                dirty = true;
+            } else {
+                millProgress++;
+                if ((millProgress % 20) == 0) {
+                }
+
+                if (millProgress >= MAX_MILL_TIME) {
+                    if (canMill()) {
+                        craftResult();
+                    } else {
+                    }
+                    resetMilling();
+                    dirty = true;
+                }
+            }
+        }
+
+        if (dirty) {
             setChanged();
-            getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+            level.sendBlockUpdated(pos, state, state, 3);
         }
     }
+
 }

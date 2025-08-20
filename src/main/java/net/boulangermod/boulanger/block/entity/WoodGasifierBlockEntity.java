@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
@@ -46,15 +47,15 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     private static final int FILTER_A     = 2;  // filter canister #1
     private static final int FILTER_B     = 3;  // filter canister #2
 
-    private static final int BURN_TIME_PER_LOG = 300;
-    private static final int WOOD_GAS_PER_COOK = 100;
+    private static final int BURN_TIME_PER_LOG = 20; // In ticks
+    private static final int WOOD_GAS_PER_COOK = 1725; // mB
 
     private static boolean isAnyLog(ItemStack s) { return s.is(net.minecraft.tags.ItemTags.LOGS); }
     private boolean isUsableFilter(ItemStack s) {
         return !s.isEmpty() && (!s.isDamageableItem() || s.getDamageValue() < s.getMaxDamage());
     }
     private boolean haveBothFilters() {
-        IItemHandler items = getItemHandler();
+        IItemHandler items = getItemHandler(null);
         return isUsableFilter(items.getStackInSlot(FILTER_A)) && isUsableFilter(items.getStackInSlot(FILTER_B));
     }
 
@@ -238,36 +239,16 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         return anchor.relative(port);
     }
 
-    /* ───────────────────────────── state propagation ──────────────────────────── */
-    private void applyHiddenToFootprint(boolean hidden) {
-        if (level == null || anchorPos == null) return;
-        Direction facing = getBlockState().hasProperty(WoodGasifierBlock.FACING)
-                ? getBlockState().getValue(WoodGasifierBlock.FACING) : Direction.NORTH;
-
-        dbg("applyHiddenToFootprint hidden={} min={} facing={}", hidden, anchorPos, facing);
-        for (BlockPos p : footprintFromMin(anchorPos, facing)) {
-            BlockState st = level.getBlockState(p);
-            if (!(st.getBlock() instanceof WoodGasifierBlock)) continue;
-
-            BlockState upd = st;
-            if (upd.hasProperty(WoodGasifierBlock.HIDDEN)) upd = upd.setValue(WoodGasifierBlock.HIDDEN, hidden);
-            if (upd.hasProperty(WoodGasifierBlock.FORMED)) upd = upd.setValue(WoodGasifierBlock.FORMED, hidden);
-
-            if (upd != st) {
-                level.setBlock(p, upd, 3);
-                level.sendBlockUpdated(p, st, upd, 3);
-                dbg("  updated HIDDEN/FORMED at {} -> {}", p, upd);
-            }
-        }
-    }
-
     private void setFormedAt(BlockPos anchor, boolean formed) {
         if (level == null) return;
         Direction facing = getBlockState().hasProperty(WoodGasifierBlock.FACING)
                 ? getBlockState().getValue(WoodGasifierBlock.FACING) : Direction.NORTH;
         dbg("setFormedAt formed={} anchor={} facing={}", formed, anchor, facing);
 
-        for (BlockPos p : footprintFromMin(anchor, facing)) {
+        // Cache footprint cells once
+        java.util.List<BlockPos> cells = footprintFromMin(anchor, facing);
+
+        for (BlockPos p : cells) {
             BlockState st = level.getBlockState(p);
             if (!(st.getBlock() instanceof WoodGasifierBlock)) continue;
 
@@ -286,13 +267,32 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
             } else {
                 dbg("  no BE at {} (expected WoodGasifierBlockEntity)", p);
             }
+
+            // Important: invalidate capabilities on each cell so queries refresh
+            level.invalidateCapabilities(p);
         }
 
         this.anchorPos = formed ? anchor : null;
         setChanged();
         dbg("setFormedAt done; this.anchorPos={}", this.anchorPos);
+
+        // Also invalidate the external neighbor at the port face so adjacent pipes refresh their cached view.
+        try {
+            Direction port = getPortSide(); // uses current state + flip
+            BlockPos external = null;
+            for (BlockPos cell : cells) {
+                BlockPos n = cell.relative(port);
+                if (!isInFootprint(n)) { external = n; break; }
+            }
+            if (external == null) external = anchor.relative(port); // fallback
+            level.invalidateCapabilities(external);
+        } catch (Exception ignored) {
+            // safe to ignore; just a best-effort invalidation
+        }
+
         if (formed) debugPortLayout();
     }
+
 
     /* ────────────────────────────────── toggling ──────────────────────────────── */
     public InteractionResult tryToggleForm(Player player, InteractionHand hand, Direction faceClicked) {
@@ -350,7 +350,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     }
 
     private boolean canCook() {
-        IItemHandler items = getItemHandler();
+        IItemHandler items = getItemHandler(null);
         ItemStack split = items.getStackInSlot(SPLIT_SLOT);
         ItemStack log   = items.getStackInSlot(LOG_SLOT);
 
@@ -372,7 +372,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     }
 
     private void doCook() {
-        IItemHandler items = getItemHandler();
+        IItemHandler items = getItemHandler(null);
 
         items.extractItem(SPLIT_SLOT, 1, false);
         items.extractItem(LOG_SLOT,   1, false);
@@ -388,7 +388,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     }
 
     private void damageOrConsumeFilter(int slot, int dmg) {
-        IItemHandler items = getItemHandler();
+        IItemHandler items = getItemHandler(null);
         ItemStack stack = items.extractItem(slot, 1, false);
         if (stack.isEmpty()) return;
 

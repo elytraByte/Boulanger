@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
 
@@ -27,13 +28,13 @@ public class ModBlockStateProvider extends BlockStateProvider {
     protected void registerStatesAndModels() {
 
 // textures
-        ResourceLocation side      = modLoc("block/pine_log");
+        ResourceLocation side = modLoc("block/pine_log");
         ResourceLocation sideResin = modLoc("block/resin_pine_log");
-        ResourceLocation end       = modLoc("block/pine_log_top");
+        ResourceLocation end = modLoc("block/pine_log_top");
 
 // models (name the resin model EXACTLY like your blockstate expects)
-        ModelFile pineLog      = models().cubeColumn("pine_log",        side,      end);
-        ModelFile pineLogResin = models().cubeColumn("resin_pine_log",  sideResin, end);
+        ModelFile pineLog = models().cubeColumn("pine_log", side, end);
+        ModelFile pineLogResin = models().cubeColumn("resin_pine_log", sideResin, end);
 
 // variants: resin_remaining==0 -> pineLog, >0 -> pineLogResin
         getVariantBuilder(ModBlocks.PINE_LOG.get())
@@ -118,7 +119,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
             ResourceLocation tex = blockTexture(ModBlocks.PINE_PLANKS.get());
 
             // create block models so …_up / …_down ALWAYS exist
-            ModelFile up   = models().pressurePlate(n + "_up", tex);
+            ModelFile up = models().pressurePlate(n + "_up", tex);
             ModelFile down = models().pressurePlateDown(n + "_down", tex);
 
             // POWERED=false -> up ; POWERED=true -> down
@@ -136,18 +137,15 @@ public class ModBlockStateProvider extends BlockStateProvider {
             ButtonBlock btn = (ButtonBlock) ModBlocks.PINE_BUTTON.get();
             ResourceLocation tex = blockTexture(ModBlocks.PINE_PLANKS.get());
 
-            // This generates all floor/wall/ceiling + powered variants and the two block models
-            buttonBlock(btn, tex);
+            buttonBlock(btn, tex);  // generates all FLOOR/WALL/CEILING + POWERED variants
 
-            // Item model (same as tutorial)
+            // Item model
             simpleBlockItem(
                     ModBlocks.PINE_BUTTON.get(),
-                    models().buttonInventory(
-                            ModBlocks.PINE_BUTTON.getId().getPath(),
-                            tex
-                    )
+                    models().buttonInventory(ModBlocks.PINE_BUTTON.getId().getPath(), tex)
             );
         }
+
 
         trapdoorBlockWithRenderType(
                 (TrapDoorBlock) ModBlocks.PINE_TRAPDOOR.get(),
@@ -166,7 +164,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
             // If you have separate textures:
             ResourceLocation bottom = modLoc("block/pine_door_bottom");
-            ResourceLocation top    = modLoc("block/pine_door_top");
+            ResourceLocation top = modLoc("block/pine_door_top");
 
             // If you only have one texture image, you can point both to the same file:
             // ResourceLocation bottom = modLoc("block/pine_door");
@@ -189,11 +187,13 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 models().getExistingFile(modLoc("block/iron_wedge"))
         );
 
-        horizontal(ModBlocks.MIXING_BLOCK.get(),     "mixing_block");
-        horizontal(ModBlocks.SCALE_BLOCK.get(),      "scale_block");
-        horizontal(ModBlocks.PROOFING_BOX.get(),   "proofing_box");
-        horizontal(ModBlocks.DOUGH_DIVIDER.get(),    "dough_divider");
+        horizontal(ModBlocks.MIXING_BLOCK.get(), "mixing_block");
+        horizontal(ModBlocks.SCALE_BLOCK.get(), "scale_block");
+        horizontal(ModBlocks.PROOFING_BOX.get(), "proofing_box");
+        horizontal(ModBlocks.DOUGH_DIVIDER.get(), "dough_divider");
 
+        horizontalBlock(ModBlocks.STONE_MILL_BLOCK.get(),
+                models().getExistingFile(modLoc("block/stone_mill_block")));
 
 
         // ─── STONE MILL & TILES ───────────────────────────────────────────────
@@ -210,8 +210,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
 // Core (rod + base): vanilla geo, your stand texture
         ModelFile core = models()
                 .withExistingParent("sugar_refinery_core", mcLoc("block/brewing_stand"))
-                .texture("base",     mcLoc("block/brewing_stand_base")) // vanilla base
-                .texture("stand",    modLoc("block/sugar_refinery"))    // your main texture
+                .texture("base", mcLoc("block/brewing_stand_base")) // vanilla base
+                .texture("stand", modLoc("block/sugar_refinery"))    // your main texture
                 .texture("particle", modLoc("block/sugar_refinery"))
                 .renderType("cutout");                                   // <-- important
 
@@ -241,8 +241,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 ModBlocks.SUGAR_REFINERY.get(),
                 models()
                         .withExistingParent("sugar_refinery_item", mcLoc("item/brewing_stand"))
-                        .texture("base",     mcLoc("block/brewing_stand_base"))
-                        .texture("stand",    modLoc("block/sugar_refinery"))
+                        .texture("base", mcLoc("block/brewing_stand_base"))
+                        .texture("stand", modLoc("block/sugar_refinery"))
                         .texture("particle", modLoc("block/sugar_refinery"))
                         .renderType("cutout")
         );
@@ -361,26 +361,26 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 "wood_gasifier",
                 modLoc("block/burnished_steel")
         );
-        ModelFile cubeLit   = models().cubeAll(
+        ModelFile cubeLit = models().cubeAll(
                 "wood_gasifier_lit",
                 modLoc("block/burnished_steel")
         );
-        ModelFile multi     = models().getExistingFile(modLoc("block/wood_gasifier_mb"));
+        ModelFile multi = models().getExistingFile(modLoc("block/wood_gasifier_mb"));
 
         simpleBlockItem(ModBlocks.WOOD_GASIFIER.get(), cubeUnlit);
 
         getVariantBuilder(ModBlocks.WOOD_GASIFIER.get())
                 .forAllStates(state -> {
-                    Direction dir    = state.getValue(WoodGasifierBlock.FACING);
-                    boolean formed   = state.getValue(WoodGasifierBlock.FORMED);
-                    boolean hidden   = state.getValue(WoodGasifierBlock.HIDDEN);
-                    boolean lit      = state.getValue(WoodGasifierBlock.LIT);
+                    Direction dir = state.getValue(WoodGasifierBlock.FACING);
+                    boolean formed = state.getValue(WoodGasifierBlock.FORMED);
+                    boolean hidden = state.getValue(WoodGasifierBlock.HIDDEN);
+                    boolean lit = state.getValue(WoodGasifierBlock.LIT);
 
                     if (formed && !hidden) {
                         // this is the “master” corner — flip it over on X
                         return ConfiguredModel.builder()
                                 .modelFile(multi)
-                                .rotationY(((int)dir.toYRot() + 180) % 360)                   // ← flip upside-down
+                                .rotationY(((int) dir.toYRot() + 180) % 360)                   // ← flip upside-down
                                 .rotationY((int) dir.toYRot())    // orient to FACING
                                 .uvLock(true)                     // keeps UVs aligned
                                 .build();
@@ -393,17 +393,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
                             .build();
                 });
 
-
-//            // …and if you also need to generate your WOOD_GAS fluid blockstates:
-//            getVariantBuilder(ModBlocks.WOOD_GAS.get())
-//                    .forAllStates(state -> ConfiguredModel.builder()
-//                            .modelFile(models().getExistingFile(modLoc("block/wood_gas_level" + state.getValue(WoodGasBlock.LEVEL))))
-//                            .build());
-
-
         ResourceLocation bedrockTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/bedrock");
-        // WOODGAS PIPES
-        woodgasPipeStates();
 
 // 2) Generate one shared cube-all model named “energy_bedrock”
         ModelFile energyModel = models().cubeAll(
@@ -434,28 +424,112 @@ public class ModBlockStateProvider extends BlockStateProvider {
         ResourceLocation coalTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/coal_block");
 
 
+        // ─── WOODGAS ENGINE (vanilla orientable: top/side + front on/off) ───────────
+        {
+            ResourceLocation texSide = modLoc("block/woodgas_engine_side");
+            ResourceLocation texTop = modLoc("block/woodgas_engine_top"); // also used as bottom by 'orientable'
+            ResourceLocation texFrontOff = modLoc("block/woodgas_engine_off");
+            ResourceLocation texFrontOn = modLoc("block/woodgas_engine_on");
+
+            // Models using vanilla parent block/orientable (top, side, front)
+            ModelFile engineOff = models()
+                    .withExistingParent("woodgas_engine_off", mcLoc("block/orientable"))
+                    .texture("top", texTop)
+                    .texture("side", texSide)
+                    .texture("front", texFrontOff);
+
+            ModelFile engineOn = models()
+                    .withExistingParent("woodgas_engine_on", mcLoc("block/orientable"))
+                    .texture("top", texTop)
+                    .texture("side", texSide)
+                    .texture("front", texFrontOn);
+
+            // Blockstate: rotate to HORIZONTAL_FACING; choose model by LIT
+            getVariantBuilder(ModBlocks.WOODGAS_ENGINE.get())
+                    .forAllStates(s -> {
+                        Direction dir = s.getValue(AbstractProcessingBlock.FACING);
+                        boolean lit = s.getValue(WoodGasEngineBlock.LIT);
+
+                        int rotY = (((int) dir.toYRot()) + 180) % 360; // make the “front” face you
+
+                        return ConfiguredModel.builder()
+                                .modelFile(lit ? engineOn : engineOff)
+                                .rotationY(rotY)
+                                .build();
+                    });
 
 
-        // Internal Combustion Engine
-        ModelFile engineModel = models().cubeAll("internal_combustion_engine", coalTex);
-        simpleBlockWithItem(
-                ModBlocks.INTERAL_COMUSTION_ENGINE.get(),
-                engineModel
-        );
+            // Item: show OFF variant in inventory
+            simpleBlockItem(ModBlocks.WOODGAS_ENGINE.get(), engineOff);
         }
 
-
-    private static BooleanProperty getProp(Direction dir) {
-        return switch (dir) {
-            case NORTH -> WoodGasPipe.NORTH;
-            case EAST  -> WoodGasPipe.EAST;
-            case SOUTH -> WoodGasPipe.SOUTH;
-            case WEST  -> WoodGasPipe.WEST;
-            case UP    -> WoodGasPipe.UP;
-            case DOWN  -> WoodGasPipe.DOWN;
-        };
-
+        woodgasPipeStates(ModBlocks.WOODGAS_PIPE);
     }
+
+    private void woodgasPipeStates(DeferredBlock<? extends Block> pipeBlock) {
+        Block b = pipeBlock.get();
+        var m = getMultipartBuilder(b);
+
+        final BooleanProperty N = WoodGasPipe.NORTH;
+        final BooleanProperty E = WoodGasPipe.EAST;
+        final BooleanProperty S = WoodGasPipe.SOUTH;
+        final BooleanProperty W = WoodGasPipe.WEST;
+        final BooleanProperty U = WoodGasPipe.UP;
+        final BooleanProperty D = WoodGasPipe.DOWN;
+
+        ModelFile isolated  = models().getExistingFile(modLoc("block/woodgas_pipe_isolated"));
+        ModelFile arm       = models().getExistingFile(modLoc("block/woodgas_pipe_arm"));
+        ModelFile straightH = models().getExistingFile(modLoc("block/woodgas_pipe_h")); // base N–S
+        ModelFile straightV = models().getExistingFile(modLoc("block/woodgas_pipe_v")); // base U–D
+
+        // 0-connections → isolated
+        m.part().modelFile(isolated).uvLock(true).addModel()
+                .condition(N,false).condition(E,false).condition(S,false)
+                .condition(W,false).condition(U,false).condition(D,false);
+
+        // Enumerate all other states (1..63)
+        for (int mask = 1; mask < 64; mask++) {
+            boolean n = (mask & 1)  != 0;
+            boolean e = (mask & 2)  != 0;
+            boolean s = (mask & 4)  != 0;
+            boolean w = (mask & 8)  != 0;
+            boolean u = (mask & 16) != 0;
+            boolean d = (mask & 32) != 0;
+
+            boolean isNS = n && s && !e && !w && !u && !d;
+            boolean isEW = e && w && !n && !s && !u && !d;
+            boolean isUD = u && d && !n && !e && !s && !w;
+
+            // Pure straights: render full model only
+            if (isNS) { partExact(m, straightH, n,e,s,w,u,d, 0,  0);  continue; }
+            if (isEW) { partExact(m, straightH, n,e,s,w,u,d, 0, 90);  continue; }
+            if (isUD) { partExact(m, straightV, n,e,s,w,u,d, 0,  0);  continue; }
+
+            // All other cases: center (use isolated) + arms for each true side
+            partExact(m, isolated, n,e,s,w,u,d, 0, 0);
+            if (n) partExact(m, arm, n,e,s,w,u,d, 0,   0);
+            if (e) partExact(m, arm, n,e,s,w,u,d, 0,  90);
+            if (s) partExact(m, arm, n,e,s,w,u,d, 0, 180);
+            if (w) partExact(m, arm, n,e,s,w,u,d, 0, 270);
+            if (u) partExact(m, arm, n,e,s,w,u,d, -90, 0);
+            if (d) partExact(m, arm, n,e,s,w,u,d,  90, 0);
+        }
+    }
+
+    // Helper: add a part tied to the exact connection mask (prevents arms/isolated in pure straights)
+    private void partExact(MultiPartBlockStateBuilder m, ModelFile model,
+                           boolean n, boolean e, boolean s, boolean w, boolean u, boolean d,
+                           int xRot, int yRot) {
+        m.part().modelFile(model).rotationX(xRot).rotationY(yRot).uvLock(true)
+                .addModel() // now on PartBuilder
+                .condition(WoodGasPipe.NORTH, n)
+                .condition(WoodGasPipe.EAST,  e)
+                .condition(WoodGasPipe.SOUTH, s)
+                .condition(WoodGasPipe.WEST,  w)
+                .condition(WoodGasPipe.UP,    u)
+                .condition(WoodGasPipe.DOWN,  d);
+    }
+
     private void leavesBlock(DeferredBlock<Block> block) {
         simpleBlockWithItem(block.get(),
                 models().singleTexture(
@@ -495,139 +569,14 @@ public class ModBlockStateProvider extends BlockStateProvider {
         });
     }
 
-    private void scaleBlockWithCustomSides(Block block) {
-        String name = block.builtInRegistryHolder().key().location().getPath();
-        ModelFile model = models().orientable(
-                name,
-                modLoc("block/diorite_side"),   // side texture (will appear on back, left, right)
-                modLoc("block/scale_front"),    // front texture (the face your FACING points toward)
-                modLoc("block/scale_top")       // top texture
-        ).texture("particle", modLoc("block/diorite_side"));
-
-        // NOTE: this is the only change
-        horizontalBlock(block, model);
-    }
-
     private void horizontal(Block block, String name) {
         ModelFile model = models().getExistingFile(modLoc("block/" + name));
         horizontalBlock(block, model); // y=0/90/180/270 for N/E/S/W
-    }
-
-    private void simple(Block block, String name) {
-        simpleBlock(block, models().getExistingFile(modLoc("block/" + name)));
     }
 
     private void blockWithItem(DeferredBlock<? extends Block> block) {
         simpleBlockWithItem(block.get(), cubeAll(block.get()));
     }
 
-    private void woodgasPipeStates() {
-        // Models
-        final ModelFile DEFAULT  = models().getExistingFile(modLoc("block/woodgas_pipe"));
-        final ModelFile STRAIGHT = models().getExistingFile(modLoc("block/woodgas_pipe_straight")); // default axis: N–S
-        final ModelFile CORNER   = models().getExistingFile(modLoc("block/woodgas_pipe_corner"));   // default corner: N+E
-        final ModelFile TRI      = models().getExistingFile(modLoc("block/woodgas_pipe_tri"));      // default tri: N+E+S (missing W)
 
-        // Properties
-        final BooleanProperty N = WoodGasPipe.NORTH;
-        final BooleanProperty E = WoodGasPipe.EAST;
-        final BooleanProperty S = WoodGasPipe.SOUTH;
-        final BooleanProperty W = WoodGasPipe.WEST;
-        final BooleanProperty U = WoodGasPipe.UP;
-        final BooleanProperty D = WoodGasPipe.DOWN;
-
-        var pipe = getMultipartBuilder(ModBlocks.WOODGAS_PIPE.get());
-
-        // ----- 4-way horizontal cross (all four, no verticals) -> DEFAULT
-        pipe.part().modelFile(DEFAULT).uvLock(true).addModel()
-                .condition(N, true).condition(E, true).condition(S, true).condition(W, true)
-                .condition(U, false).condition(D, false)
-                .end();
-
-        // ----- Straights (exact)
-        // N + S only
-        pipe.part().modelFile(STRAIGHT).rotationY(0).uvLock(true).addModel()
-                .condition(N, true).condition(S, true)
-                .condition(E, false).condition(W, false)
-                .condition(U, false).condition(D, false)
-                .end();
-        // E + W only
-        pipe.part().modelFile(STRAIGHT).rotationY(90).uvLock(true).addModel()
-                .condition(E, true).condition(W, true)
-                .condition(N, false).condition(S, false)
-                .condition(U, false).condition(D, false)
-                .end();
-
-        // ----- Single-side only (use STRAIGHT)
-        pipe.part().modelFile(STRAIGHT).rotationY(0).uvLock(true).addModel()
-                .condition(N, true).condition(E, false).condition(S, false).condition(W, false)
-                .condition(U, false).condition(D, false)
-                .end(); // N only
-        pipe.part().modelFile(STRAIGHT).rotationY(0).uvLock(true).addModel()
-                .condition(S, true).condition(N, false).condition(E, false).condition(W, false)
-                .condition(U, false).condition(D, false)
-                .end(); // S only
-        pipe.part().modelFile(STRAIGHT).rotationY(90).uvLock(true).addModel()
-                .condition(E, true).condition(N, false).condition(S, false).condition(W, false)
-                .condition(U, false).condition(D, false)
-                .end(); // E only
-        pipe.part().modelFile(STRAIGHT).rotationY(90).uvLock(true).addModel()
-                .condition(W, true).condition(N, false).condition(E, false).condition(S, false)
-                .condition(U, false).condition(D, false)
-                .end(); // W only
-
-        // ----- Corners (exact L bends, no verticals) -> CORNER
-        pipe.part().modelFile(CORNER).rotationY(0).uvLock(true).addModel()
-                .condition(N, true).condition(E, true)
-                .condition(S, false).condition(W, false)
-                .condition(U, false).condition(D, false)
-                .end(); // N + E
-        pipe.part().modelFile(CORNER).rotationY(90).uvLock(true).addModel()
-                .condition(E, true).condition(S, true)
-                .condition(N, false).condition(W, false)
-                .condition(U, false).condition(D, false)
-                .end(); // E + S
-        pipe.part().modelFile(CORNER).rotationY(180).uvLock(true).addModel()
-                .condition(S, true).condition(W, true)
-                .condition(N, false).condition(E, false)
-                .condition(U, false).condition(D, false)
-                .end(); // S + W
-        pipe.part().modelFile(CORNER).rotationY(270).uvLock(true).addModel()
-                .condition(W, true).condition(N, true)
-                .condition(E, false).condition(S, false)
-                .condition(U, false).condition(D, false)
-                .end(); // W + N
-
-        // ----- T junctions (exact horizontal 3-way) -> TRI
-        pipe.part().modelFile(TRI).rotationY(0).uvLock(true).addModel()
-                .condition(N, true).condition(E, true).condition(S, true).condition(W, false)
-                .condition(U, false).condition(D, false)
-                .end(); // missing W
-        pipe.part().modelFile(TRI).rotationY(90).uvLock(true).addModel()
-                .condition(E, true).condition(S, true).condition(W, true).condition(N, false)
-                .condition(U, false).condition(D, false)
-                .end(); // missing N
-        pipe.part().modelFile(TRI).rotationY(180).uvLock(true).addModel()
-                .condition(S, true).condition(W, true).condition(N, true).condition(E, false)
-                .condition(U, false).condition(D, false)
-                .end(); // missing E
-        pipe.part().modelFile(TRI).rotationY(270).uvLock(true).addModel()
-                .condition(W, true).condition(N, true).condition(E, true).condition(S, false)
-                .condition(U, false).condition(D, false)
-                .end(); // missing S
-
-        // ----- Default / fallbacks
-        // No connections at all -> DEFAULT (so a lone placed pipe is visible)
-        pipe.part().modelFile(DEFAULT).uvLock(true).addModel()
-                .condition(N, false).condition(E, false).condition(S, false).condition(W, false)
-                .condition(U, false).condition(D, false)
-                .end();
-
-        // Any vertical present (until vertical models exist) -> also show DEFAULT
-        pipe.part().modelFile(DEFAULT).uvLock(true).addModel().condition(U, true).end();
-        pipe.part().modelFile(DEFAULT).uvLock(true).addModel().condition(D, true).end();
-
-        // Item model
-        simpleBlockItem(ModBlocks.WOODGAS_PIPE.get(), DEFAULT);
-    }
 }

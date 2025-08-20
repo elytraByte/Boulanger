@@ -1,6 +1,6 @@
 package net.boulangermod.boulanger.block.entity;
 
-import net.boulangermod.boulanger.block.ModBlocks;
+import net.boulangermod.boulanger.block.AbstractProcessingBlock;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.ProofingStateComponent;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
@@ -13,16 +13,12 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -32,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.Optional;
 
-public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity {
+public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -75,11 +71,12 @@ public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity {
         return new ProofingBoxMenu(id, playerInventory, this);
     }
 
-    public static void tick(Level level, BlockPos pos, BlockState state, ProofingBoxBlockEntity blockEntity) {
+    @Override
+    public void tick(Level level, BlockPos pos, BlockState state) {
         if (level == null || level.isClientSide) return;
 
         for (int i = 0; i <= 26; i++) { // INPUT SLOTS ONLY
-            ItemStack stack = blockEntity.itemHandler.getStackInSlot(i);
+            ItemStack stack = this.itemHandler.getStackInSlot(i);
             if (stack.isEmpty()) continue;
 
             ResourceLocation doughType = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
@@ -125,9 +122,9 @@ public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity {
                 // Try to move to output slot
                 boolean moved = false;
                 for (int j = 27; j < 54; j++) {
-                    if (blockEntity.itemHandler.getStackInSlot(j).isEmpty()) {
-                        blockEntity.itemHandler.setStackInSlot(j, updatedStack);
-                        blockEntity.itemHandler.setStackInSlot(i, ItemStack.EMPTY);
+                    if (this.itemHandler.getStackInSlot(j).isEmpty()) {
+                        this.itemHandler.setStackInSlot(j, updatedStack);
+                        this.itemHandler.setStackInSlot(i, ItemStack.EMPTY);
                         LOGGER.debug("→ Dough at slot {} completed {} step and moved to output slot {}", i, currentStep.type(), j);
                         moved = true;
                         break;

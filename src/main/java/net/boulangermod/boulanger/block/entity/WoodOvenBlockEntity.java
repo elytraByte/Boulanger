@@ -235,7 +235,7 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
 
     @Override
     public void drops() {
-        AbstractProcessingBlockEntity.drops(level, worldPosition, itemHandler);
+        super.drops();
     }
 
     @Override

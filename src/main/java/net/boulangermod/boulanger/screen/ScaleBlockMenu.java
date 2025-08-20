@@ -25,10 +25,10 @@ public class ScaleBlockMenu extends AbstractContainerMenu {
         this.blockEntity = (ScaleBlockEntity) entity;
 
         // --- our four tile slots ---
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 26, 17)); // bulk
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 62, 17)); // bowl in
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 62, 53)); // bowl out
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 3, 26, 53)); // residual
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 0, 26, 17)); // bulk
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 1, 62, 17)); // bowl in
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 2, 62, 53)); // bowl out
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 3, 26, 53)); // residual
 
         // --- player inventory + hotbar (unchanged) ---
         for (int row = 0; row < 3; ++row) {

@@ -1,15 +1,10 @@
 package net.boulangermod.boulanger.item;
 
-import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.WeightComponent;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import net.neoforged.bus.api.IEventBus;
@@ -37,49 +32,53 @@ public class ModCreativeModeTabs {
                     {
                         //PINE VARIANTS
                         pOutput.accept(new ItemStack(ModBlocks.PINE_LOG.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_LOG.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_WOOD.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_LOG.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_WOOD.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_PLANKS.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_STAIRS.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.PINE_SLAB.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.PINE_FENCE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.PINE_FENCE_GATE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.PINE_LEAVES.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.PINE_BUTTON.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.PINE_PRESSURE_PLATE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_DOOR.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_TRAPDOOR.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_PRESSURE_PLATE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_BUTTON.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_LEAVES.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_SAPLING.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SPLIT_PINE_LOGS.get(), 1));
-
-                        //TOOLS, BLOCKS AND MICROCRAFTING
-                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.COPPER_CHANNEL.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.PINE_RESIN.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.KAOLINITE_CLAY.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.KAOLINITE_CLAY_BALL.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PORCELAIN_MIX.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BRICK_MOLD.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.WHITE_TILE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.UNFIRED_PORCELAIN_BRICK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.BLUE_WHITE_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.L3E_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.LIGHT_BLUE_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.UNFIRED_LIGHT_BLUE_PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.LIGHT_BLUE_PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.BLUE_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.UNFIRED_BLUE_PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BLUE_PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.BLACK_TILE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.UNFIRED_BLACK_PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BLACK_PORCELAIN_BRICK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.BONE_ASH.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.GLASS_DUST.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.PCB.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.GILDED_PCB.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.DIORITE_BRICK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.DIORITE_PLATE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.REINFORCED_DIORITE_PLATE.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.COPPER_CHANNEL.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.PINE_RESIN.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.BONE_ASH.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.GLASS_DUST.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.IRON_WEDGE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SLEDGEHAMMER.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.L3E_TILE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.LIGHT_BLUE_TILE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.BLUE_TILE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.BLUE_WHITE_TILE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.BLACK_TILE.get(), 1));
-                        pOutput.accept(new ItemStack(ModBlocks.WHITE_TILE.get(), 1));
+
+
+
+
+
 
                         // TILE ENTITIES
                         pOutput.accept(new ItemStack(ModBlocks.TREE_TAP.get(), 1));
@@ -99,9 +98,8 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.MOTIVATOR.get(), 1));
                         pOutput.accept((new ItemStack(ModItems.MILLIGRAM_SCALE.get(), 1)));
                         pOutput.accept((new ItemStack(ModBlocks.IRON_FRAME.get(), 1)));
-
-
-                        //SPAWN EGGS
+                        pOutput.accept((new ItemStack(ModBlocks.WOODGAS_ENGINE.get(), 1)));
+                        pOutput.accept((new ItemStack(ModBlocks.WOODGAS_PIPE.get(), 1)));
                         pOutput.accept(new ItemStack(ModItems.HEN_SPAWN_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.HOLSTEIN_FRIESIAN_COW_SPAWN_EGG.get(), 1));
 
@@ -145,6 +143,8 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.FANCY_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EGG_YOLK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EGG_WHITE.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BREAD.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));

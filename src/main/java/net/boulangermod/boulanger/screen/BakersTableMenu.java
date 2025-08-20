@@ -24,9 +24,9 @@ public class BakersTableMenu extends AbstractContainerMenu {
         this.blockEntity = (BakersTableBlockEntity) entity;
 
         // Slots: 0 = dough, 1 = pan, 2 = output
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 0, 27, 47)); // Dough
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 1, 76, 47)); // Pan
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(), 2, 134, 47)); // Output
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 0, 27, 47)); // Dough
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 1, 76, 47)); // Pan
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 2, 134, 47)); // Output
 
         // Player inventory
         for (int row = 0; row < 3; ++row) {
@@ -54,7 +54,7 @@ public class BakersTableMenu extends AbstractContainerMenu {
     public void slotsChanged(Container container) {
         super.slotsChanged(container);
 
-        if (blockEntity.getItemHandler().getStackInSlot(2).isEmpty()) {
+        if (blockEntity.getItemHandler(null).getStackInSlot(2).isEmpty()) {
             blockEntity.tryShape();
         }
     }

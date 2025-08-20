@@ -17,93 +17,120 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.capabilities.BlockCapability;
+import net.neoforged.neoforge.common.extensions.IBlockEntityExtension;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Base class for processing machines that own an inventory.
+ * - Saves/loads inventory via HolderLookup (1.21).
+ * - Handles S2C sync via BE data packet/tag.
+ * - Provides item drops helper.
+ * - Acts as a MenuProvider so children only implement createMenu (and optional getDisplayName).
+ *
+ * Capabilities: register handlers in RegisterCapabilitiesEvent, e.g.:
+ *   event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, TYPE, (be, side) -> be.getItemHandler(side));
+ */
 public abstract class AbstractProcessingBlockEntity extends BlockEntity implements MenuProvider {
+
     protected final ItemStackHandler itemHandler;
+    protected final int slotCount;
 
-    public AbstractProcessingBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int slots) {
+    protected AbstractProcessingBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int slotCount) {
         super(type, pos, state);
-
-
-        this.itemHandler = new ItemStackHandler(slots) {
+        this.slotCount = slotCount;
+        this.itemHandler = new ItemStackHandler(slotCount) {
             @Override
             protected void onContentsChanged(int slot) {
-                setChanged();
-                if (!level.isClientSide()) {
-                    level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-                }
+                setChangedAndNotify();
             }
         };
     }
 
-    public static <T extends BlockEntity> BlockEntityTicker<T> createTickerHelper(
-            BlockEntityType<T> actualType,
-            BlockEntityType<T> expectedType,
-            BlockEntityTicker<? super T> ticker
-    ) {
-        return actualType == expectedType
-                ? (BlockEntityTicker<T>) ticker
-                : null;
+    /** Expose the item handler to capability providers (side-gate here if needed). */
+    public @Nullable ItemStackHandler getItemHandler(@Nullable Direction side) {
+        return itemHandler;
     }
 
+    /* ------------------------- Persistence ------------------------- */
 
-    public abstract BlockEntityType<?> getType();
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.put("Inventory", itemHandler.serializeNBT(registries));
+    }
 
-    public abstract AbstractContainerMenu createMenu(int id, Inventory playerInv, Player player);
-
-    protected static void drops(Level level, BlockPos pos, ItemStackHandler handler) {
-        SimpleContainer inventory = new SimpleContainer(handler.getSlots());
-        for (int i = 0; i < handler.getSlots(); i++) {
-            inventory.setItem(i, handler.getStackInSlot(i));
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        if (tag.contains("Inventory")) {
+            itemHandler.deserializeNBT(registries, tag.getCompound("Inventory"));
         }
-        Containers.dropContents(level, pos, inventory);
     }
 
-    @Override
-    public Component getDisplayName() {
-        return Component.literal("Processing Block");
-    }
+    /* --------------------------- Sync ----------------------------- */
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        tag.put("inventory", itemHandler.serializeNBT(provider));
-        super.saveAdditional(tag, provider);
-    }
-
-    @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.loadAdditional(tag, provider);
-        itemHandler.deserializeNBT(provider, tag.getCompound("inventory"));
-    }
-
-    @Override
-    public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
-        return saveWithoutMetadata(provider);
-    }
-
-    @Nullable
-    @Override
-    public Packet<ClientGamePacketListener> getUpdatePacket() {
+    public @Nullable Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider provider) {
-        super.onDataPacket(net, pkt, provider);
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = new CompoundTag();
+        saveAdditional(tag, registries);
+        return tag;
     }
 
-    public ItemStackHandler getItemHandler() {
-        return this.itemHandler;
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider registries) {
+        loadAdditional(pkt.getTag(), registries);
     }
 
-    @Nullable
-    public IFluidHandler getFluidHandler(Direction side) {
-        return null; // subclasses return their tank capability if needed
+    /** Mark dirty and notify clients. Safe to call from inventory/energy changes. */
+    protected void setChangedAndNotify() {
+        setChanged();
+        Level lvl = getLevel();
+        if (lvl != null && !lvl.isClientSide) {
+            lvl.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    /* --------------------------- Drops ---------------------------- */
+
+    /** Called by AbstractProcessingBlock#onRemove via Tickable.drops(). */
+    public void drops() {
+        if (level == null || level.isClientSide) return;
+        SimpleContainer container = new SimpleContainer(slotCount);
+        for (int i = 0; i < slotCount; i++) {
+            container.setItem(i, itemHandler.getStackInSlot(i).copy());
+        }
+        Containers.dropContents(level, worldPosition, container);
+    }
+
+    /* ----------------------- MenuProvider ------------------------- */
+
+    /** Default display name: the block's translatable name. Children may override. */
+    @Override
+    public Component getDisplayName() {
+        return getBlockState().getBlock().getName();
+    }
+
+    /** Force children that have UIs to supply their menu. */
+    @Override
+    public abstract AbstractContainerMenu createMenu(int id, Inventory inv, Player player);
+
+    /* ----------------------- Convenience -------------------------- */
+
+    public int getSlotCount() { return slotCount; }
+
+    /** Force capability cache refresh if capability presence changes. */
+    protected void invalidateBlockCaps() {
+        if (level != null) {
+            level.invalidateCapabilities(worldPosition);
+        }
     }
 }
