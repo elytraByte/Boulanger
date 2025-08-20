@@ -124,13 +124,15 @@ public class ModBlocks {
     public static final DeferredBlock<Block> PINE_WOOD = registerBlock("pine_wood",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_WOOD)));
 
-    public static final DeferredBlock<Block> STRIPPED_PINE_LOG = registerBlock("stripped_pine_log",
-            () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_OAK_LOG)));
+
     public static final DeferredBlock<Block> PINE_LOG = registerBlock("pine_log",
             () -> new PineResinLogBlock(BlockBehaviour.Properties
                     .ofFullCopy(Blocks.OAK_LOG)
                     .strength(2.0f))
     );
+    public static final DeferredBlock<Block> STRIPPED_PINE_LOG = registerBlock("stripped_pine_log",
+            () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_OAK_LOG)));
+
 
     public static final DeferredBlock<DoorBlock> PINE_DOOR = registerDoor("pine_door",
             () -> new DoorBlock(BlockSetType.OAK,

@@ -103,13 +103,11 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .predicate(mcLoc("custom_model_data"), full)
                     .model(fullModel)
                     .end();
-
-//            pan.override()
-//                    .predicate(mcLoc("custom_model_data"), proofed)
-//                    .model(proofedModel)
-//                    .end();
         }
 
+        // WOODGAS_PIPE item → show the isolated pipe segment
+        withExistingParent(ModBlocks.WOODGAS_PIPE.getId().getPath(),
+                modLoc("block/woodgas_pipe_isolated"));
 
         basicItem(ModItems.BUTTER.get());
         basicItem(ModItems.FANCY_EGG.get());

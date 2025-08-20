@@ -56,5 +56,34 @@ public class PineResinLogBlock extends RotatedPillarBlock {
             LOGGER.info("PineResinLog @ {} refilled (charges remaining={})", pos, charges);
         }
     }
+
+    @Override
+    public @org.jetbrains.annotations.Nullable BlockState getToolModifiedState(
+            BlockState state,
+            net.minecraft.world.item.context.UseOnContext context,
+            net.neoforged.neoforge.common.ItemAbility ability,
+            boolean simulate
+    ) {
+        if (ability == net.neoforged.neoforge.common.ItemAbilities.AXE_STRIP) {
+            BlockState out = null;
+
+            // Strip PINE_LOG -> STRIPPED_PINE_LOG
+            if (state.is(ModBlocks.PINE_LOG.get())) {
+                out = ModBlocks.STRIPPED_PINE_LOG.get().defaultBlockState();
+            }
+
+            // (Optional) If your PINE_WOOD also uses PineResinLogBlock, handle it here too
+            if (out == null && state.is(ModBlocks.PINE_WOOD.get())) {
+                out = ModBlocks.STRIPPED_PINE_WOOD.get().defaultBlockState();
+            }
+
+            if (out != null) {
+                // Preserve the axis from the original pillar
+                return out.setValue(AXIS, state.getValue(AXIS));
+            }
+        }
+        return super.getToolModifiedState(state, context, ability, simulate);
+    }
+
 }
 

@@ -22,6 +22,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -90,6 +91,7 @@ public class Boulanger {
                         .build()
         );
 
+
     }
 
     @SubscribeEvent
@@ -130,6 +132,7 @@ public class Boulanger {
             event.register(ModMenuTypes.DOUGH_DIVIDER_MENU.get(), DoughDividerScreen::new);
             event.register(ModMenuTypes.MILLIGRAM_SCALE_MENU.get(), MilligramScaleScreen::new);
             event.register(ModMenuTypes.SUGAR_REFINERY_MENU.get(), SugarRefineryScreen::new);
+            event.register(ModMenuTypes.WOODGAS_ENGINE_MENU.get(), WoodGasEngineBlockScreen ::new);
         }
     }
 

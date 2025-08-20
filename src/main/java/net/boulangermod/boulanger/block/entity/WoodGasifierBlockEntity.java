@@ -33,8 +33,6 @@ import java.util.List;
 
 public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final boolean DBG = true;
-    private static void dbg(String fmt, Object... args) { if (DBG) LOGGER.info("[WoodGasifierBE] " + fmt, args); }
 
     /** Flip once if your model's visual “front” is 180° off from the blockstate FACING. */
     private static final boolean FLIP_MODEL_FRONT = true;
@@ -162,13 +160,13 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         for (BlockPos p : footprintFromMin(min, facing)) {
             BlockState st = level.getBlockState(p);
             if (!(st.getBlock() instanceof WoodGasifierBlock)) {
-                dbg("matchesFootprint FAIL at cell#{} pos={} state={}", idx, p, st);
                 return false;
             }
             idx++;
         }
         return true;
     }
+
 
     /** True if the given world position lies inside this gasifier’s current footprint. */
     public boolean isInFootprint(BlockPos test) {
@@ -191,9 +189,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
             if (!isInFootprint(n)) { portCell = cell; external = n; break; }
         }
         if (external == null) external = anchor.relative(port);
-
-        LOGGER.info("[GasifierDBG] anchor={} facing={} port={} portCell={} expectedPipePos={}",
-                anchor, facing, port, portCell, external);
     }
 
     private static List<BlockPos> findNearbyGasifiers(Level level, BlockPos origin) {
@@ -319,10 +314,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         setChanged();
     }
 
-
-
-
-    // ───────────────────────────── toggling ─────────────────────────────
     public net.minecraft.world.InteractionResult tryToggleForm(
             net.minecraft.world.entity.player.Player player,
             net.minecraft.world.InteractionHand hand,
@@ -332,20 +323,17 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
             return net.minecraft.world.InteractionResult.SUCCESS;
         }
 
-        dbg("tryToggleForm at {} formed={} anchorPos={} hand={} faceClicked={}",
-                worldPosition, isFormed(), anchorPos, hand, faceClicked);
+        // Resolve the true anchor for the current structure
+        BlockPos anchor = resolveAnchor(level, worldPosition);
+        Direction facing = getBlockState().hasProperty(WoodGasifierBlock.FACING)
+                ? getBlockState().getValue(WoodGasifierBlock.FACING)
+                : Direction.NORTH;
 
-        // Find the true anchor for this multiblock based on current facing
-        net.minecraft.core.BlockPos anchor = resolveAnchor(level, worldPosition);
-        net.minecraft.core.Direction facing = getBlockState().hasProperty(net.boulangermod.boulanger.block.WoodGasifierBlock.FACING)
-                ? getBlockState().getValue(net.boulangermod.boulanger.block.WoodGasifierBlock.FACING)
-                : net.minecraft.core.Direction.NORTH;
 
-        dbg("  resolved anchor={} using facing={}", anchor, facing);
 
         if (!isFormed()) {
             if (!matchesFootprint(level, anchor, facing)) {
-                dbg("  footprint mismatch at anchor={}, PASS", anchor);
+
                 return net.minecraft.world.InteractionResult.PASS;
             }
             setFormedAt(anchor, true);
@@ -371,13 +359,11 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     public static void tick(Level level, BlockPos pos, BlockState state, WoodGasifierBlockEntity be) {
         if (level.isClientSide) return;
         if (!be.isFormed() || !be.isAnchor()) return;
-        if ((level.getGameTime() & 15L) == 0L) dbg("tick @{} (anchor) burnTime={}", pos, be.burnTime);
         be.performCookingTick();
     }
 
     private void performCookingTick() {
         if (burnTime <= 0 && canCook()) {
-            dbg("performCookingTick: starting cook");
             doCook();
             burnTime = BURN_TIME_PER_LOG;
         }
@@ -399,7 +385,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         boolean okFilters = haveBothFilters();
 
         if (!(okSplit && okLog && okFilters)) {
-            dbg("canCook inputs invalid: split={} log={} filters={}", okSplit, okLog, okFilters);
             return false;
         }
 
@@ -407,7 +392,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         int canFill = woodGasTank.fill(toMake, IFluidHandler.FluidAction.SIMULATE);
         boolean fits = (canFill == WOOD_GAS_PER_COOK);
 
-        dbg("canCook tank space ok={} ({} / {} mb)", fits, woodGasTank.getFluidAmount(), woodGasTank.getCapacity());
         return fits;
     }
 
@@ -424,7 +408,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
                 IFluidHandler.FluidAction.EXECUTE);
 
         setChanged();
-        dbg("doCook: +{}mb wood gas, tank now {}mb", WOOD_GAS_PER_COOK, woodGasTank.getFluidAmount());
     }
 
     private void damageOrConsumeFilter(int slot, int dmg) {
@@ -450,12 +433,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         Direction neighborFace = port.getOpposite();
 
         IFluidHandler target = level.getCapability(Capabilities.FluidHandler.BLOCK, outPos, neighborFace);
-        if (target == null) {
-            LOGGER.info("[WoodGasifierBE] pushFluidOut: no handler at {} (side {}), tank={}mb",
-                    outPos, port, woodGasTank.getFluidAmount());
-            return;
-        }
-
         int toSend = Math.min(200, woodGasTank.getFluidAmount());
         int moved  = target.fill(woodGasTank.drain(toSend, IFluidHandler.FluidAction.SIMULATE),
                 IFluidHandler.FluidAction.EXECUTE);
@@ -469,7 +446,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         if (anchorPos != null) tag.putLong("anchorPos", anchorPos.asLong());
         tag.putInt("burnTime", burnTime);
         tag.put("tank", woodGasTank.writeToNBT(regs, new CompoundTag()));
-        dbg("saveAdditional anchorPos={} burnTime={} tank={}mb", anchorPos, burnTime, woodGasTank.getFluidAmount());
     }
 
     @Override
@@ -478,7 +454,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         anchorPos = tag.contains("anchorPos") ? BlockPos.of(tag.getLong("anchorPos")) : null;
         burnTime  = tag.getInt("burnTime");
         if (tag.contains("tank")) woodGasTank.readFromNBT(regs, tag.getCompound("tank"));
-        dbg("loadAdditional anchorPos={} burnTime={} tank={}mb", anchorPos, burnTime, woodGasTank.getFluidAmount());
     }
 
     /* ─────────────────────────────── UI / menus ──────────────────────────────── */

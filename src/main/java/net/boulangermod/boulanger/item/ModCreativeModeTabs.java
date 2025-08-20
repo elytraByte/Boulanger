@@ -37,6 +37,9 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModBlocks.STRIPPED_PINE_WOOD.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_PLANKS.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_STAIRS.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_SLAB.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_FENCE.get(), 1));
+                        pOutput.accept(new ItemStack(ModBlocks.PINE_FENCE_GATE.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_DOOR.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_TRAPDOOR.get(), 1));
                         pOutput.accept(new ItemStack(ModBlocks.PINE_PRESSURE_PLATE.get(), 1));

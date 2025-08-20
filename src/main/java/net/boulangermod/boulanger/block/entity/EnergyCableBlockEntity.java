@@ -1,6 +1,7 @@
 // EnergyCableBlockEntity.java
 package net.boulangermod.boulanger.block.entity;
 
+import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.energy.ModEnergyStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -9,10 +10,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
+import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 
 public class EnergyCableBlockEntity extends BlockEntity {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private static final int CAP = 10_000;
     private static final int TICK_TRANSFER = 500;
 
@@ -22,20 +26,69 @@ public class EnergyCableBlockEntity extends BlockEntity {
         }
     };
 
+    // Tracks last known connection mask so we only log on change
+    private int lastCombinedMask = Integer.MIN_VALUE; // force first-tick log
+    private int lastCableMask    = 0;
+    private int lastDeviceMask   = 0;
+
     public EnergyCableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ENERGY_CABLE_BE.get(), pos, state);
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide()) {
+            LOGGER.info("[EnergyCable] loaded @ {} in {}", worldPosition, level.dimension().location());
+        }
+    }
+
+    @Override
+    public void setRemoved() {
+        if (level != null && !level.isClientSide()) {
+            LOGGER.info("[EnergyCable] removed @ {}", worldPosition);
+        }
+        super.setRemoved();
     }
 
     public IEnergyStorage getEnergyStorage(@Nullable Direction side) {
         return buffer;
     }
 
-// EnergyCableBlockEntity.java (replace your tick with this, add helpers)
-// constants kept: CAP, TICK_TRANSFER
-
+    // ───────────────────────────────── tick (unchanged behavior + logs) ─────────────────────────────────
     public static <T extends BlockEntity> void tick(Level level, BlockPos pos,
                                                     BlockState st, EnergyCableBlockEntity be) {
         if (level.isClientSide()) return;
+
+        // Detect connections and log on change
+        int cableMask  = 0;
+        int deviceMask = 0;
+        for (Direction dir : Direction.values()) {
+            BlockPos np = pos.relative(dir);
+            BlockEntity nbe = level.getBlockEntity(np);
+            if (nbe instanceof EnergyCableBlockEntity) {
+                cableMask |= (1 << dir.ordinal());
+            } else {
+                IEnergyStorage neigh = level.getCapability(
+                        Capabilities.EnergyStorage.BLOCK, np, dir.getOpposite());
+                if (neigh != null) {
+                    deviceMask |= (1 << dir.ordinal());
+                }
+            }
+        }
+        int combined = cableMask | deviceMask;
+        if (combined != be.lastCombinedMask) {
+            be.lastCombinedMask = combined;
+            be.lastCableMask    = cableMask;
+            be.lastDeviceMask   = deviceMask;
+
+            LOGGER.info("[EnergyCable] {} connections @ {} → total={}, cables={}({}), devices={}({})",
+                    (combined == 0 ? "no" : "updated"),
+                    pos,
+                    Integer.bitCount(combined),
+                    Integer.bitCount(cableMask),  dirsToString(cableMask),
+                    Integer.bitCount(deviceMask), dirsToString(deviceMask));
+        }
 
         // ───────────────────── Pull phase ─────────────────────
         int space = be.buffer.getMaxEnergyStored() - be.buffer.getEnergyStored();
@@ -113,4 +166,21 @@ public class EnergyCableBlockEntity extends BlockEntity {
         return be instanceof EnergyCableBlockEntity;
     }
 
+    private static String dirsToString(int mask) {
+        if (mask == 0) return "-";
+        StringBuilder sb = new StringBuilder();
+        for (Direction d : Direction.values()) {
+            if ((mask & (1 << d.ordinal())) != 0) {
+                switch (d) {
+                    case NORTH -> sb.append('N');
+                    case EAST  -> sb.append('E');
+                    case SOUTH -> sb.append('S');
+                    case WEST  -> sb.append('W');
+                    case UP    -> sb.append('U');
+                    case DOWN  -> sb.append('D');
+                }
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -192,9 +192,12 @@ public class ModBlockStateProvider extends BlockStateProvider {
         horizontal(ModBlocks.PROOFING_BOX.get(), "proofing_box");
         horizontal(ModBlocks.DOUGH_DIVIDER.get(), "dough_divider");
 
-        horizontalBlock(ModBlocks.STONE_MILL_BLOCK.get(),
-                models().getExistingFile(modLoc("block/stone_mill_block")));
-
+// Stone Mill: blockstate + item model
+        {
+            ModelFile stoneMill = models().getExistingFile(modLoc("block/stone_mill_block"));
+            horizontalBlock(ModBlocks.STONE_MILL_BLOCK.get(), stoneMill);
+            simpleBlockItem(ModBlocks.STONE_MILL_BLOCK.get(), stoneMill); // generates models/item/stone_mill_block.json
+        }
 
         // ─── STONE MILL & TILES ───────────────────────────────────────────────
         blockWithItem(ModBlocks.KAOLINITE_CLAY);

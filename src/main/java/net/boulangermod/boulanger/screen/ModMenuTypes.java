@@ -36,6 +36,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<WoodGasifierMenu>> WOOD_GASIFIER_MENU =
             registerMenuType("wood_gasifier_menu", WoodGasifierMenu::new);
 
+    public static final DeferredHolder<MenuType<?>, MenuType<WoodGasEngineBlockMenu>> WOODGAS_ENGINE_MENU =
+            registerMenuType("woodgas_engine_menu", WoodGasEngineBlockMenu::new);
+
     public static final DeferredHolder<MenuType<?>, MenuType<ProofingBoxMenu>> PROOFING_BOX_MENU =
             registerMenuType("proofing_box_menu", ProofingBoxMenu::new);
 

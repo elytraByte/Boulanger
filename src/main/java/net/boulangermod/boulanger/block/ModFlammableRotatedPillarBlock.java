@@ -7,6 +7,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.ItemAbilities;
 import net.neoforged.neoforge.common.ItemAbility;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,17 +32,24 @@ public class ModFlammableRotatedPillarBlock extends RotatedPillarBlock {
     }
 
     @Override
-    public @Nullable BlockState getToolModifiedState(BlockState state, UseOnContext context, ItemAbility itemAbility, boolean simulate) {
-        if(context.getItemInHand().getItem() instanceof AxeItem) {
-            if(state.is(ModBlocks.PINE_LOG.get())) {
-                return ModBlocks.STRIPPED_PINE_LOG.get().defaultBlockState().setValue(AXIS, state.getValue(AXIS));
+    public @Nullable BlockState getToolModifiedState(BlockState state,
+                                                     UseOnContext context,
+                                                     ItemAbility ability,
+                                                     boolean simulate) {
+        // Only react to the axe-strip ability. Scrape / wax-off fall through to super.
+        if (ability == ItemAbilities.AXE_STRIP) {
+            if (state.is(ModBlocks.PINE_LOG.get())) {
+                return ModBlocks.STRIPPED_PINE_LOG.get()
+                        .defaultBlockState()
+                        .setValue(AXIS, state.getValue(AXIS)); // preserve axis
             }
-
-            if(state.is(ModBlocks.PINE_WOOD.get())) {
-                return ModBlocks.STRIPPED_PINE_WOOD.get().defaultBlockState().setValue(AXIS, state.getValue(AXIS));
+            if (state.is(ModBlocks.PINE_WOOD.get())) {
+                return ModBlocks.STRIPPED_PINE_WOOD.get()
+                        .defaultBlockState()
+                        .setValue(AXIS, state.getValue(AXIS));
             }
         }
-
-        return super.getToolModifiedState(state, context, itemAbility, simulate);
+        return super.getToolModifiedState(state, context, ability, simulate);
     }
+
 }

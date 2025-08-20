@@ -38,7 +38,13 @@ public final class ModCapabilities {
         event.registerBlockEntity(
                 Capabilities.FluidHandler.BLOCK,
                 ModBlockEntities.WOODGAS_ENGINE_BE.get(),
-                (WoodGasEngineBlockEntity be, @Nullable Direction querySide) -> be.getFluidHandler(querySide)
+                (be, side) -> ((WoodGasEngineBlockEntity) be).getFluidHandler(side)
+        );
+
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.WOODGAS_ENGINE_BE.get(),
+                (be, side) -> ((WoodGasEngineBlockEntity) be).getEnergyForSide(side) // extract-only view on ALL sides
         );
 
         event.registerBlockEntity(

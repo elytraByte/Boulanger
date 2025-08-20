@@ -1,4 +1,4 @@
-// 1.21	2025-08-20T13:04:42.5040512	Block States: boulanger
+// 1.21	2025-08-20T16:46:33.3653696	Block States: boulanger
 1e5500f221cf165e9146ecfa3d3d9e81fba4e43d assets/boulanger/blockstates/bakers_table.json
 cbe2406c5629ecfeda96071a79a9d55aec18551f assets/boulanger/blockstates/battery.json
 8c8ddc53613ecdb21afc8929b3e45a039d7c0650 assets/boulanger/blockstates/black_tile.json
@@ -130,6 +130,7 @@ f1e66dfbb59dd77ec6191c631e0c898c26fec11a assets/boulanger/models/item/pine_butto
 92e6e5fe51205ee1b1da42c2fdb567b951b26034 assets/boulanger/models/item/pine_pressure_plate.json
 3a8a209c256cced0794e13b0b931b0803be323c3 assets/boulanger/models/item/pine_trapdoor.json
 d28a9ccbb2965b72587ce3835afc9191cf8ce7be assets/boulanger/models/item/pine_wood.json
+1a3746fb0608f77add3a9b3da000e97c61fb1c14 assets/boulanger/models/item/stone_mill.json
 a3019cdc4a39fee84f842c1e8a176d4440e53521 assets/boulanger/models/item/stripped_pine_log.json
 7ebe31e3cb0e60c1a3f3302417b6122373cfc5e7 assets/boulanger/models/item/stripped_pine_wood.json
 2e067bca0875957ebdd469686b301d253a4cd016 assets/boulanger/models/item/sugar_refinery.json

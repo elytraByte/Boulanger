@@ -4,16 +4,20 @@ import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.WoodGasEngineBlock;
 import net.boulangermod.boulanger.energy.ModEnergyStorage;
 import net.boulangermod.boulanger.fluid.ModFluids;
+import net.boulangermod.boulanger.screen.WoodGasEngineBlockMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
@@ -23,21 +27,28 @@ import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-public class WoodGasEngineBlockEntity extends BlockEntity {
-    private static final Logger LOGGER = LogUtils.getLogger();
+public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
 
-    // ---- Tuning knobs ----
-    // Amount of wood-gas the engine attempts to burn each server tick.
-    private static final int DRAIN_MB_PER_TICK   = 25;   // was 25
-    // RF generated per tick while running.
-    private static final int RF_PER_TICK         = 5;   // was 5 per "cycle"
-    // Hysteresis thresholds to avoid on/off flicker.
-    private static final int START_THRESHOLD_MB  = 100;  // must reach this to turn on
-    private static final int STOP_THRESHOLD_MB   = 50;   // falls below this to turn off
-    // Try to "pull" up to this much from neighbors each tick before deciding to run.
-    private static final int PULL_PER_TICK_MB    = 250;
+    /* ── tuning ─────────────────────────────────────────────────── */
+    private static final int TANK_CAP_MB        = 1000;
+    private static final int DRAIN_MB_PER_TICK  = 25;    // gas consumed when running
+    private static final int FE_PER_TICK        = 5;     // generation rate
+    private static final int START_THRESHOLD_MB = 100;   // start at/above
+    private static final int STOP_THRESHOLD_MB  = 50;    // stop at/below
+    private static final int PULL_PER_TICK_MB   = 250;   // pull from neighbors per tick
 
-    private final FluidTank tank = new FluidTank(1000) {
+    private static final int FE_CAPACITY        = 1000;
+    private static final int FE_MAX_EXTRACT     = 1000;  // allow cables to pull generously
+    private static final int PER_SIDE_LIMIT     = 1000; // max FE to try per neighbor per tick
+
+
+    // simple visual cycle for GUI
+    private static final int BURN_TOTAL_TICKS   = 200;
+    private int burnProgress = 0;
+    private int burnTotal    = BURN_TOTAL_TICKS;
+
+    /* ── storage ────────────────────────────────────────────────── */
+    private final FluidTank tank = new FluidTank(TANK_CAP_MB) {
         @Override
         public boolean isFluidValid(FluidStack stack) {
             return stack.getFluid() == ModFluids.WOOD_GAS_STILL.get()
@@ -45,181 +56,216 @@ public class WoodGasEngineBlockEntity extends BlockEntity {
         }
         @Override
         protected void onContentsChanged() {
-            LOGGER.debug("[ICE] onContentsChanged → {} mB wood-gas", getFluidAmount());
-            setChanged();
-            if (level != null) {
-                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-            }
+            // LOGGER.debug("[ICE] Wood-gas: {} mB", getFluidAmount());
+            setChangedAndNotify();
         }
     };
 
-    private final ModEnergyStorage energy = new ModEnergyStorage(1000, RF_PER_TICK, RF_PER_TICK) {
-        @Override
-        protected void onEnergyChanged() {
-            setChanged();
-            LOGGER.debug("[ICE] Energy changed: {}/{} RF", getEnergyStored(), getMaxEnergyStored());
+    // extract-only view (lets neighbors pull FE out; engine never receives FE)
+    private final IEnergyStorage outOnlyView = new IEnergyStorage() {
+        @Override public int receiveEnergy(int maxReceive, boolean simulate) { return 0; }
+        @Override public int extractEnergy(int maxExtract, boolean simulate) {
+            return energy.extractEnergy(maxExtract, simulate);
+        }
+        @Override public int getEnergyStored()    { return energy.getEnergyStored(); }
+        @Override public int getMaxEnergyStored() { return energy.getMaxEnergyStored(); }
+        @Override public boolean canExtract()     { return true; }
+        @Override public boolean canReceive()     { return false; }
+    };
+
+
+    // maxReceive=0, maxExtract=FE_MAX_EXTRACT so **pullers can extract freely**
+    private final ModEnergyStorage energy = new ModEnergyStorage(FE_CAPACITY, 1000, FE_MAX_EXTRACT) {
+        @Override protected void onEnergyChanged() {
+            setChangedAndNotify();
         }
     };
 
     public WoodGasEngineBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.WOODGAS_ENGINE_BE.get(), pos, state);
+        // 4th arg = inventory slot count (engine has none)
+        super(ModBlockEntities.WOODGAS_ENGINE_BE.get(), pos, state, 0);
     }
 
-    // ---- Cap exposure helpers (your pipeline already queries by block) ----
-    public IFluidHandler getFluidHandler(@Nullable Direction side) { return tank; }
-
-    // Extract-only view for neighbors. Internal code still uses `energy`.
-    private final IEnergyStorage outOnlyView = new IEnergyStorage() {
-        @Override public int receiveEnergy(int maxReceive, boolean simulate) { return 0; } // no input
-        @Override public int extractEnergy(int maxExtract, boolean simulate) {
-            return energy.extractEnergy(maxExtract, simulate);
-        }
-        @Override public int getEnergyStored()      { return energy.getEnergyStored(); }
-        @Override public int getMaxEnergyStored()   { return energy.getMaxEnergyStored(); }
-        @Override public boolean canExtract()       { return true; }
-        @Override public boolean canReceive()       { return false; }
-    };
-
-    private Direction getBackSide() {
-        BlockState st = getBlockState();
-        Direction facing = Direction.NORTH;
-        if (st.hasProperty(WoodGasEngineBlock.FACING)) {
-            facing = st.getValue(WoodGasEngineBlock.FACING);
-        }
-        return facing.getOpposite(); // "back" is opposite the facing/front
+    // was: public IFluidHandler getFluidHandler(@Nullable Direction side) { return tank; }
+    public IFluidHandler getFluidHandler(@Nullable Direction side) {
+        // wood-gas input only on the back; unsided queries allowed
+        return (side == null || side == getBackSide()) ? tank : null;
     }
 
-    public IEnergyStorage getEnergyStorage(@Nullable Direction side) {
-        if (side == null) return null;                  // no unsided access
-        return side == getBackSide() ? outOnlyView : null;
+    // was: public IEnergyStorage getEnergyForSide(@Nullable Direction side) { return outOnlyView; }
+    public IEnergyStorage getEnergyForSide(@Nullable Direction side) {
+        // no energy output on the back
+        if (side != null && side == getBackSide()) return null;
+        return outOnlyView;
     }
 
+
+    /* ── ticking ─────────────────────────────────────────────────── */
     public static void tick(Level level, BlockPos pos, BlockState state, WoodGasEngineBlockEntity be) {
         if (level.isClientSide) return;
         be.serverTick(state);
     }
 
     private void serverTick(BlockState state) {
-        // 1) Pull from neighbors first so we evaluate with the freshest supply this tick.
         pullFromNeighbors();
 
         boolean running = state.getValue(WoodGasEngineBlock.LIT);
         int amt = tank.getFluidAmount();
 
-        // 2) Hysteresis to prevent flapping
+        // hysteresis
         if (!running && amt >= START_THRESHOLD_MB) {
             running = true;
             level.setBlock(worldPosition, state.setValue(WoodGasEngineBlock.LIT, true), 3);
-            state = getBlockState(); // refresh local ref
-            LOGGER.debug("[ICE] Engine -> RUNNING ({} mB >= start {})", amt, START_THRESHOLD_MB);
         } else if (running && amt <= STOP_THRESHOLD_MB) {
             running = false;
             level.setBlock(worldPosition, state.setValue(WoodGasEngineBlock.LIT, false), 3);
-            state = getBlockState();
-            LOGGER.debug("[ICE] Engine -> STOPPED ({} mB <= stop {})", amt, STOP_THRESHOLD_MB);
         }
 
-        // 3) If running, burn smoothly each tick
         if (running) {
             int drained = tank.drain(DRAIN_MB_PER_TICK, IFluidHandler.FluidAction.EXECUTE).getAmount();
             if (drained < DRAIN_MB_PER_TICK) {
-                // Unexpected starvation: stop and wait for buffer to recover to START_THRESHOLD_MB
                 level.setBlock(worldPosition, state.setValue(WoodGasEngineBlock.LIT, false), 3);
-                LOGGER.debug("[ICE] Starved: drained {} < {}. Engine stopping.", drained, DRAIN_MB_PER_TICK);
             } else {
-                energy.receiveEnergy(RF_PER_TICK, false);
+                energy.receiveEnergy(FE_PER_TICK, false);
+                burnProgress = (burnProgress + 1) % burnTotal;
             }
+        } else if (burnProgress > 0) {
+            burnProgress = Math.max(0, burnProgress - 2);
         }
 
-        // 4) Push energy to neighbors
-        for (Direction dir : Direction.values()) {
-            IEnergyStorage target = level.getCapability(
-                    Capabilities.EnergyStorage.BLOCK,
-                    worldPosition.relative(dir),
-                    dir.getOpposite()
-            );
-            if (target != null) {
-                int available = energy.extractEnergy(energy.getEnergyStored(), true);
-                if (available > 0) {
-                    int sent = target.receiveEnergy(available, false);
-                    if (sent > 0) energy.extractEnergy(sent, false);
+// --- fair push to all output sides (skip back) ---
+        int remaining = energy.getEnergyStored();
+        if (remaining > 0) {
+            Direction back = getBackSide();
+
+            // collect valid output targets first
+            Direction[] dirs = Direction.values();
+            java.util.ArrayList<Direction> outs = new java.util.ArrayList<>(6);
+            for (Direction d : dirs) {
+                if (d == back) continue;
+                IEnergyStorage t = level.getCapability(
+                        Capabilities.EnergyStorage.BLOCK,
+                        worldPosition.relative(d),
+                        d.getOpposite()
+                );
+                if (t != null) outs.add(d);
+            }
+
+            int targets = outs.size();
+            if (targets > 0) {
+                // give each side an equal share, capped by PER_SIDE_LIMIT, at least 1 FE
+                int per = Math.max(1, Math.min(PER_SIDE_LIMIT, remaining / targets));
+
+                for (Direction d : outs) {
+                    if (remaining <= 0) break;
+
+                    IEnergyStorage t = level.getCapability(
+                            Capabilities.EnergyStorage.BLOCK,
+                            worldPosition.relative(d),
+                            d.getOpposite()
+                    );
+                    if (t == null) continue;
+
+                    int offer = Math.min(per, remaining);
+                    int accepted = t.receiveEnergy(offer, false);
+                    if (accepted > 0) {
+                        energy.extractEnergy(accepted, false);
+                        remaining -= accepted;
+                    }
                 }
             }
         }
     }
 
-    /**
-     * Pull wood-gas from any neighboring fluid handler, up to PULL_PER_TICK_MB in total.
-     * Uses the int-amount drain to accept either still or flowing variants.
-     */
+
     private void pullFromNeighbors() {
         if (level == null) return;
         int room = tank.getCapacity() - tank.getFluidAmount();
         if (room <= 0) return;
 
         int toPull = Math.min(PULL_PER_TICK_MB, room);
-        int pulled = 0;
+        Direction back = getBackSide();
 
-        for (Direction dir : Direction.values()) {
-            if (pulled >= toPull) break;
+        IFluidHandler src = level.getCapability(
+                Capabilities.FluidHandler.BLOCK,
+                worldPosition.relative(back),
+                back.getOpposite()
+        );
+        if (src == null) return;
 
-            IFluidHandler src = level.getCapability(
-                    Capabilities.FluidHandler.BLOCK,
-                    worldPosition.relative(dir),
-                    dir.getOpposite()
-            );
-            if (src == null) continue;
+        FluidStack sim = src.drain(toPull, IFluidHandler.FluidAction.SIMULATE);
+        if (sim.isEmpty() || !tank.isFluidValid(sim)) return;
 
-            int request = Math.min(toPull - pulled, toPull);
-            // simulate “any fluid” drain, then filter for our wood-gas
-            FluidStack sim = src.drain(request, IFluidHandler.FluidAction.SIMULATE);
-            if (sim.isEmpty()) continue;
-            if (!tank.isFluidValid(sim)) continue;
+        int fit = Math.min(sim.getAmount(), tank.getCapacity() - tank.getFluidAmount());
+        if (fit <= 0) return;
 
-            int fit = Math.min(sim.getAmount(), tank.getCapacity() - tank.getFluidAmount());
-            if (fit <= 0) break;
-
-            FluidStack drained = src.drain(fit, IFluidHandler.FluidAction.EXECUTE);
-            if (!drained.isEmpty()) {
-                int accepted = tank.fill(drained, IFluidHandler.FluidAction.EXECUTE);
-                pulled += accepted;
-            }
-        }
+        FluidStack drained = src.drain(fit, IFluidHandler.FluidAction.EXECUTE);
+        if (!drained.isEmpty()) tank.fill(drained, IFluidHandler.FluidAction.EXECUTE);
     }
 
-    // —— NBT persistence & client sync —— //
+
+    /* ── NBT / sync ──────────────────────────────────────────────── */
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider regs) {
+        super.saveAdditional(tag, regs); // base saves inventory (0 slots)
         CompoundTag tankTag = new CompoundTag();
-        tank.writeToNBT(registries, tankTag);
+        tank.writeToNBT(regs, tankTag);
         tag.put("ice.tank", tankTag);
         tag.putInt("ice.energy", energy.getEnergyStored());
+        tag.putInt("ice.burnProgress", burnProgress);
+        tag.putInt("ice.burnTotal",    burnTotal);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        CompoundTag tankTag = tag.getCompound("ice.tank");
-        tank.readFromNBT(registries, tankTag);
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider regs) {
+        super.loadAdditional(tag, regs);
+        if (tag.contains("ice.tank")) tank.readFromNBT(regs, tag.getCompound("ice.tank"));
         energy.setEnergy(tag.getInt("ice.energy"));
+        burnProgress = tag.getInt("ice.burnProgress");
+        burnTotal    = Math.max(1, tag.getInt("ice.burnTotal"));
+        if (burnTotal <= 1) burnTotal = BURN_TOTAL_TICKS;
     }
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
-    public CompoundTag getUpdateTag(HolderLookup.Provider prov) {
-        return saveWithoutMetadata(prov);
+    public CompoundTag getUpdateTag(HolderLookup.Provider regs) {
+        return saveWithoutMetadata(regs);
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider prov) {
-        super.onDataPacket(net, pkt, prov);
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider regs) {
+        super.onDataPacket(net, pkt, regs);
     }
 
+    /* ── MenuProvider (from base) ────────────────────────────────── */
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("screen.boulanger.woodgas_engine");
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+        return new WoodGasEngineBlockMenu(id, inv, this);
+    }
+
+    /* ── GUI helpers ─────────────────────────────────────────────── */
+    public int getBurnProgress() { return this.burnProgress; }
+    public int getBurnTotal()    { return Math.max(this.burnTotal, 1); }
+    public int getGasAmount()    { return tank.getFluidAmount(); }
+    public int getGasCapacity()  { return Math.max(tank.getCapacity(), 1); }
+    private Direction getFrontSide() {
+        BlockState st = getBlockState();
+        return st.hasProperty(WoodGasEngineBlock.FACING)
+                ? st.getValue(WoodGasEngineBlock.FACING)
+                : Direction.NORTH;
+    }
+
+    private Direction getBackSide() {
+        return getFrontSide().getOpposite();
+    }
 
 }

@@ -47,13 +47,13 @@ public class WoodGasEngineBlock extends AbstractProcessingBlock {
         return new WoodGasEngineBlockEntity(pos, st);
     }
 
-    // Keep server tick using your existing static tick method
-    @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide()) return null;
-        return createTickerHelper(type, ModBlockEntities.WOODGAS_ENGINE_BE.get(), WoodGasEngineBlockEntity::tick);
+    public <T extends BlockEntity> BlockEntityTicker<T>
+    getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        return level.isClientSide ? null
+                : createTickerHelper(type, ModBlockEntities.WOODGAS_ENGINE_BE.get(), WoodGasEngineBlockEntity::tick);
     }
+
 
     @Override
     public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
