@@ -142,20 +142,12 @@ public class WoodGasifierBlock extends BaseEntityBlock {
         return InteractionResult.PASS;
     }
 
-    @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,
-                                                                  BlockState state,
-                                                                  BlockEntityType<T> type) {
-        if (level.isClientSide) {
-            return null;
-        }
-        return createTickerHelper(
-                type,
-                ModBlockEntities.WOOD_GASIFIER_BE.get(),
-                WoodGasifierBlockEntity::tick
-        );
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        return createTickerHelper(type, ModBlockEntities.WOOD_GASIFIER_BE.get(),
+                (lvl, pos, st, be) -> WoodGasifierBlockEntity.tick(lvl, pos, st, (WoodGasifierBlockEntity) be));
     }
+
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, net.minecraft.util.RandomSource random) {
         // Only the anchor should handle client effects

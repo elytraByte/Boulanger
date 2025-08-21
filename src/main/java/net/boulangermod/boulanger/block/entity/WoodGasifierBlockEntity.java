@@ -43,8 +43,8 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     private static final int FILTER_A     = 2;  // filter canister #1
     private static final int FILTER_B     = 3;  // filter canister #2
 
-    private static final int BURN_TIME_PER_LOG = 200;   // In ticks
-    private static final int WOOD_GAS_PER_COOK = 3750; // mB
+    private static final int BURN_TIME_PER_LOG = 200;   // ticks
+    private static final int WOOD_GAS_PER_COOK = 3750;  // mB
 
     private static boolean isAnyLog(ItemStack s) { return s.is(net.minecraft.tags.ItemTags.LOGS); }
     private boolean isUsableFilter(ItemStack s) {
@@ -71,7 +71,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     private int burnTime = 0;
 
     /** Private tank; we expose a drain-only view on the port face. */
-    private final FluidTank woodGasTank = new FluidTank(8_000) {
+    private final FluidTank woodGasTank = new FluidTank(8_000, fs -> fs.getFluid() == ModFluids.WOOD_GAS_STILL.get()) {
         @Override protected void onContentsChanged() { setChanged(); }
     };
 
@@ -100,12 +100,10 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
             };
         }
         @Override public void set(int idx, int val) {
-            // Client copy only; keep harmless. If someone writes burnElapsed, invert back to remaining.
             if (idx == 0) {
                 int clamped = Math.max(0, Math.min(BURN_TIME_PER_LOG, val));
                 burnTime = Math.max(0, BURN_TIME_PER_LOG - clamped);
             } else if (idx == 3) {
-                // allow client copy to reflect value locally without changing type
                 if (!woodGasTank.getFluid().isEmpty()) {
                     woodGasTank.setFluid(woodGasTank.getFluid().copyWithAmount(val));
                 }
@@ -156,17 +154,12 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     }
 
     public static boolean matchesFootprint(Level level, BlockPos min, Direction facing) {
-        int idx = 0;
         for (BlockPos p : footprintFromMin(min, facing)) {
             BlockState st = level.getBlockState(p);
-            if (!(st.getBlock() instanceof WoodGasifierBlock)) {
-                return false;
-            }
-            idx++;
+            if (!(st.getBlock() instanceof WoodGasifierBlock)) return false;
         }
         return true;
     }
-
 
     /** True if the given world position lies inside this gasifier’s current footprint. */
     public boolean isInFootprint(BlockPos test) {
@@ -177,7 +170,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         return false;
     }
 
-    /** Log the external port placement to make pipe placement trivial. */
+    /** Log the external port placement to make pipe placement trivial. (kept for your debug flow) */
     private void debugPortLayout() {
         BlockPos anchor = (anchorPos != null) ? anchorPos : worldPosition;
         Direction facing = getBlockState().getValue(WoodGasifierBlock.FACING);
@@ -189,6 +182,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
             if (!isInFootprint(n)) { portCell = cell; external = n; break; }
         }
         if (external == null) external = anchor.relative(port);
+        // Intentionally no spam logging
     }
 
     private static List<BlockPos> findNearbyGasifiers(Level level, BlockPos origin) {
@@ -245,8 +239,8 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     /** Port = left of front (after optional flip). */
     public Direction getPortSide() {
         Direction port = getFrontFacing().getClockWise();
-        LogUtils.getLogger().info("[Gasifier] facing={} (flip={}) -> port={}",
-                getBlockState().getValue(WoodGasifierBlock.FACING), FLIP_MODEL_FRONT, port);
+        // Debug was noisy; keep quiet in production.
+        // LOGGER.info("[Gasifier] facing={} (flip={}) -> port={}", getBlockState().getValue(WoodGasifierBlock.FACING), FLIP_MODEL_FRONT, port);
         return port;
     }
 
@@ -275,12 +269,9 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
 
         var cells = footprintFromMin(anchor, facing);
 
-        // If your model renders one block to the RIGHT of the anchor,
-        // make THAT cell the visible one:
+        // Visible cell = one block to the RIGHT of the anchor (adjust if your model differs)
         Direction right = facing.getClockWise();
-        BlockPos visibleCell = anchor.relative(right); // ← try this first
-        // If it ends up on the wrong side, switch to counterclockwise:
-        // BlockPos visibleCell = anchor.relative(right.getOpposite());
+        BlockPos visibleCell = anchor.relative(right);
 
         for (BlockPos p : cells) {
             BlockState st = level.getBlockState(p);
@@ -291,7 +282,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
 
             if (forming) {
                 boolean isVisible = p.equals(visibleCell);
-                // Only the visible cell shows the big model
                 if (upd.hasProperty(WoodGasifierBlock.FORMED)) upd = upd.setValue(WoodGasifierBlock.FORMED, isVisible);
                 if (upd.hasProperty(WoodGasifierBlock.HIDDEN)) upd = upd.setValue(WoodGasifierBlock.HIDDEN, !isVisible);
             } else {
@@ -303,7 +293,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
 
             var other = level.getBlockEntity(p);
             if (other instanceof WoodGasifierBlockEntity o) {
-                o.anchorPos = forming ? anchor : null; // keep logical anchor unchanged
+                o.anchorPos = forming ? anchor : null; // keep logical anchor on all parts
                 o.setChanged();
                 level.sendBlockUpdated(p, upd, upd, 3);
             }
@@ -323,17 +313,13 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
             return net.minecraft.world.InteractionResult.SUCCESS;
         }
 
-        // Resolve the true anchor for the current structure
         BlockPos anchor = resolveAnchor(level, worldPosition);
         Direction facing = getBlockState().hasProperty(WoodGasifierBlock.FACING)
                 ? getBlockState().getValue(WoodGasifierBlock.FACING)
                 : Direction.NORTH;
 
-
-
         if (!isFormed()) {
             if (!matchesFootprint(level, anchor, facing)) {
-
                 return net.minecraft.world.InteractionResult.PASS;
             }
             setFormedAt(anchor, true);
@@ -358,18 +344,19 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     /** Server tick — gated to ANCHOR ONLY. */
     public static void tick(Level level, BlockPos pos, BlockState state, WoodGasifierBlockEntity be) {
         if (level.isClientSide) return;
-        if (!be.isFormed() || !be.isAnchor()) return;
+        if (!be.isFormed() || !be.isAnchor()) return; // only the anchor runs logic
         be.performCookingTick();
     }
 
     private void performCookingTick() {
+        // Cook cycle
         if (burnTime <= 0 && canCook()) {
             doCook();
             burnTime = BURN_TIME_PER_LOG;
         }
         if (burnTime > 0) burnTime--;
 
-        // Push gas toward the external port neighbor.
+        // Push gas toward the external port neighbor (safe)
         pushFluidOut();
 
         updateLitFlag();
@@ -384,15 +371,11 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         boolean okLog     = isAnyLog(log);
         boolean okFilters = haveBothFilters();
 
-        if (!(okSplit && okLog && okFilters)) {
-            return false;
-        }
+        if (!(okSplit && okLog && okFilters)) return false;
 
         FluidStack toMake = new FluidStack(ModFluids.WOOD_GAS_STILL.get(), WOOD_GAS_PER_COOK);
         int canFill = woodGasTank.fill(toMake, IFluidHandler.FluidAction.SIMULATE);
-        boolean fits = (canFill == WOOD_GAS_PER_COOK);
-
-        return fits;
+        return (canFill == WOOD_GAS_PER_COOK);
     }
 
     private void doCook() {
@@ -425,18 +408,35 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         // else: nondurable → consumed
     }
 
+    /** Safe fluid push: checks chunk loaded, null capability, and uses simulate→execute flow. */
     private void pushFluidOut() {
-        if (level == null || woodGasTank.getFluidAmount() <= 0) return;
+        if (level == null) return;
+        int available = woodGasTank.getFluidAmount();
+        if (available <= 0) return;
 
         Direction port = getPortSide();
-        BlockPos outPos = getPortNeighborPos();              // external neighbor
-        Direction neighborFace = port.getOpposite();
+        BlockPos outPos = getPortNeighborPos();
+        if (!level.isLoaded(outPos)) return; // during world load / chunk borders
 
+        Direction neighborFace = port.getOpposite();
         IFluidHandler target = level.getCapability(Capabilities.FluidHandler.BLOCK, outPos, neighborFace);
-        int toSend = Math.min(200, woodGasTank.getFluidAmount());
-        int moved  = target.fill(woodGasTank.drain(toSend, IFluidHandler.FluidAction.SIMULATE),
-                IFluidHandler.FluidAction.EXECUTE);
-        if (moved > 0) woodGasTank.drain(moved, IFluidHandler.FluidAction.EXECUTE);
+        if (target == null) return; // no handler on that side
+
+        // Offer up to N mB this tick
+        final int MAX_PUSH_MB = 200;
+        int offer = Math.min(MAX_PUSH_MB, available);
+        if (offer <= 0) return;
+
+        FluidStack proposed = new FluidStack(woodGasTank.getFluid().getFluid(), offer);
+        int accepted = target.fill(proposed, IFluidHandler.FluidAction.SIMULATE);
+        if (accepted <= 0) return;
+
+        FluidStack drained = woodGasTank.drain(accepted, IFluidHandler.FluidAction.EXECUTE);
+        if (drained.isEmpty() || drained.getAmount() <= 0) return;
+
+        // Finalize into target
+        int moved = target.fill(drained, IFluidHandler.FluidAction.EXECUTE);
+        if (moved > 0) setChanged();
     }
 
     /* ─────────────────────────────────── NBT ──────────────────────────────────── */

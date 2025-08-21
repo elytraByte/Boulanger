@@ -1,4 +1,4 @@
-// 1.21	2025-08-20T16:38:57.1147972	Item Models: boulanger
+// 1.21	2025-08-20T21:58:40.5661381	Item Models: boulanger
 782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
 5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
 604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
@@ -55,6 +55,7 @@ a69ab60d4d3ba04e23637133d31a335b0232270b assets/boulanger/models/item/flour.json
 f65a1521a5aa0d8037d096bb7b8dc654fc3db873 assets/boulanger/models/item/hen_spawn_egg.json
 4b04f8197f4b362c699a7596f5f24335b23c481e assets/boulanger/models/item/high_gluten_flour_fifty_pound_bag.json
 c06e30592056a30c29178cf2017a82acb66b70cb assets/boulanger/models/item/holstein_friesain_cow_spawn_egg.json
+5b91c688860b054fdb77ea6660fd0ad9756a49ac assets/boulanger/models/item/iron_frame.json
 ab2426e464ace9013e2279f9263ae985d8a48c90 assets/boulanger/models/item/iron_wedge.json
 aef85b2c1fe39d08ccd8f7563cf45ee9da69b275 assets/boulanger/models/item/kaolinite_clay_ball.json
 9639e9b27acbd946007ca9f8d27067bd7354192b assets/boulanger/models/item/light_blue_porcelain_brick.json
@@ -86,7 +87,7 @@ a744a3a5a294221b04accf766117a29e7b96082b assets/boulanger/models/item/sledgehamm
 6e9bafa61f357a373f6a98956db68633e3a0d178 assets/boulanger/models/item/sourdough_starter.json
 0193a4afb44ee210b8b47b6ddd71e067b22e3fc3 assets/boulanger/models/item/soybean_oil.json
 896234665639fc7033ba8bafe0e7c179c19470f8 assets/boulanger/models/item/split_pine_logs.json
-4ba545402c7298ee90a42a15ef7bb78fa4f60344 assets/boulanger/models/item/stone_mill_block.json
+4ba545402c7298ee90a42a15ef7bb78fa4f60344 assets/boulanger/models/item/stone_mill.json
 a83f9950acff305a231f35fac6759bd541e67343 assets/boulanger/models/item/unfired_black_porcelain_brick.json
 fa277fd85461053eec72ae0cc7f33fae463047b8 assets/boulanger/models/item/unfired_blue_porcelain_brick.json
 e93feffb865c7138c712d6d187fe421365ba96c8 assets/boulanger/models/item/unfired_light_blue_porcelain_brick.json

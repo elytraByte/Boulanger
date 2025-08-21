@@ -43,5 +43,11 @@ public abstract class ModEnergyStorage extends EnergyStorage {
      */
     protected abstract void onEnergyChanged();
 
+    public int getMaxExtract() {
+        return this.maxExtract;
+    }
 
+    public int getMaxReceive() {
+        return this.maxReceive;
+    }
 }

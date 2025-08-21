@@ -49,24 +49,20 @@ public final class ModCapabilities {
 
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
-                ModBlockEntities.ENERGY_CABLE_BE.get(),
-                (EnergyCableBlockEntity be, @Nullable Direction side) -> be.getEnergyStorage(side)
-        );
-
-        event.registerBlockEntity(
-                Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.ENERGY_STORAGE_BE.get(),
                 (EnergyStorageBlockEntity be, @Nullable Direction querySide) -> be.getEnergyStorage(querySide)
         );
 
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.ENERGY_CABLE_BE.get(),
+                (EnergyCableBlockEntity be, @Nullable Direction side) -> be.getEnergyStorage(side)
+        );
+
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
                 ModBlockEntities.STONE_MILL_BE.get(),
-                (be, side) -> {
-                    // DEBUG: prove provider is hit
-                    LogUtils.getLogger().debug("[Cap] Query Energy for StoneMill @ {} side={}", be.getBlockPos(), side);
-                    return be.getEnergyStorage(side);
-                }
+                (StoneMillBlockEntity be, @Nullable Direction side) -> be.getEnergyStorage(side)
         );
     }
 

@@ -28,9 +28,18 @@ public class EnergyStorageBlockEntity extends BlockEntity {
         super(ModBlockEntities.ENERGY_STORAGE_BE.get(), pos, state);
     }
 
-    public IEnergyStorage getEnergyStorage(Direction side) {
-        // Input & output on ALL sides
-        return energy;
+    /** Expose to ModCapabilities */
+    public IEnergyStorage getEnergyStorage(@Nullable Direction side) {
+        return energy; // IO on all sides
+    }
+
+    // rotatedDirs: fix negative modulo
+    private static Direction[] rotatedDirs(Level level, BlockPos pos) {
+        Direction[] base = Direction.values();
+        Direction[] out  = new Direction[base.length];
+        int off = Math.floorMod(level.getGameTime() + pos.asLong(), base.length);
+        for (int i = 0; i < base.length; i++) out[i] = base[Math.floorMod(i + off, base.length)];
+        return out;
     }
 
     public static <T extends BlockEntity> void tick(Level level, BlockPos pos, BlockState st, EnergyStorageBlockEntity be) {
@@ -121,14 +130,6 @@ public class EnergyStorageBlockEntity extends BlockEntity {
     private static double fill(IEnergyStorage es) {
         int max = es.getMaxEnergyStored();
         return max == 0 ? 0.0 : (double) es.getEnergyStored() / (double) max;
-    }
-
-    private static Direction[] rotatedDirs(Level level, BlockPos pos) {
-        Direction[] base = Direction.values();
-        Direction[] out  = new Direction[base.length];
-        int off = (int)((level.getGameTime() + pos.asLong()) % base.length);
-        for (int i = 0; i < base.length; i++) out[i] = base[(i + off) % base.length];
-        return out;
     }
 }
 

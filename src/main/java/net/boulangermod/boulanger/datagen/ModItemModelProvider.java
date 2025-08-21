@@ -192,11 +192,12 @@ public class ModItemModelProvider extends ItemModelProvider {
 // Sized-down block items
         machineItem("wood_oven",        "block/wood_oven_off",    0.62F);
         machineItem("mixing_block",     "block/mixing_block",     0.62F);
-        machineItem("stone_mill_block", "block/stone_mill_block", 0.62F);
+        machineItem("stone_mill", "block/stone_mill_block", 0.62F);
         machineItem("scale_block",      "block/scale_block",      0.62F);
         machineItem("proofing_box", "block/proofing_box", 0.62F);
         machineItem("machine_housing",  "block/machine_housing",  0.62F);
         machineItem("dough_divider",    "block/dough_divider",    0.62F); // add this one
+        machineItem("iron_frame",    "block/iron_frame_0",    0.62F); // add this one
 
     }
 
