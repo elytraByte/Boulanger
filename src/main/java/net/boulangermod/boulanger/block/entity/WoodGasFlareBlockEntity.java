@@ -3,7 +3,6 @@ package net.boulangermod.boulanger.block.entity;
 import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.WoodGasFlareBlock;
 import net.boulangermod.boulanger.fluid.ModFluids;
-import net.boulangermod.boulanger.util.ModTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -49,7 +48,7 @@ public class WoodGasFlareBlockEntity extends BlockEntity {
 
         @Override
         public boolean isFluidValid(int tank, FluidStack stack) {
-            return tank == 0 && !stack.isEmpty() && stack.getFluid().is(ModTags.WOOD_GAS);
+            return tank == 0 && !stack.isEmpty() && isWoodGasFluid(stack.getFluid());
         }
 
         @Override
@@ -65,8 +64,13 @@ public class WoodGasFlareBlockEntity extends BlockEntity {
             return accepted;
         }
 
-        @Override public FluidStack drain(FluidStack resource, FluidAction action) { return FluidStack.EMPTY; }
-        @Override public FluidStack drain(int maxDrain, FluidAction action)          { return FluidStack.EMPTY; }
+        @Override public FluidStack drain(FluidStack resource, FluidAction action) {
+            return FluidStack.EMPTY;
+        }
+
+        @Override public FluidStack drain(int maxDrain, FluidAction action) {
+            return FluidStack.EMPTY;
+        }
     };
 
     /** Expose handler ONLY on the face that touches the pipe (attach face). */
@@ -76,9 +80,16 @@ public class WoodGasFlareBlockEntity extends BlockEntity {
         return (side == null || side == attach) ? sidedHandler : null;
     }
 
+    // 1) Helper: accept your fluids OR the tag (covers early-tag race)
+    private static boolean isWoodGasFluid(net.minecraft.world.level.material.Fluid f) {
+        return f == net.boulangermod.boulanger.fluid.ModFluids.WOOD_GAS_STILL.get()
+                || f == net.boulangermod.boulanger.fluid.ModFluids.WOOD_GAS_FLOWING.get()
+                || f.is(net.boulangermod.boulanger.util.ModTags.WOOD_GAS);
+    }
 
     /* ─────────── Server tick ─────────── */
     public static void tick(Level level, BlockPos pos, BlockState state, WoodGasFlareBlockEntity be) {
+
         if (level == null || level.isClientSide) return;
 
         // Pull wood gas from the pipe *behind* the flare (opposite of nozzle direction)
@@ -91,15 +102,12 @@ public class WoodGasFlareBlockEntity extends BlockEntity {
         if (neighbor != null && be.buffer <= (MAX_BUFFER_MB - PULL_CHUNK_MB)) {
             // Probe by amount; validate with tag, then drain exact fluid type we probed
             FluidStack sim = neighbor.drain(PULL_CHUNK_MB, IFluidHandler.FluidAction.SIMULATE);
-            if (!sim.isEmpty() && sim.getFluid().is(ModTags.WOOD_GAS)) {
+            if (!sim.isEmpty() && isWoodGasFluid(sim.getFluid())) {
                 int toDrain = Math.min(PULL_CHUNK_MB, MAX_BUFFER_MB - be.buffer);
                 FluidStack drained = neighbor.drain(new FluidStack(sim.getFluid(), toDrain),
                         IFluidHandler.FluidAction.EXECUTE);
                 if (!drained.isEmpty()) {
                     be.buffer = Math.min(MAX_BUFFER_MB, be.buffer + drained.getAmount());
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("[Flare] Pulled {} mB (buffer={}/{})", drained.getAmount(), be.buffer, MAX_BUFFER_MB);
-                    }
                 }
             }
         }

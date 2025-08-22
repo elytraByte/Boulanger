@@ -27,11 +27,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class WoodGasFlareBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
-    public static final BooleanProperty   LIT    = BlockStateProperties.LIT;
+    public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    // ✅ Use the class ctor; props come from registration
     public static final MapCodec<WoodGasFlareBlock> CODEC = simpleCodec(WoodGasFlareBlock::new);
-    @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+
+    @Override
+    public MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
+    }
 
     public WoodGasFlareBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -48,23 +51,23 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
         b.add(FACING, LIT);
     }
 
-    @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
-            Level level, BlockState state, BlockEntityType<T> type) {
-        // ✅ Mirror engine pattern: server-only, and type EXACTLY matches your BE type
-        return level.isClientSide ? null
-                : createTickerHelper(type, ModBlockEntities.WOODGAS_FLARE_BE.get(),
-                WoodGasFlareBlockEntity::tick);
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide) return null;
+        return (lvl, pos, st, be) -> {
+            if (be instanceof WoodGasFlareBlockEntity flare) {
+                WoodGasFlareBlockEntity.tick(lvl, pos, st, flare);
+            }
+        };
     }
 
     // Compact rod-ish shape that rotates with FACING
-    private static final VoxelShape SHAPE_UP    = box(6, 0, 6, 10, 12, 10);
-    private static final VoxelShape SHAPE_DOWN  = box(6, 4, 6, 10, 16, 10);
+    private static final VoxelShape SHAPE_UP = box(6, 0, 6, 10, 12, 10);
+    private static final VoxelShape SHAPE_DOWN = box(6, 4, 6, 10, 16, 10);
     private static final VoxelShape SHAPE_NORTH = box(6, 6, 10, 10, 10, 16);
     private static final VoxelShape SHAPE_SOUTH = box(6, 6, 0, 10, 10, 6);
-    private static final VoxelShape SHAPE_WEST  = box(10, 6, 6, 16, 10, 10);
-    private static final VoxelShape SHAPE_EAST  = box(0, 6, 6, 6, 10, 10);
+    private static final VoxelShape SHAPE_WEST = box(10, 6, 6, 16, 10, 10);
+    private static final VoxelShape SHAPE_EAST = box(0, 6, 6, 6, 10, 10);
 
 
     @Override
@@ -77,8 +80,8 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
     @Override
     public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext ctx) {
         Direction face = ctx.getClickedFace(); // the side we clicked on the pipe
-        BlockPos pos   = ctx.getClickedPos();
-        Level level    = ctx.getLevel();
+        BlockPos pos = ctx.getClickedPos();
+        Level level = ctx.getLevel();
 
         BlockState trial = defaultBlockState().setValue(FACING, face).setValue(LIT, false);
         // Only place if there's a pipe behind the flare (opposite its facing)
@@ -88,7 +91,7 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
     @Override
     public boolean canSurvive(BlockState state, LevelReader world, BlockPos pos) {
         Direction attachDir = state.getValue(FACING).getOpposite(); // where the pipe must be
-        BlockPos behind     = pos.relative(attachDir);
+        BlockPos behind = pos.relative(attachDir);
         BlockState neighbor = world.getBlockState(behind);
         // Require the neighbor to be your woodgas pipe block
         return neighbor.is(net.boulangermod.boulanger.block.ModBlocks.WOODGAS_PIPE.get());
@@ -111,12 +114,12 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext ctx) {
         return switch (state.getValue(FACING)) {
-            case UP    -> SHAPE_UP;
-            case DOWN  -> SHAPE_DOWN;
+            case UP -> SHAPE_UP;
+            case DOWN -> SHAPE_DOWN;
             case NORTH -> SHAPE_NORTH;
             case SOUTH -> SHAPE_SOUTH;
-            case WEST  -> SHAPE_WEST;
-            case EAST  -> SHAPE_EAST;
+            case WEST -> SHAPE_WEST;
+            case EAST -> SHAPE_EAST;
         };
     }
 
@@ -174,5 +177,4 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
             level.sendBlockUpdated(pipePos, pipeState, pipeState, 3);
         }
     }
-
 }
