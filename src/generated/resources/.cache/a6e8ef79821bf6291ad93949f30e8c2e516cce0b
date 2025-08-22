@@ -1,4 +1,4 @@
-// 1.21	2025-08-22T07:02:13.1227555	Item Models: boulanger
+// 1.21	2025-08-22T11:49:16.4000258	Item Models: boulanger
 782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
 5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
 604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
@@ -49,6 +49,7 @@ e7737f652c17ee7cc066fa54f9bf7fd13ed1c457 assets/boulanger/models/item/filter_can
 0e144b8890eb0448bf3e547eb9662efaa08d82b7 assets/boulanger/models/item/fleischmann.json
 a69ab60d4d3ba04e23637133d31a335b0232270b assets/boulanger/models/item/flour.json
 82819b8d5582d17676d5119890f793fe33950210 assets/boulanger/models/item/fresh_yeast.json
+93ebfdf80dab260f0f4a28b12ae5787136082798 assets/boulanger/models/item/gas_tank.json
 7c0b9b65deca43dbff64881d9eaafcfe7f40ca6f assets/boulanger/models/item/generic_dough.json
 1bd8e01cfc7a7b04ffd2d06c0a948c2cc55427d6 assets/boulanger/models/item/gilded_pcb.json
 650158ebfc9e4ef74a85b907860fb0cbf20d11f6 assets/boulanger/models/item/glass_dust.json
@@ -101,6 +102,7 @@ ecb076c430191530646873377079babf80a8d64e assets/boulanger/models/item/vital_whea
 af67ff14a893e7cbeef53141e1914db13af06683 assets/boulanger/models/item/wooden_bucket.json
 5c7ff4550db85f9231ec782e1ed348cc1c233a1f assets/boulanger/models/item/wooden_milk_bucket.json
 2388291b589418804ef78ad91a6df8054509e471 assets/boulanger/models/item/wooden_shell_egg_bucket.json
+df0247347d9d2795ea2d97589bed0e8ea693f10f assets/boulanger/models/item/woodgas_engine.json
 b9ed889e5cd29c55582ed8045dbcaf50aa9b9622 assets/boulanger/models/item/woodgas_pipe.json
 2f1e338015987ca12117c46303d359692c876b03 assets/boulanger/models/item/wood_oven.json
 a263f1b106b1e2e4975b43290f679ba13f99b48d assets/boulanger/models/pan/baguette/empty.json

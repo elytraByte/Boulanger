@@ -70,6 +70,29 @@ public final class ModCapabilities {
                 ModBlockEntities.WOODGAS_FLARE_BE.get(),
                 (WoodGasFlareBlockEntity be, @Nullable Direction side) -> be.getFluidHandler(side)
         );
+
+        event.registerBlockEntity(
+                net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.WOODGAS_TANK_BE.get(),
+                (be, side) -> {
+                    if (!(be instanceof net.boulangermod.boulanger.block.entity.WoodGasTankBlockEntity tank)) return null;
+
+                    // Accept from bottom only → expose FILL on LOWER (query side == DOWN)
+                    // Push from top only     → expose DRAIN on UPPER (query side == UP)
+                    boolean isUpper = tank.getBlockState().getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.DOUBLE_BLOCK_HALF)
+                            == net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER;
+
+                    if (!isUpper) {
+                        // LOWER half: only from DOWN
+                        if (side == Direction.DOWN) return tank.bottomFillOnly();
+                        return null;
+                    } else {
+                        // UPPER half: only to UP
+                        if (side == Direction.UP) return tank.topDrainOnly();
+                        return null;
+                    }
+                }
+        );
     }
 
     static boolean isPortCell(net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity be) {

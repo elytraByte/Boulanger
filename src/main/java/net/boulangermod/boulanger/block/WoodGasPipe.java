@@ -44,6 +44,8 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
     public static final BooleanProperty UP    = BlockStateProperties.UP;
     public static final BooleanProperty DOWN  = BlockStateProperties.DOWN;
 
+    private static final int PARTICLE_MIN_MB = 10;
+
     // ---- slim voxel shapes (center nub + 6 arms), precomputed for 64 states ----
 // ---- slim voxel shapes (center nub + 6 arms), precomputed for 64 states ----
 // tweak these two to change thickness
@@ -223,7 +225,10 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         if (!(level.getBlockEntity(pos) instanceof WoodGasPipeBlockEntity pipe)) return;
-        if (pipe.getTank().getFluidAmount() <= 0) return;
+
+        int amount = pipe.getTank().getFluidAmount();
+        if (amount < PARTICLE_MIN_MB) return; // only render smoke if we have at least 10 mB
+
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
         double a = random.nextDouble() * Math.PI * 2;
         double vx = Math.cos(a) * 0.05, vz = Math.sin(a) * 0.05;

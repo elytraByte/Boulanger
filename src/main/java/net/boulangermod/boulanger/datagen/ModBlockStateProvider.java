@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
@@ -462,12 +463,36 @@ public class ModBlockStateProvider extends BlockStateProvider {
                     });
 
             simpleBlockItem(ModBlocks.WOODGAS_ENGINE.get(), engineOff);
+            woodGasTankStates();
         }
 
     }
 
+    public void woodGasTankStates() {
+        ModelFile full  = models().getExistingFile(modLoc("block/gas_tank"));
+        ModelFile empty = models().getBuilder("gas_tank_empty")
+                .parent(models().getExistingFile(mcLoc("block/block"))); // renders nothing
 
+        getVariantBuilder(ModBlocks.GAS_TANK.get()).forAllStates(state -> {
+            var facing = state.getValue(WoodGasTankBlock.FACING);
+            var half   = state.getValue(WoodGasTankBlock.HALF);
 
+            ModelFile model = (half == DoubleBlockHalf.LOWER) ? full : empty;
+
+            int yRot = switch (facing) {
+                case SOUTH -> 180;
+                case WEST  -> 270;
+                case EAST  -> 90;
+                default    -> 0;
+            };
+
+            // ⬇ return a single ConfiguredModel, NOT an array
+            return ConfiguredModel.builder()
+                    .modelFile(model)
+                    .rotationY(yRot)
+                    .build();
+        });
+    }
 
     private void woodgasFlareStates() {
         ModelFile flare = models().getExistingFile(modLoc("block/woodgas_flare"));

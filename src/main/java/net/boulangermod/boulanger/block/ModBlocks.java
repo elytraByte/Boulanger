@@ -41,6 +41,9 @@ public class ModBlocks {
     public static final DeferredBlock<Block> MIXING_BLOCK = registerBlock("mixing_block",
             () -> new MixingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
+    public static final DeferredBlock<Block> GAS_TANK = registerBlock("gas_tank",
+            () -> new WoodGasTankBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+
     public static final DeferredBlock<Block> SCALE_BLOCK =
             registerBlock("scale_block",
                     () -> new ScaleBlock(BlockBehaviour.Properties.of()
