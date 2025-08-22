@@ -75,8 +75,6 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
     /** Screen uses this to draw the “on” bulb. True if we currently hold any energy. */
     public boolean isGridPowered() { return getEnergyStored() > 0; }
 
-    @Override public BlockEntityType<?> getType() { return ModBlockEntities.STONE_MILL_BE.get(); }
-
     /* ───────────── helpers ───────────── */
 
     private static ItemStack buildFlourStack(FlourItemType type) {

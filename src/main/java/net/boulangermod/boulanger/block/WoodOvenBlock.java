@@ -11,21 +11,17 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.Rotation;
-import org.jetbrains.annotations.Nullable;
 
-public class WoodOvenBlock extends AbstractProcessingBlock {
+public class WoodOvenBlock extends SimpleProcessingBlock {
     public static final MapCodec<WoodOvenBlock> CODEC = simpleCodec(WoodOvenBlock::new);
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public WoodOvenBlock(Properties properties) {
-        super(properties);
+        super(properties, WoodOvenBlockEntity::new);
         // Default: face north, not lit
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(FACING, Direction.NORTH)
@@ -34,10 +30,7 @@ public class WoodOvenBlock extends AbstractProcessingBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // Face the front of the oven toward the player
-        Direction front = context.getHorizontalDirection().getOpposite();
         return this.defaultBlockState()
-                .setValue(FACING, front)
                 .setValue(LIT, false);
     }
 
@@ -45,16 +38,6 @@ public class WoodOvenBlock extends AbstractProcessingBlock {
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder); // adds FACING from AbstractProcessingBlock
         builder.add(LIT);
-    }
-
-    @Override
-    public BlockState rotate(BlockState state, Rotation rotation) {
-        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
-    }
-
-    @Override
-    public BlockState mirror(BlockState state, Mirror mirror) {
-        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override
@@ -108,10 +91,5 @@ public class WoodOvenBlock extends AbstractProcessingBlock {
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
         return CODEC;
-    }
-
-    @Override
-    public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new WoodOvenBlockEntity(pos, state);
     }
 }

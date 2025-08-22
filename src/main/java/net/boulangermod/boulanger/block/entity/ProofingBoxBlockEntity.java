@@ -9,8 +9,6 @@ import net.boulangermod.boulanger.recipe.ProcessingStep;
 import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.screen.ProofingBoxMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -19,7 +17,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.apache.logging.log4j.LogManager;
@@ -39,26 +36,8 @@ public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity implem
         super(ModBlockEntities.PROOFING_BOX.get(), pos, state, SLOT_COUNT);
     }
 
-    @Override
-    public BlockEntityType<?> getType() {
-        return ModBlockEntities.PROOFING_BOX.get();
-    }
-
-
     public ItemStackHandler getItemHandler() {
         return itemHandler;
-    }
-
-    @Override
-    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        itemHandler.deserializeNBT(registries, tag.getCompound("Inventory"));
-    }
-
-    @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.put("Inventory", itemHandler.serializeNBT(registries));
     }
 
     @Override

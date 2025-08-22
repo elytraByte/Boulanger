@@ -339,8 +339,6 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     }
 
     /* ───────────────────────────── processing / ticking ───────────────────────── */
-    @Override
-    public BlockEntityType<?> getType() { return ModBlockEntities.WOOD_GASIFIER_BE.get(); }
 
     /** Server tick — gated to ANCHOR ONLY. */
     public static void tick(Level level, BlockPos pos, BlockState state, WoodGasifierBlockEntity be) {

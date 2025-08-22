@@ -191,9 +191,4 @@ public class SugarRefineryBlockEntity extends AbstractProcessingBlockEntity
         cookTime      = tag.getInt("CookTime");
         cookTimeTotal = Math.max(1, tag.getInt("CookTimeTotal"));
     }
-
-    @Override
-    public BlockEntityType<?> getType() {
-        return ModBlockEntities.SUGAR_REFINERY_BE.get();
-    }
 }

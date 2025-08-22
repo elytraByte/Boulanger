@@ -52,10 +52,6 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     public MixingBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MIXING_BLOCK_BE.get(), pos, state, 3);
     }
-    @Override
-    public BlockEntityType<?> getType() {
-        return ModBlockEntities.MIXING_BLOCK_BE.get();
-    }
 
     public List<IngredientStack> getIngredientList() { return Collections.unmodifiableList(ingredientList); }
     public int getMixProgress() { return mixProgress; }
@@ -378,7 +374,7 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider regs) {
         super.saveAdditional(tag, regs);
-        tag.put("Inventory", itemHandler.serializeNBT(regs));
+        //tag.put("Inventory", itemHandler.serializeNBT(regs));
         tag.putBoolean("Mixing", mixing);
         tag.putInt("MixProgress", mixProgress);
         tag.put("Ingredients", saveIngredientList());
@@ -387,7 +383,7 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider regs) {
         super.loadAdditional(tag, regs);
-        itemHandler.deserializeNBT(regs, tag.getCompound("Inventory"));
+        //itemHandler.deserializeNBT(regs, tag.getCompound("Inventory"));
         mixing = tag.getBoolean("Mixing");
         mixProgress = tag.getInt("MixProgress");
         loadIngredientList(tag.getList("Ingredients", ListTag.TAG_COMPOUND));

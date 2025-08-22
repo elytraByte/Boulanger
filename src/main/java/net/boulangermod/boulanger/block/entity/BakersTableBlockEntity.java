@@ -21,7 +21,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
@@ -34,11 +33,6 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
 
     public BakersTableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.BAKERS_TABLE.get(), pos, state, 3);
-    }
-
-    @Override
-    public BlockEntityType<?> getType() {
-        return ModBlockEntities.BAKERS_TABLE.get();
     }
 
     @Override
@@ -137,17 +131,5 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
 
         setChanged();
         return true;
-    }
-
-    @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.saveAdditional(tag, provider);
-        tag.put("inventory", getItemHandler(null).serializeNBT(provider));
-    }
-
-    @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.loadAdditional(tag, provider);
-        getItemHandler(null).deserializeNBT(provider, tag.getCompound("inventory"));
     }
 }

@@ -60,11 +60,6 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
     public int getCookTime()    { return cookTime;    }
 
     @Override
-    public BlockEntityType<?> getType() {
-        return ModBlockEntities.WOOD_OVEN_BE.get();
-    }
-
-    @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide) return;
 

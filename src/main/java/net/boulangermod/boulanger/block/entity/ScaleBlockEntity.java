@@ -12,7 +12,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,11 +28,6 @@ public class ScaleBlockEntity extends AbstractProcessingBlockEntity {
 
     public ScaleBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.SCALE_BLOCK_BE.get(), pos, state, 4);
-    }
-
-    @Override
-    public BlockEntityType<?> getType() {
-        return ModBlockEntities.SCALE_BLOCK_BE.get();
     }
 
     /** Called by the menu when the user enters a target weight */

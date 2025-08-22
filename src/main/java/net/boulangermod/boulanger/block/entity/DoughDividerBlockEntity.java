@@ -17,21 +17,18 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final int INPUT_SLOT = 0;
+    private static final int INPUT_SLOT  = 0;
     private static final int OUTPUT_SLOT = 1;
     // grams of wiggle room
     private static final double TOLERANCE_GRAMS = 2.0;
@@ -40,21 +37,7 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         super(ModBlockEntities.DOUGH_DIVIDER.get(), pos, state, 2);
     }
 
-    private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-            if (!level.isClientSide) {
-                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-            }
-        }
-    };
-
-    public ItemStackHandler getItemHandler() {
-        return itemHandler;
-    }
-
-
+    @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
         // only run on server
         if (level.isClientSide) return;
@@ -67,9 +50,13 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         DoughProcessRecipe recipe = findRecipeFor(input);
         if (recipe == null) return;
 
-        // 2) Check that the current processing step is DIVIDE
-        ProofingStateComponent proofState = input.get(ModDataComponentTypes.PROOFING_STATE);
-        int stepIdx = proofState != null ? proofState.stepIndex() : 0;
+        // 2) Resolve current step index safely
+        int stepIdx = safeStepIndex(input, recipe);
+        if (stepIdx < 0) {
+            // Finished or invalid index -> nothing to do here anymore
+            return;
+        }
+
         ProcessingStep currentStep = recipe.getSteps().get(stepIdx);
         if (currentStep.getType() != StepType.DIVIDE) return;
 
@@ -78,6 +65,18 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         processItem();
     }
 
+    /** Returns -1 if finished (idx >= steps.size()) or invalid; otherwise the safe index. */
+    private int safeStepIndex(ItemStack stack, DoughProcessRecipe recipe) {
+        ProofingStateComponent proof = stack.get(ModDataComponentTypes.PROOFING_STATE);
+        int idx = (proof != null ? proof.stepIndex() : 0);
+        int size = recipe.getSteps().size();
+        if (idx < 0) idx = 0;
+        if (idx >= size) {
+            // Already beyond last step => complete
+            return -1;
+        }
+        return idx;
+    }
 
     protected boolean canProcess() {
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
@@ -87,38 +86,41 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         DoughProcessRecipe recipe = findRecipeFor(input);
         if (recipe == null) return false;
 
-        // b) must be on the DIVIDE step
-        ProofingStateComponent proofState = input.get(ModDataComponentTypes.PROOFING_STATE);
-        int stepIdx = proofState != null ? proofState.stepIndex() : 0;
+        // b) must be on a valid step and that step must be DIVIDE
+        int stepIdx = safeStepIndex(input, recipe);
+        if (stepIdx < 0) return false; // finished/invalid
         ProcessingStep currentStep = recipe.getSteps().get(stepIdx);
         if (currentStep.getType() != StepType.DIVIDE) return false;
 
-        // c) original weight checks remain exactly the same…
+        // c) weight checks
         WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
         if (wc == null || wc.grams() <= 0) return false;
-        double total = wc.grams();
+
+        double total   = wc.grams();
         double serving = recipe.getServingWeightGrams();
+        if (serving <= 0) {
+            return false;
+        }
+
         boolean minimalOk = Math.abs(total - serving) <= TOLERANCE_GRAMS;
         boolean multiOk   = total >= (2 * serving - TOLERANCE_GRAMS);
         return minimalOk || multiOk;
     }
 
-
     protected void processItem() {
         // 0) Grab the input stack
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
-        // 0a) Nothing to do if empty or not dough
-        if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) {
-            return;
-        }
+        if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) return;
 
         // 1) Look up the dough‐process recipe
         DoughProcessRecipe recipe = findRecipeFor(input);
         if (recipe == null) {
-            LOGGER.warn("→ processItem: no dough‐process recipe for {}", input);
             return;
         }
         double serving = recipe.getServingWeightGrams();
+        if (serving <= 0) {
+            return;
+        }
 
         // 2) Read total grams from the weight component
         WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
@@ -129,12 +131,8 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         if (floorPortions < 2) {
             double diff = Math.abs(total - serving);
             if (diff <= TOLERANCE_GRAMS) {
-                LOGGER.debug("→ {}g ≈ 1× serving ({}g ±{}g); advancing step",
-                        total, serving, TOLERANCE_GRAMS);
                 advanceSinglePortion(input);
             } else {
-                LOGGER.debug("→ Only {} portion(s) possible and {}g off target; skipping",
-                        floorPortions, diff);
             }
             return;
         }
@@ -148,14 +146,14 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
             // exact multiples: trim leftover
             portions      = floorPortions;
             portionWeight = serving;
-            LOGGER.debug("→ {}g is {}×{}g with {}g leftover ≤{}g; trimming leftover",
-                    total, portions, serving, leftover, TOLERANCE_GRAMS);
         } else {
             // split evenly
             portions      = floorPortions;
             portionWeight = total / portions;
-            LOGGER.debug("→ Splitting {}g evenly into {} pieces of {}g each (no trim)",
-                    total, portions, portionWeight);
+        }
+
+        if (portions <= 0 || portionWeight <= 0) {
+            return;
         }
 
         // 5) Perform the divide‐and‐stamp
@@ -168,8 +166,7 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
 
         // copy & bump proof step
         ItemStack out = input.copy();
-        out.set(ModDataComponentTypes.PROOFING_STATE.get(),
-                bumpProofStep(input));
+        out.set(ModDataComponentTypes.PROOFING_STATE.get(), bumpProofStep(input));
 
         // write & clear
         itemHandler.setStackInSlot(OUTPUT_SLOT, out);
@@ -177,42 +174,58 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         setChanged();
     }
 
+    /**
+     * Divide input into up to {@code portions} items of {@code pWeight} each,
+     * respecting output stack capacity. Only reduces input after confirming output is writable.
+     */
     private void divideIntoPortions(ItemStack input, int portions, double pWeight) {
-        // reduce input by exactly the weight we’re splitting off
-        reduceInput(portions * pWeight);
-
-        // build the output stack
         ItemStack out = itemHandler.getStackInSlot(OUTPUT_SLOT);
-        if (out.isEmpty()) {
-            out = new ItemStack(input.getItem(), portions);
-        } else if (out.getItem() == input.getItem()) {
-            out.grow(portions);
-        } else {
-            LOGGER.warn("→ Cannot divide: output occupied by {}", out.getItem());
+
+        // Incompatible occupant?
+        if (!out.isEmpty() && out.getItem() != input.getItem()) {
             return;
         }
 
-        // copy everything except weight
+        // How many can the output stack accept?
+        int maxStack = input.getMaxStackSize();
+        int existing = (!out.isEmpty() ? out.getCount() : 0);
+        int capacity = Math.max(0, maxStack - existing);
+        if (capacity <= 0) {
+            return;
+        }
+
+        int produce = Math.min(portions, capacity);
+        if (produce <= 0) return;
+
+        // Build/extend the output stack first (so we don't destroy input if we can't output)
+        if (out.isEmpty()) {
+            out = new ItemStack(input.getItem(), produce);
+        } else {
+            out.grow(produce);
+        }
+
+        // Copy everything except weight
         copyDoughMetadataExceptWeight(input, out);
 
-        // stamp the correct recipe & weight
+        // Stamp the correct recipe & per-piece weight
         var oldRec = input.get(ModDataComponentTypes.DOUGH_RECIPE);
         if (oldRec != null) {
             out.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
                     scaleRecipeForWeight(oldRec, pWeight));
         }
-        out.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
-                new WeightComponent((float)pWeight));
+        out.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent((float) pWeight));
 
-        // advance proof step
-        out.set(ModDataComponentTypes.PROOFING_STATE.get(),
-                bumpProofStep(input));
+        // Advance proof step for the produced portions
+        out.set(ModDataComponentTypes.PROOFING_STATE.get(), bumpProofStep(input));
 
-        // write back
+        // Write output
         itemHandler.setStackInSlot(OUTPUT_SLOT, out);
-        setChanged();
 
-        LOGGER.info("→ Divided into {} × {}g", portions, pWeight);
+        // Now reduce input by the actually produced amount
+        double gramsUsed = produce * pWeight;
+        reduceInput(gramsUsed);
+
+        setChanged();
     }
 
     private ProofingStateComponent bumpProofStep(ItemStack stack) {
@@ -224,16 +237,17 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
     private DoughRecipeComponent scaleRecipeForWeight(DoughRecipeComponent old, double newWeight) {
         double scale = newWeight / old.totalWeight();
         var scaled = old.ingredients().stream()
-                .map(i -> new IngredientInfo(i.itemId(), i.category(), (int)Math.round(i.weight() * scale)))
+                .map(i -> new IngredientInfo(i.itemId(), i.category(), (int) Math.round(i.weight() * scale)))
                 .collect(Collectors.toList());
         return new DoughRecipeComponent(
                 old.recipeId(),
                 old.targetPercentages(),
                 scaled,
-                (int)newWeight
+                (int) newWeight
         );
     }
 
+    @SuppressWarnings("unchecked")
     private static void copyDoughMetadataExceptWeight(ItemStack src, ItemStack dst) {
         List<DataComponentType<?>> toCopy = List.of(
                 ModDataComponentTypes.PROOFING_STATE.get(),
@@ -251,11 +265,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
     }
 
     @Override
-    public BlockEntityType<?> getType() {
-        return ModBlockEntities.DOUGH_DIVIDER.get();
-    }
-
-    @Override
     public AbstractContainerMenu createMenu(int id, Inventory playerInv, Player player) {
         return new DoughDividerMenu(id, playerInv, this);
     }
@@ -267,15 +276,14 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         }
 
         // 2) pull out the ResourceLocation directly
-        ResourceLocation processId =
-                stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+        ResourceLocation processId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
 
         // 3) stream your Process recipes, unwrap via RecipeHolder::value, then match on that ID
         return level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get())
                 .stream()
-                .map(RecipeHolder::value)                            // ← RecipeHolder::value works cleanly here
-                .filter(r -> r.getDoughType().equals(processId))     // or getProcessId(), depending on your API
+                .map(RecipeHolder::value)
+                .filter(r -> r.getDoughType().equals(processId))
                 .findFirst()
                 .orElse(null);
     }
@@ -285,33 +293,21 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
      * If the result is ≤0, clears the slot; otherwise writes back the new weight.
      */
     private void reduceInput(double gramsToRemove) {
-        // Grab the current input stack
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
         if (input.isEmpty() || !input.has(ModDataComponentTypes.INGREDIENT_GRAMS.get())) {
-            LOGGER.warn("→ Tried to reduce input but no INGREDIENT_GRAMS component present.");
             return;
         }
 
-        // Read the current weight
         WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
         double remaining = wc.grams() - gramsToRemove;
-        LOGGER.debug("→ Reducing input: {}g - {}g = {}g", wc.grams(), gramsToRemove, remaining);
 
         if (remaining <= 0) {
-            // fully consumed
             itemHandler.setStackInSlot(INPUT_SLOT, ItemStack.EMPTY);
-            LOGGER.debug("→ Input fully consumed; clearing slot.");
         } else {
-            // update to new weight
-            input.set(
-                    ModDataComponentTypes.INGREDIENT_GRAMS.get(),
-                    new WeightComponent((float) remaining)
-            );
+            input.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent((float) remaining));
             itemHandler.setStackInSlot(INPUT_SLOT, input);
-            LOGGER.debug("→ Updated input with new weight: {}g", remaining);
         }
 
-        // mark dirty so it syncs & saves
         setChanged();
     }
 }

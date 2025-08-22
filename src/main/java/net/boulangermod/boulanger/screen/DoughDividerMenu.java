@@ -31,12 +31,12 @@ public class DoughDividerMenu extends AbstractContainerMenu {
         this.blockEntity = (DoughDividerBlockEntity) be;
 
         // Tile-entity slots: 0 = input, 1 = output
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(),
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null),
                 0,
                 INPUT_SLOT_X,
                 INPUT_SLOT_Y
         ));
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(),
+        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null),
                 1,
                 OUTPUT_SLOT_X,
                 OUTPUT_SLOT_Y

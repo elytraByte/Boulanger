@@ -12,19 +12,15 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.Nullable;
 
-public class StoneMillBlock extends AbstractProcessingBlock {
+public class StoneMillBlock extends SimpleProcessingBlock {
     public static final MapCodec<StoneMillBlock> CODEC = simpleCodec(StoneMillBlock::new);
 
     // 16×10 base + 12×6 top (centered)
@@ -33,19 +29,10 @@ public class StoneMillBlock extends AbstractProcessingBlock {
             net.minecraft.world.level.block.Block.box(2, 10, 2, 14, 16, 14)
     );
 
-    public StoneMillBlock(Properties properties) { super(properties); }
+    public StoneMillBlock(Properties properties) { super(properties, StoneMillBlockEntity::new); }
 
     @Override protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
 
-    @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new StoneMillBlockEntity(pos, state);
-    }
-
-    @Override public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
-
-    @Override public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) { return SHAPE; }
-    @Override public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) { return Shapes.empty(); }
-    @Override public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) { return SHAPE; }
     @Override public boolean useShapeForLightOcclusion(BlockState state) { return true; }
 
     // Empty-hand interactions (e.g. right-click with no item)

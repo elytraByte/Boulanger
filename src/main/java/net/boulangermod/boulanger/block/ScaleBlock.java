@@ -3,10 +3,8 @@ package net.boulangermod.boulanger.block;
 import com.mojang.serialization.MapCodec;
 import net.boulangermod.boulanger.block.entity.ScaleBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -26,8 +24,6 @@ public class ScaleBlock extends AbstractProcessingBlock {
     protected MapCodec<? extends BaseEntityBlock> codec() {
         return CODEC;
     }
-
-    @Override public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
@@ -53,11 +49,6 @@ public class ScaleBlock extends AbstractProcessingBlock {
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new ScaleBlockEntity(pos, state);
-    }
-
-    @Override
-    public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
     }
 }
 
