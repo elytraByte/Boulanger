@@ -1,19 +1,19 @@
 {
   "variants": {
     "facing=east": {
-      "model": "boulanger:block/scale_block",
-      "y": 90
+      "model": "boulanger:block/scale1",
+      "y": 270
     },
     "facing=north": {
-      "model": "boulanger:block/scale_block"
-    },
-    "facing=south": {
-      "model": "boulanger:block/scale_block",
+      "model": "boulanger:block/scale1",
       "y": 180
     },
+    "facing=south": {
+      "model": "boulanger:block/scale1"
+    },
     "facing=west": {
-      "model": "boulanger:block/scale_block",
-      "y": 270
+      "model": "boulanger:block/scale1",
+      "y": 90
     }
   }
 }

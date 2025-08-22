@@ -1,5 +1,7 @@
 package net.boulangermod.boulanger.datagen;
 
+import net.boulangermod.boulanger.fluid.ModFluids;
+import net.boulangermod.boulanger.util.ModTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;

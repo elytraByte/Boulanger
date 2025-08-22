@@ -1,4 +1,4 @@
-// 1.21	2025-08-21T23:40:33.2428864	Block States: boulanger
+// 1.21	2025-08-22T07:02:13.1292694	Block States: boulanger
 1e5500f221cf165e9146ecfa3d3d9e81fba4e43d assets/boulanger/blockstates/bakers_table.json
 51ebe8566768390fb86404f773efde625bd9670c assets/boulanger/blockstates/battery.json
 8c8ddc53613ecdb21afc8929b3e45a039d7c0650 assets/boulanger/blockstates/black_tile.json
@@ -29,7 +29,7 @@ c1e9bd6248964529b6c442622410da6425d6dbc2 assets/boulanger/blockstates/pine_stair
 e9cc3319ec4ec575ff1e37633108514f84851aa3 assets/boulanger/blockstates/pine_trapdoor.json
 a6219bbaca6f5f6f723127c04caea6ed76b511a5 assets/boulanger/blockstates/pine_wood.json
 6b1361b7592576de6397d0783ffebb5fda52b4ed assets/boulanger/blockstates/proofing_box.json
-5318b73a761965d4138afdbbeca5dd8d30acc454 assets/boulanger/blockstates/scale_block.json
+4160e10cf7438211c764ccb41de5bc30628b93c9 assets/boulanger/blockstates/scale_block.json
 18a8a2da9f0cc3361ef6897c940f5022e41e9161 assets/boulanger/blockstates/stone_mill.json
 9bc7cdcc2599484e0fe9bf911f95e9ffc0b4aae3 assets/boulanger/blockstates/stripped_pine_log.json
 ec4d1e59bfd5c9dea1fee39558a54451da0f4a68 assets/boulanger/blockstates/stripped_pine_wood.json
@@ -38,6 +38,7 @@ e69b8ead17d06ec8f4a17c369cd9defd9a48b751 assets/boulanger/blockstates/sugar_refi
 0e2c3f0633f6055ab6f6a803939ad4cd00117784 assets/boulanger/blockstates/white_tile.json
 f9477b59a374678903d718e1c7393f52e85b2885 assets/boulanger/blockstates/wild_wheat.json
 fa5933d8af58f460142bdae621789ed61286ec7d assets/boulanger/blockstates/woodgas_engine.json
+565e2b9fe1e39ff9d17668abaee9d77c5933fc02 assets/boulanger/blockstates/woodgas_flare.json
 31cdad6977f33d25d1e423899bfbd6a0472fe481 assets/boulanger/blockstates/woodgas_pipe.json
 a3ca652b868f8fed60a845bc8d56d3011cbe6431 assets/boulanger/blockstates/wood_gasifier.json
 9cc0929abdb804ee5b61219e30a48743ba2dddea assets/boulanger/blockstates/wood_oven.json
@@ -104,11 +105,7 @@ b6b986340d804dbacccaebc4d1a847391e9c9551 assets/boulanger/models/block/sugar_ref
 635885c699339cdfbd5cce743d6045ce57e47e43 assets/boulanger/models/block/sugar_refinery_item.json
 5aa7eaee16aa6df3cb9e33d9ef5240349fee8777 assets/boulanger/models/block/white_tile.json
 60fea460a932d3bfc9d887b01083df116a65ef32 assets/boulanger/models/block/wild_wheat.json
-6fe4fae8c58bb4c86be40301829072f887872da6 assets/boulanger/models/block/woodgas_engine_off.json
-fe81d9fea48ae0fe4f7846a0550c514cb9bc65c9 assets/boulanger/models/block/woodgas_engine_on.json
 19044f928450e6667dea0390c0d43847306f0f0e assets/boulanger/models/block/wood_gasifier_base.json
-4de5974ea532e2019c147796ba6ef28522cfc097 assets/boulanger/models/block/wood_oven_off.json
-c87d545432b7df2359abfaa52513360816d21bc3 assets/boulanger/models/block/wood_oven_on.json
 7691f8293470ad43b69e5ffb90d2259e2832de61 assets/boulanger/models/item/bakers_table.json
 7d7830a2061ea59639b31bc25529a585fa3173cf assets/boulanger/models/item/battery.json
 3df6ef84cc4c5ab8295c7d8a8f5cb0dba0aee860 assets/boulanger/models/item/black_tile.json
@@ -139,5 +136,5 @@ be8dcf5876b7c381837e7de664a6dbc6a7e97f64 assets/boulanger/models/item/tree_tap.j
 aa7e0a6558642a6344ab67679390a7f24cf3196f assets/boulanger/models/item/white_tile.json
 6cba356a9ae8b07397607f4a1ac6bb8a505dcfe5 assets/boulanger/models/item/wild_wheat.json
 3210702ecc57492295392023fb689d0bbd9ab118 assets/boulanger/models/item/woodgas_engine.json
+1bdcfa6e21a7c927e541eded5c1a24bbb4c8afbe assets/boulanger/models/item/woodgas_flare.json
 515862480b693a8fbb9e03c7a0ad487aeb64bbe7 assets/boulanger/models/item/wood_gasifier.json
-759399399ce94bc76254a3ce6fb7f91f2562bd3a assets/boulanger/models/item/wood_oven.json

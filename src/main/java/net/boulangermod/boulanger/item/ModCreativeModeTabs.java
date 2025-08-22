@@ -105,6 +105,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept((new ItemStack(ModBlocks.IRON_FRAME.get(), 1)));
                         pOutput.accept((new ItemStack(ModBlocks.WOODGAS_ENGINE.get(), 1)));
                         pOutput.accept((new ItemStack(ModBlocks.WOODGAS_PIPE.get(), 1)));
+                        pOutput.accept((new ItemStack(ModBlocks.WOODGAS_FLARE.get(), 1)));
                         pOutput.accept(new ItemStack(ModItems.HEN_SPAWN_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.HOLSTEIN_FRIESIAN_COW_SPAWN_EGG.get(), 1));
 

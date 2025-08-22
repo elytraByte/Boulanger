@@ -17,23 +17,23 @@ public class WoodGasEngineBlockScreen extends AbstractContainerScreen<WoodGasEng
     private static final ResourceLocation FLAME_TEX =
             ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/lit_progress.png"); // 14×14
     private static final ResourceLocation BUBBLES_TEX =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/bubbles.png");       // 12×29
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/bubbles.png");      // 12×29
+
+    // Gauge texture (7×62)
     private static final ResourceLocation WOODGAS_TEX =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/woodgas.png");       // 7×62
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/woodgas.png");
 
     // ── background size ────────────────────────────────────────────────────────
     private static final int BG_W = 176;
     private static final int BG_H = 166;
 
-    // ── flame (unchanged): origin 80,51; shrinks TOP→DOWN ─────────────────────
+    // ── flame (unchanged) ─────────────────────────────────────────────────────
     private static final int FLAME_X = 80, FLAME_Y = 51, FLAME_W = 14, FLAME_H = 14;
 
-    // ── bubbles: COPY from Gasifier (origin moved down by 1px to 46) ──────────
-    // reveal from TOP downward, texture is 12×29
+    // ── bubbles (unchanged) ───────────────────────────────────────────────────
     private static final int BUB_X = 136, BUB_Y = 46, BUB_W = 12, BUB_H = 29;
 
-    // ── woodgas gauge: COPY from Gasifier (bottom lowered by 1 → 77) ──────────
-    // 156,15 .. 163,77  (7×62), draw bottom→up using woodgas.png 1:1
+    // ── woodgas gauge (unchanged) ─────────────────────────────────────────────
     private static final int GAS_X = 156, GAS_Y_TOP = 15, GAS_Y_BOTTOM = 77, GAS_W = 7, GAS_H = 62;
 
     public WoodGasEngineBlockScreen(WoodGasEngineBlockMenu menu, Inventory inv, Component title) {
@@ -48,11 +48,11 @@ public class WoodGasEngineBlockScreen extends AbstractContainerScreen<WoodGasEng
     protected void renderBg(GuiGraphics gfx, float partialTicks, int mouseX, int mouseY) {
         final int x = leftPos, y = topPos;
 
-        // background first (like Gasifier)
+        // Background
         RenderSystem.setShaderTexture(0, TEXTURE);
         gfx.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
-        // elapsed 0..1 (use your percent, same as Gasifier math expects)
+        // Percent elapsed for flame/bubbles
         float elapsed = Mth.clamp(menu.getBurnPercent(), 0f, 1f);
 
         // FLAME (starts full, empties TOP→DOWN)
@@ -67,8 +67,8 @@ public class WoodGasEngineBlockScreen extends AbstractContainerScreen<WoodGasEng
             RenderSystem.disableBlend();
         }
 
-        // BUBBLES — COPY from Gasifier: reveal from TOP downward, origin at (136,46), 12×29
-        int bubbleFill = Math.round(elapsed * BUB_H); // 0..29
+        // BUBBLES (reveal from TOP downward)
+        int bubbleFill = Math.round(elapsed * BUB_H);
         if (bubbleFill > 0) {
             RenderSystem.setShaderTexture(0, BUBBLES_TEX);
             RenderSystem.enableBlend();
@@ -77,12 +77,14 @@ public class WoodGasEngineBlockScreen extends AbstractContainerScreen<WoodGasEng
             RenderSystem.disableBlend();
         }
 
-        // WOODGAS — COPY from Gasifier: bottom anchored at y=77, draw 1:1 from woodgas.png (7×62)
+        // Gas values
         int cap = Math.max(menu.getGasCapacity(), 0);
         int amt = Math.min(Math.max(menu.getGasAmount(), 0), cap);
-        int gasFill = (cap > 0) ? (amt * GAS_H / cap) : 0; // 0..62
+
+        // Gauge: bottom→up, 1:1 draw from 7×62 gui texture
+        int gasFill = (cap > 0) ? (amt * GAS_H / cap) : 0;
         if (gasFill > 0) {
-            int srcV  = GAS_H - gasFill;            // read from bottom up
+            int srcV  = GAS_H - gasFill;
             int destY = y + (GAS_Y_BOTTOM - gasFill);
             RenderSystem.setShaderTexture(0, WOODGAS_TEX);
             RenderSystem.enableBlend();
@@ -91,7 +93,7 @@ public class WoodGasEngineBlockScreen extends AbstractContainerScreen<WoodGasEng
             RenderSystem.disableBlend();
         }
 
-        // back to main sheet (if anything else needs it)
+        // restore main sheet if needed later
         RenderSystem.setShaderTexture(0, TEXTURE);
     }
 

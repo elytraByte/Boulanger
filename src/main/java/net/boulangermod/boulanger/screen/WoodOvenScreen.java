@@ -13,13 +13,13 @@ public class WoodOvenScreen extends AbstractContainerScreen<WoodOvenMenu> {
     private static final ResourceLocation GUI_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/furnace.png");
     private static final ResourceLocation FLAME_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/flame.png");
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/lit_progress.png");
     private static final ResourceLocation ARROW_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/arrow_progress.png");
 
     // Native sizes (no scaling needed since textures are 1:1)
-    private static final int FLAME_WIDTH = 56;
-    private static final int FLAME_HEIGHT = 56;
+    private static final int FLAME_WIDTH = 14;
+    private static final int FLAME_HEIGHT = 14;
     private static final int ARROW_WIDTH = 87;
     private static final int ARROW_HEIGHT = 60;
 

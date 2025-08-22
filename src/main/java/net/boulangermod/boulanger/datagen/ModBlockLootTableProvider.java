@@ -137,6 +137,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.PINE_PRESSURE_PLATE.get());
         dropSelf(ModBlocks.PINE_DOOR.get());
         dropSelf(ModBlocks.PINE_TRAPDOOR.get());
+        dropSelf(ModBlocks.WOODGAS_FLARE.get());
 
         // your custom wheat crop:
         Block crop = ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get();

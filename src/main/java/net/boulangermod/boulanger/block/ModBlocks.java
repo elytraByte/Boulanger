@@ -41,8 +41,11 @@ public class ModBlocks {
     public static final DeferredBlock<Block> MIXING_BLOCK = registerBlock("mixing_block",
             () -> new MixingBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
-    public static final DeferredBlock<Block> SCALE_BLOCK = registerBlock("scale_block",
-            () -> new ScaleBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+    public static final DeferredBlock<Block> SCALE_BLOCK =
+            registerBlock("scale_block",
+                    () -> new ScaleBlock(BlockBehaviour.Properties.of()
+                            .strength(1.5F)
+                            .noOcclusion()));  // ← important
 
     public static final DeferredBlock<StoneMillBlock> STONE_MILL_BLOCK = registerBlock("stone_mill",
             () -> new StoneMillBlock(BlockBehaviour.Properties.of()
@@ -57,6 +60,19 @@ public class ModBlocks {
                     .noOcclusion()                 // <-- important: don’t cull neighbors
             )
     );
+
+    public static final DeferredBlock<WoodGasFlareBlock> WOODGAS_FLARE =
+            registerBlock("woodgas_flare",
+                    () -> new WoodGasFlareBlock(
+                            BlockBehaviour.Properties.of()
+                                    .noOcclusion()
+                                    .strength(0.3F)
+                                    .sound(SoundType.LANTERN)
+                                    .lightLevel(s -> s.getValue(WoodGasFlareBlock.LIT) ? 14 : 0)
+                    )
+            );
+
+
 
 
     public static final DeferredBlock<Block> MOTIVATOR =

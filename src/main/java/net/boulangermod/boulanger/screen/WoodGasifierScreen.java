@@ -13,9 +13,17 @@ public class WoodGasifierScreen extends AbstractContainerScreen<WoodGasifierMenu
             ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/wood_gasifier.png");
 
     private static final ResourceLocation BUBBLES_TEX =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/bubbles.png");  // 12x29
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/bubbles.png");      // 12x29
     private static final ResourceLocation WOODGAS_TEX =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/woodgas.png");  // 7x62
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/woodgas.png");      // 7x62
+
+    // New: lit_progress sprite (starts full, disappears from TOP as burn progresses)
+    private static final ResourceLocation LIT_PROGRESS_TEX =
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/lit_progress.png");
+    private static final int LIT_X = 27, LIT_Y = 41;
+    // Set these to your lit_progress.png size:
+    private static final int LIT_TEX_W = 14;
+    private static final int LIT_TEX_H = 14;
 
     // Layout
     private static final int BURN_X = 94,  BURN_Y = 21, BURN_W = 14, BURN_H = 50;
@@ -44,10 +52,34 @@ public class WoodGasifierScreen extends AbstractContainerScreen<WoodGasifierMenu
         // Background
         gfx.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
-        // Horizontal burn arrow (kept)
+        // Compute burn progress once
         int maxBurn = menu.getMaxBurnProgress();
-        int elapsed = maxBurn > 0 ? menu.getBurnProgress() : 0; // our menu exposes elapsed (0..max)
-        int progW   = maxBurn > 0 ? (elapsed * 24 / maxBurn) : 0;
+        int elapsed = maxBurn > 0 ? menu.getBurnProgress() : 0; // elapsed 0..maxBurn
+
+        // New: lit_progress overlay — starts full, disappears from TOP as elapsed increases
+        if (maxBurn > 0) {
+            int visible = LIT_TEX_H - (elapsed * LIT_TEX_H / maxBurn);  // LIT_TEX_H..0
+            if (visible > 0) {
+                int cutTop = LIT_TEX_H - visible; // hidden pixels from top
+                RenderSystem.setShaderTexture(0, LIT_PROGRESS_TEX);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+
+                // Draw only the bottom slice, keeping the bottom edge anchored
+                gfx.blit(LIT_PROGRESS_TEX,
+                        x + LIT_X, y + LIT_Y + cutTop,
+                        0,                 // blit offset
+                        0, cutTop,         // u, v (skip hidden top)
+                        LIT_TEX_W, visible,
+                        LIT_TEX_W, LIT_TEX_H);
+
+                RenderSystem.disableBlend();
+                RenderSystem.setShaderTexture(0, TEXTURE);
+            }
+        }
+
+        // Horizontal burn arrow (kept)
+        int progW = maxBurn > 0 ? (elapsed * 24 / maxBurn) : 0;
         gfx.blit(TEXTURE, x + 56, y + 37, 176, 0, progW + 1, 16);
 
         // Vertical burn bar (top → bottom)
@@ -64,11 +96,11 @@ public class WoodGasifierScreen extends AbstractContainerScreen<WoodGasifierMenu
         // Woodgas level — 1:1 draw from woodgas.png (no scaling), bottom anchored at y=77
         int gasCap = Math.max(menu.getGasCapacity(), 0);
         int gasAmt = Math.min(Math.max(menu.getGasAmount(), 0), gasCap);
-        int gasFillTex = (gasCap > 0) ? (gasAmt * GAS_TEX_H / gasCap) : 0; // 0..62 texture pixels
+        int gasFillTex = (gasCap > 0) ? (gasAmt * GAS_TEX_H / gasCap) : 0; // 0..62 tex px
 
         if (gasFillTex > 0) {
-            int srcV  = GAS_TEX_H - gasFillTex;            // read from bottom upward
-            int destY = y + (GAS_Y_BOTTOM - gasFillTex);   // draw from bottom upward
+            int srcV  = GAS_TEX_H - gasFillTex;           // read from bottom upward
+            int destY = y + (GAS_Y_BOTTOM - gasFillTex);  // draw from bottom upward
             RenderSystem.setShaderTexture(0, WOODGAS_TEX);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
@@ -82,8 +114,7 @@ public class WoodGasifierScreen extends AbstractContainerScreen<WoodGasifierMenu
             RenderSystem.setShaderTexture(0, TEXTURE);
         }
 
-        // Bubbles like a furnace flame:
-        // Reveal from TOP downward, proportional to *elapsed* (as burnTime counts down).
+        // Bubbles like a furnace flame: reveal from TOP downward as elapsed rises
         if (elapsed > 0 && maxBurn > 0) {
             int bubbleFill = (elapsed * BUB_H) / maxBurn;   // 0..29
             if (bubbleFill > 0) {
@@ -93,8 +124,8 @@ public class WoodGasifierScreen extends AbstractContainerScreen<WoodGasifierMenu
                 // draw the TOP slice (u=0,v=0) with height=bubbleFill
                 gfx.blit(BUBBLES_TEX,
                         x + BUB_X, y + BUB_Y,
-                        0,            // blitOffset
-                        0, 0,         // u, v start at top of texture
+                        0, 0,        // blitOffset, u
+                        0,           // v (top of texture)
                         BUB_W, bubbleFill,
                         BUB_W, BUB_H);
                 RenderSystem.disableBlend();
@@ -118,13 +149,12 @@ public class WoodGasifierScreen extends AbstractContainerScreen<WoodGasifierMenu
         this.renderBackground(gfx, mouseX, mouseY, partialTicks);
         super.render(gfx, mouseX, mouseY, partialTicks);
 
-        // ── Tooltip over the woodgas gauge
+        // Tooltip over the woodgas gauge
         int gx0 = leftPos + GAS_X, gx1 = gx0 + GAS_W;
         int gy0 = topPos + GAS_Y_TOP, gy1 = topPos + GAS_Y_BOTTOM;
         if (mouseX >= gx0 && mouseX < gx1 && mouseY >= gy0 && mouseY < gy1) {
             int cap = Math.max(menu.getGasCapacity(), 0);
             int amt = Math.min(Math.max(menu.getGasAmount(), 0), cap);
-            // If you have a lang key for the fluid, use that; otherwise this literal is fine.
             Component tip = Component.literal(amt + "/" + cap + " mB " + "Wood Gas");
             gfx.renderTooltip(this.font, tip, mouseX, mouseY);
         }

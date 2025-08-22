@@ -1,5 +1,7 @@
 package net.boulangermod.boulanger.datagen;
 
+import net.boulangermod.boulanger.Boulanger;
+import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.item.*;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -9,8 +11,6 @@ import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
-import net.boulangermod.boulanger.Boulanger;
-import net.boulangermod.boulanger.block.ModBlocks;
 
 public class ModItemModelProvider extends ItemModelProvider {
     public ModItemModelProvider(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
@@ -19,53 +19,45 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-
-        // Flour base model with all overrides
+        // ─── Flour with overrides via custom_model_data ───────────────────────
         ItemModelBuilder flour = withExistingParent("flour", "item/generated")
-                .texture("layer0", modLoc("item/flour")); // base flour.png
+                .texture("layer0", modLoc("item/flour"));
 
         for (FlourItemType type : FlourItemType.values()) {
-            // Override for custom_model_data
             flour.override()
                     .predicate(ResourceLocation.fromNamespaceAndPath("minecraft", "custom_model_data"), type.getModelIndex())
                     .model(withExistingParent("flour/" + type.getId(), "item/generated"))
-                    // flour/first_break_flour
                     .end();
 
-            // Individual override model: flour/first_break_flour.json
             withExistingParent("flour/" + type.getId(), "item/generated")
                     .texture("layer0", modLoc("item/flour/" + type.getId()));
         }
 
-        //breads
+        // ─── Bread with overrides ─────────────────────────────────────────────
         ItemModelBuilder bread = withExistingParent("bread", mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/bread"));
 
         for (BreadType type : BreadType.values()) {
             String id = type.getId();
-            String modelPath = "bread/" + id;
-
-            // build it once, capture it
-            ItemModelBuilder overrideModel = withExistingParent(modelPath, mcLoc("item/generated"))
+            ItemModelBuilder overrideModel = withExistingParent("bread/" + id, mcLoc("item/generated"))
                     .texture("layer0", modLoc("item/" + id));
 
-            // reference _that_ builder in your override
             bread.override()
                     .predicate(mcLoc("custom_model_data"), type.getModelIndex())
                     .model(overrideModel)
                     .end();
         }
 
-        // --- Fifty Pound Bags ---
+        // ─── Fifty Pound Bags (overrides) ─────────────────────────────────────
         ItemModelBuilder fiftyBag = withExistingParent("fifty_pound_bag", mcLoc("item/generated"))
-                .texture("layer0", modLoc("item/blank_fifty_pound_bag")); // default / fallback
+                .texture("layer0", modLoc("item/blank_fifty_pound_bag"));
 
         for (FiftyPoundBagType type : FiftyPoundBagType.values()) {
-            String id = type.getId() + "_fifty_pound_bag"; // e.g., ap_fifty_pound_bag
-            int modelIndex = type.getModelIndex(); // e.g., 101, 102...
+            String id = type.getId() + "_fifty_pound_bag";
+            int modelIndex = type.getModelIndex();
 
             ItemModelBuilder overrideModel = withExistingParent(id, mcLoc("item/generated"))
-                    .texture("layer0", modLoc("item/" + id)); // match your PNG name
+                    .texture("layer0", modLoc("item/" + id));
 
             fiftyBag.override()
                     .predicate(mcLoc("custom_model_data"), modelIndex)
@@ -73,44 +65,25 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .end();
         }
 
+        // ─── Pans with overrides (empty/full) ─────────────────────────────────
         ItemModelBuilder pan = withExistingParent("pan", mcLoc("item/generated"))
-                .texture("layer0", modLoc("item/loaf_pan")); // fallback texture
+                .texture("layer0", modLoc("item/loaf_pan"));
 
         for (PanType type : PanType.values()) {
             String id = type.getId();
-
             int empty = type.getEmptyModelIndex();
-            int full = type.getFullModelIndex();
-            int proofed = type.getProofedModelIndex();
+            int full  = type.getFullModelIndex();
 
-            // Child models per state
             ItemModelBuilder emptyModel = withExistingParent("pan/" + id + "/empty", mcLoc("item/generated"))
                     .texture("layer0", modLoc("item/" + id + "_pan"));
-
             ItemModelBuilder fullModel = withExistingParent("pan/" + id + "/full", mcLoc("item/generated"))
                     .texture("layer0", modLoc("item/" + id + "_pan_full"));
 
-//            ItemModelBuilder proofedModel = withExistingParent("pan/" + id + "/proofed", mcLoc("item/generated"))
-//                    .texture("layer0", modLoc("item/" + id + "_pan_proofed"));
-
-            // Overrides on the base 'pan' item
-            pan.override()
-                    .predicate(mcLoc("custom_model_data"), empty)
-                    .model(emptyModel)
-                    .end();
-
-            pan.override()
-                    .predicate(mcLoc("custom_model_data"), full)
-                    .model(fullModel)
-                    .end();
+            pan.override().predicate(mcLoc("custom_model_data"), empty).model(emptyModel).end();
+            pan.override().predicate(mcLoc("custom_model_data"), full ).model(fullModel ).end();
         }
 
-//        // WOODGAS_PIPE item → show the isolated pipe segment
-//        withExistingParent(ModBlocks.WOODGAS_PIPE.getId().getPath(),
-//                modLoc("block/woodgas_pipe_isolated"));
-        basicItem(ModBlocks.ENERGY_CABLE.asItem());
-        basicItem(ModBlocks.WOODGAS_PIPE.asItem());
-
+        // ─── Simple items (generated) ─────────────────────────────────────────
         basicItem(ModItems.BUTTER.get());
         basicItem(ModItems.FANCY_EGG.get());
         basicItem(ModItems.WOODEN_BUCKET.get());
@@ -165,49 +138,39 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.HEN_SPAWN_EGG.get());
         basicItem(ModItems.FILLED_BOWL_ITEM.get());
         basicItem(ModItems.GASIFIER_FILTER.get());
-        saplingItem(ModBlocks.PINE_SAPLING);
-        fenceItem(ModBlocks.PINE_FENCE, ModBlocks.PINE_PLANKS);
         basicItem(ModItems.MILLIGRAM_SCALE.get());
 
+        // ─── Block items that should show the block’s 3D model ───────────────
+        // (pipes/cables often use simple item models; adjust if you prefer block parents)
+        basicItem(ModBlocks.ENERGY_CABLE.asItem());
+        basicItem(ModBlocks.WOODGAS_PIPE.asItem());
 
+        // ─── Sapling & fence inventory items ─────────────────────────────────
+        saplingItem(ModBlocks.PINE_SAPLING);
+        fenceItem(ModBlocks.PINE_FENCE, ModBlocks.PINE_PLANKS);
 
+        // ─── Stairs/Slab/Gate items parented to their block models ───────────
+        withExistingParent(ModBlocks.PINE_STAIRS.getId().getPath(), modLoc("block/pine_stairs"));
+        withExistingParent(ModBlocks.PINE_SLAB.getId().getPath(),   modLoc("block/pine_slab"));
+        withExistingParent(ModBlocks.PINE_FENCE_GATE.getId().getPath(), modLoc("block/pine_fence_gate"));
 
-        // ─── PINE STAIRS, SLAB & FENCE GATE ITEM MODELS ───────────────────────
-        // Stairs: use the 3D block model so it renders in‐world shape in your inventory
-        withExistingParent(
-                ModBlocks.PINE_STAIRS.getId().getPath(),
-                modLoc("block/pine_stairs")
-        );
-
-        // Slab: same idea, references the slab block’s model
-        withExistingParent(
-                ModBlocks.PINE_SLAB.getId().getPath(),
-                modLoc("block/pine_slab")
-        );
-
-        // Fence Gate: reference the block model so it shows the gate shape
-        withExistingParent(
-                ModBlocks.PINE_FENCE_GATE.getId().getPath(),
-                modLoc("block/pine_fence_gate")
-        );
-
-// Sized-down block items
-        machineItem("wood_oven",        "block/wood_oven_off",    0.62F);
-        machineItem("mixing_block",     "block/mixing_block",     0.62F);
-        machineItem("stone_mill", "block/stone_mill_block", 0.62F);
-        machineItem("scale_block",      "block/scale_block",      0.62F);
-        machineItem("proofing_box", "block/proofing_box", 0.62F);
-        machineItem("machine_housing",  "block/machine_housing",  0.62F);
-        machineItem("dough_divider",    "block/dough_divider",    0.62F); // add this one
-        machineItem("iron_frame",    "block/iron_frame_0",    0.62F); // add this one
-
+        // ─── Machine-style block items (isometric GUI view, scaled down) ─────
+        machineItem("wood_oven",      "block/wood_oven_off",   0.62F);
+        machineItem("mixing_block",   "block/mixing_block",    0.62F);
+        machineItem("stone_mill",     "block/stone_mill_block",0.62F);
+        machineItem("scale_block",    "block/scale_block",     0.62F); // if your block model is 'scale1', change to "block/scale1"
+        machineItem("proofing_box",   "block/proofing_box",    0.62F);
+        machineItem("machine_housing","block/machine_housing", 0.62F);
+        machineItem("dough_divider",  "block/dough_divider",   0.62F);
+        machineItem("iron_frame",     "block/iron_frame_0",    0.62F);
     }
 
+    // Helper to make a nice isometric block-item render using the block model as parent
     private ItemModelBuilder machineItem(String itemId, String blockModelPath, float guiScale) {
         ItemModelBuilder b = withExistingParent(itemId, modLoc(blockModelPath));
         b.transforms()
                 .transform(ItemDisplayContext.GUI)
-                .rotation(30, 225, 0).scale(guiScale) // try 0.65–0.75
+                .rotation(30, 225, 0).scale(guiScale)
                 .end()
                 .transform(ItemDisplayContext.GROUND)
                 .translation(0, 3, 0).scale(0.35F)
@@ -232,17 +195,14 @@ public class ModItemModelProvider extends ItemModelProvider {
     }
 
     private ItemModelBuilder saplingItem(DeferredBlock<Block> item) {
-        return withExistingParent(item.getId().getPath(),
-                ResourceLocation.parse("item/generated")).texture("layer0",
-                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
+        return withExistingParent(item.getId().getPath(), ResourceLocation.parse("item/generated"))
+                .texture("layer0", ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
                         "block/" + item.getId().getPath()));
     }
 
     public void fenceItem(DeferredBlock<Block> block, DeferredBlock<Block> baseBlock) {
         this.withExistingParent(block.getId().getPath(), mcLoc("block/fence_inventory"))
-                .texture("texture",  ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
+                .texture("texture", ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
                         "block/" + baseBlock.getId().getPath()));
     }
-
-
 }

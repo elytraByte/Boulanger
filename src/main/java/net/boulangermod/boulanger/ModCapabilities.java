@@ -64,6 +64,12 @@ public final class ModCapabilities {
                 ModBlockEntities.STONE_MILL_BE.get(),
                 (StoneMillBlockEntity be, @Nullable Direction side) -> be.getEnergyStorage(side)
         );
+
+        event.registerBlockEntity(
+                Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.WOODGAS_FLARE_BE.get(),
+                (WoodGasFlareBlockEntity be, @Nullable Direction side) -> be.getFluidHandler(side)
+        );
     }
 
     static boolean isPortCell(net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity be) {

@@ -188,7 +188,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         );
 
         horizontal(ModBlocks.MIXING_BLOCK.get(), "mixing_block");
-        horizontal(ModBlocks.SCALE_BLOCK.get(), "scale_block");
+//        horizontal(ModBlocks.SCALE_BLOCK.get(), "scale_block");
         horizontal(ModBlocks.PROOFING_BOX.get(), "proofing_box");
         horizontal(ModBlocks.DOUGH_DIVIDER.get(), "dough_divider");
 
@@ -199,6 +199,22 @@ public class ModBlockStateProvider extends BlockStateProvider {
             simpleBlockItem(ModBlocks.STONE_MILL_BLOCK.get(), stoneMill); // generates models/item/stone_mill_block.json
         }
 
+// ─── SCALE (custom model 'scale1', horizontal; NO flip) ─────────────────────
+        {
+            ModelFile scale = models().getExistingFile(modLoc("block/scale1"));
+
+            getVariantBuilder(ModBlocks.SCALE_BLOCK.get())
+                    .forAllStates(s -> {
+                        Direction dir = s.getValue(BlockStateProperties.HORIZONTAL_FACING);
+                        int rotY = (int) dir.toYRot(); // no +180
+                        return ConfiguredModel.builder()
+                                .modelFile(scale)
+                                .rotationY(rotY)
+                                .build();
+                    });
+        }
+
+
         // ─── STONE MILL & TILES ───────────────────────────────────────────────
         blockWithItem(ModBlocks.KAOLINITE_CLAY);
         blockWithItem(ModBlocks.BLACK_TILE);
@@ -207,7 +223,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockWithItem(ModBlocks.BLUE_WHITE_TILE);
         blockWithItem(ModBlocks.L3E_TILE);
         blockWithItem(ModBlocks.WHITE_TILE);
-//        scaleBlockWithCustomSides(ModBlocks.SCALE_BLOCK.get());
         blockWithItem(ModBlocks.MACHINE_HOUSING);
 
 // Core (rod + base): vanilla geo, your stand texture
@@ -301,26 +316,27 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 models().getExistingFile(modLoc("block/boulanger_wheat_stage0"))
         );
 
-        // ─── WOOD OVEN ─────────────────────────────────────────────────────────
-        getVariantBuilder(ModBlocks.WOOD_OVEN.get())
-                .forAllStates(s -> {
-                    boolean lit = s.getValue(BlockStateProperties.LIT);
-                    Direction dir = s.getValue(BlockStateProperties.HORIZONTAL_FACING);
-                    String suffix = lit ? "_on" : "_off";
-                    ModelFile file = models().orientable(
-                            "wood_oven" + suffix,
-                            modLoc("block/diorite_side"),
-                            modLoc("block/wood_oven_front" + suffix),
-                            modLoc("block/diorite_side")
-                    );
-                    return ConfiguredModel.builder()
-                            .modelFile(file)
-                            .rotationY((int) dir.toYRot())
-                            .build();
-                });
-        simpleBlockItem(ModBlocks.WOOD_OVEN.get(),
-                models().getExistingFile(modLoc("block/wood_oven_off"))
-        );
+// ─── WOOD OVEN (custom models 'wood_oven_on' / 'wood_oven_off') ─────────────
+        {
+            ModelFile ovenOff = models().getExistingFile(modLoc("block/wood_oven_off"));
+            ModelFile ovenOn  = models().getExistingFile(modLoc("block/wood_oven_on"));
+
+            getVariantBuilder(ModBlocks.WOOD_OVEN.get())
+                    .forAllStates(s -> {
+                        Direction dir = s.getValue(BlockStateProperties.HORIZONTAL_FACING);
+                        boolean lit   = s.getValue(BlockStateProperties.LIT);
+
+                        // If your model’s “front” points the wrong way, add +180 here.
+                        int rotY = (int) dir.toYRot();
+
+                        return ConfiguredModel.builder()
+                                .modelFile(lit ? ovenOn : ovenOff)
+                                .rotationY(rotY)
+                                .build();
+                    });
+
+            // Do NOT call simpleBlockItem here—item is generated in ModItemModelProvider via machineItem.
+        }
 
         // ─── BAKER'S TABLE ─────────────────────────────────────────────────────
         ModelFile bakersTableModel = models().orientable(
@@ -422,33 +438,22 @@ public class ModBlockStateProvider extends BlockStateProvider {
         ResourceLocation coalTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/coal_block");
 
 
-        // ─── WOODGAS ENGINE (vanilla orientable: top/side + front on/off) ───────────
+        woodgasPipeStates(ModBlocks.WOODGAS_PIPE);
+        energyCableStates(ModBlocks.ENERGY_CABLE);
+        woodgasFlareStates();
+
+// ─── WOODGAS ENGINE (use custom ON/OFF models; swap by LIT) ────────────────
         {
-            ResourceLocation texSide = modLoc("block/woodgas_engine_side");
-            ResourceLocation texTop = modLoc("block/woodgas_engine_top"); // also used as bottom by 'orientable'
-            ResourceLocation texFrontOff = modLoc("block/woodgas_engine_off");
-            ResourceLocation texFrontOn = modLoc("block/woodgas_engine_on");
+            ModelFile engineOff = models().getExistingFile(modLoc("block/woodgas_engine_off"));
+            ModelFile engineOn  = models().getExistingFile(modLoc("block/woodgas_engine_on"));
 
-            // Models using vanilla parent block/orientable (top, side, front)
-            ModelFile engineOff = models()
-                    .withExistingParent("woodgas_engine_off", mcLoc("block/orientable"))
-                    .texture("top", texTop)
-                    .texture("side", texSide)
-                    .texture("front", texFrontOff);
-
-            ModelFile engineOn = models()
-                    .withExistingParent("woodgas_engine_on", mcLoc("block/orientable"))
-                    .texture("top", texTop)
-                    .texture("side", texSide)
-                    .texture("front", texFrontOn);
-
-            // Blockstate: rotate to HORIZONTAL_FACING; choose model by LIT
             getVariantBuilder(ModBlocks.WOODGAS_ENGINE.get())
                     .forAllStates(s -> {
                         Direction dir = s.getValue(AbstractProcessingBlock.FACING);
-                        boolean lit = s.getValue(WoodGasEngineBlock.LIT);
+                        boolean lit   = s.getValue(WoodGasEngineBlock.LIT);
 
-                        int rotY = (((int) dir.toYRot()) + 180) % 360; // make the “front” face you
+                        // 180° flip so the custom model’s “front” matches the block’s FACING
+                        int rotY = (((int) dir.toYRot()) + 180) % 360;
 
                         return ConfiguredModel.builder()
                                 .modelFile(lit ? engineOn : engineOff)
@@ -456,14 +461,44 @@ public class ModBlockStateProvider extends BlockStateProvider {
                                 .build();
                     });
 
-
-            // Item: show OFF variant in inventory
             simpleBlockItem(ModBlocks.WOODGAS_ENGINE.get(), engineOff);
         }
 
-        woodgasPipeStates(ModBlocks.WOODGAS_PIPE);
-        energyCableStates(ModBlocks.ENERGY_CABLE);
     }
+
+
+
+
+    private void woodgasFlareStates() {
+        ModelFile flare = models().getExistingFile(modLoc("block/woodgas_flare"));
+
+        getVariantBuilder(ModBlocks.WOODGAS_FLARE.get())
+                .forAllStatesExcept(state -> {
+                    Direction f = state.getValue(WoodGasFlareBlock.FACING);
+
+                    int xRot, yRot;
+                    switch (f) {
+                        case UP    -> { xRot = 0;   yRot = 0;   }
+                        case DOWN  -> { xRot = 180; yRot = 0;   }
+                        case NORTH -> { xRot = 90;  yRot = 0;   }   // ← fixed
+                        case SOUTH -> { xRot = 90;  yRot = 180; }   // ← fixed
+                        case EAST  -> { xRot = 90;  yRot = 90;  }
+                        case WEST  -> { xRot = 90;  yRot = 270; }
+                        default    -> { xRot = 0;   yRot = 0;   }
+                    }
+
+                    return ConfiguredModel.builder()
+                            .modelFile(flare)
+                            .rotationX(xRot)
+                            .rotationY(yRot)
+                            .uvLock(true)
+                            .build();
+                }, WoodGasFlareBlock.LIT);
+
+        simpleBlockItem(ModBlocks.WOODGAS_FLARE.get(), flare);
+    }
+
+
 
     private void woodgasPipeStates(DeferredBlock<? extends Block> pipeBlock) {
         Block b = pipeBlock.get();

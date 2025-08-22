@@ -1,5 +1,6 @@
 package net.boulangermod.boulanger.block.entity;
 
+import net.boulangermod.boulanger.block.WoodGasFlareBlock;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -86,6 +87,12 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("dough_divider", () -> BlockEntityType.Builder.of(
                     DoughDividerBlockEntity::new,
                     ModBlocks.DOUGH_DIVIDER.get()
+            ).build(null));
+
+    public static final Supplier<BlockEntityType<WoodGasFlareBlockEntity>> WOODGAS_FLARE_BE =
+            BLOCK_ENTITIES.register("woodgas_flare_be", () -> BlockEntityType.Builder.of(
+                    WoodGasFlareBlockEntity::new,
+                    ModBlocks.WOODGAS_FLARE.get()
             ).build(null));
 
     public static void register(IEventBus eventBus) {
