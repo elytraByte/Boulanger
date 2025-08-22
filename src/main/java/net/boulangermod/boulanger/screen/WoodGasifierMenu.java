@@ -73,39 +73,73 @@ public class WoodGasifierMenu extends AbstractContainerMenu {
         return stillValid(ContainerLevelAccess.create(blockEntity.getLevel(), pos), player, ModBlocks.WOOD_GASIFIER.get());
     }
 
-    private static final int HOTBAR_SLOT_COUNT             = 9;
-    private static final int PLAYER_INVENTORY_ROW_COUNT    = 3;
-    private static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
-    private static final int PLAYER_INVENTORY_SLOT_COUNT   = PLAYER_INVENTORY_ROW_COUNT * PLAYER_INVENTORY_COLUMN_COUNT;
-    private static final int VANILLA_SLOT_COUNT            = HOTBAR_SLOT_COUNT + PLAYER_INVENTORY_SLOT_COUNT;
-    private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_SLOT_COUNT;
-    private static final int TE_INVENTORY_SLOT_COUNT       = 4;
+    // ---- Slot index layout (you add TE first, then player inventory, then hotbar) ----
+    private static final int TE_FIRST              = 0;
+    private static final int TE_COUNT              = 4;
+    private static final int TE_LAST_EXCL          = TE_FIRST + TE_COUNT;             // 0..4
+
+    private static final int PLAYER_INV_FIRST      = TE_LAST_EXCL;                    // 4
+    private static final int PLAYER_INV_COUNT      = 27;
+    private static final int PLAYER_INV_LAST_EXCL  = PLAYER_INV_FIRST + PLAYER_INV_COUNT; // 4..31
+
+    private static final int HOTBAR_FIRST          = PLAYER_INV_LAST_EXCL;            // 31
+    private static final int HOTBAR_COUNT          = 9;
+    private static final int HOTBAR_LAST_EXCL      = HOTBAR_FIRST + HOTBAR_COUNT;     // 31..40
+
+    // TE slot aliases
+    private static final int TE_SLOT_SPLIT         = TE_FIRST + 0; // split pine logs
+    private static final int TE_SLOT_LOG           = TE_FIRST + 1; // any logs
+    private static final int TE_SLOT_FILTER_A      = TE_FIRST + 2; // filter
+    private static final int TE_SLOT_FILTER_B      = TE_FIRST + 3; // filter
 
     @Override
-    public ItemStack quickMoveStack(Player playerIn, int index) {
-        Slot sourceSlot = slots.get(index);
-        if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;
-        ItemStack sourceStack = sourceSlot.getItem();
-        ItemStack copyStack = sourceStack.copy();
+    public ItemStack quickMoveStack(Player player, int index) {
+        Slot source = this.slots.get(index);
+        if (source == null || !source.hasItem()) return ItemStack.EMPTY;
 
-        if (index < VANILLA_SLOT_COUNT) {
-            if (!moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT, false)) {
-                return ItemStack.EMPTY;
-            }
-        } else if (index < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
-            if (!moveItemStackTo(sourceStack, 0, VANILLA_SLOT_COUNT, false)) {
-                return ItemStack.EMPTY;
-            }
+        ItemStack stack = source.getItem();
+        ItemStack original = stack.copy();
+        boolean moved = false;
+
+        // ---- From TE -> Player
+        if (index >= TE_FIRST && index < TE_LAST_EXCL) {
+            // Prefer main inventory, then hotbar
+            moved = moveItemStackTo(stack, PLAYER_INV_FIRST, PLAYER_INV_LAST_EXCL, false)
+                    || moveItemStackTo(stack, HOTBAR_FIRST, HOTBAR_LAST_EXCL, false);
+
+            // ---- From Player -> TE (route by item type)
         } else {
-            return ItemStack.EMPTY;
+            if (stack.getItem() == ModItems.SPLIT_PINE_LOGS.get()) {
+                moved = moveItemStackTo(stack, TE_SLOT_SPLIT, TE_SLOT_SPLIT + 1, false);
+            } else if (stack.is(ItemTags.LOGS)) {
+                moved = moveItemStackTo(stack, TE_SLOT_LOG, TE_SLOT_LOG + 1, false);
+            } else if (stack.getItem() == ModItems.GASIFIER_FILTER.get()) {
+                // try both filter slots
+                moved = moveItemStackTo(stack, TE_SLOT_FILTER_A, TE_SLOT_FILTER_B + 1, false);
+            } else {
+                moved = false;
+            }
+
+            // If it didn't fit the TE, bounce between inv/hotbar like vanilla
+            if (!moved) {
+                if (index >= PLAYER_INV_FIRST && index < PLAYER_INV_LAST_EXCL) {
+                    moved = moveItemStackTo(stack, HOTBAR_FIRST, HOTBAR_LAST_EXCL, false);
+                } else if (index >= HOTBAR_FIRST && index < HOTBAR_LAST_EXCL) {
+                    moved = moveItemStackTo(stack, PLAYER_INV_FIRST, PLAYER_INV_LAST_EXCL, false);
+                }
+            }
         }
 
-        if (sourceStack.isEmpty()) sourceSlot.set(ItemStack.EMPTY);
-        else sourceSlot.setChanged();
+        if (!moved) return ItemStack.EMPTY;
 
-        sourceSlot.onTake(playerIn, sourceStack);
-        return copyStack;
+        if (stack.isEmpty()) source.set(ItemStack.EMPTY);
+        else source.setChanged();
+
+        source.onTake(player, stack);
+        return original;
     }
+
+
 
     // ─── Data accessors ─────────────────────────────────────────────
     public int getBurnProgress()    { return data.get(0); }
