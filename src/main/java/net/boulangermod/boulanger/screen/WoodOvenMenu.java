@@ -1,118 +1,282 @@
 package net.boulangermod.boulanger.screen;
 
-import net.boulangermod.boulanger.block.WoodOvenBlock;
+import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.block.entity.WoodOvenBlockEntity;
-import net.minecraft.network.FriendlyByteBuf;
+import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.item.ModItems;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.Mth;
 
+import java.util.Objects;
+
+/**
+ * Container for the Wood Oven.
+ *
+ * Slots:
+ *   0: INPUT        (dough or proofed panned dough)
+ *   1: FUEL         (split pine logs only)
+ *   2: OUTPUT       (result bread)          [no insert]
+ *   3: PAN_RETURN   (empty pan comes back)  [no insert]
+ *
+ * Data slots (ContainerData):
+ *   [0] burnTime
+ *   [1] maxBurnTime
+ *   [2] cookTime
+ *   [3] MAX_COOK_TIME (constant)
+ */
 public class WoodOvenMenu extends AbstractContainerMenu {
-    private final WoodOvenBlockEntity blockEntity;
+    // ---- indices in this menu ----
+    public static final int SLOT_INPUT      = WoodOvenBlockEntity.SLOT_INPUT;
+    public static final int SLOT_FUEL       = WoodOvenBlockEntity.SLOT_FUEL;
+    public static final int SLOT_OUTPUT     = WoodOvenBlockEntity.SLOT_OUTPUT;
+    public static final int SLOT_PAN_RETURN = WoodOvenBlockEntity.SLOT_PAN_RETURN;
 
-    public WoodOvenMenu(int id, Inventory playerInv, FriendlyByteBuf extraData) {
-        this(id, playerInv, playerInv.player.level().getBlockEntity(extraData.readBlockPos()));
+    // vanilla player inventory/hotbar sizes
+    private static final int PLAYER_INV_ROWS = 3;
+    private static final int PLAYER_INV_COLS = 9;
+    private static final int PLAYER_INV_SIZE = PLAYER_INV_ROWS * PLAYER_INV_COLS; // 27
+    private static final int HOTBAR_SIZE     = 9;
+
+    // container index ranges (inclusive start, exclusive end)
+    private static final int BE_FIRST_SLOT = 0;
+    private static final int BE_SLOT_COUNT = 4;
+    private static final int INV_FIRST_SLOT = BE_FIRST_SLOT + BE_SLOT_COUNT;              // 4
+    private static final int INV_LAST_SLOT_EXCL = INV_FIRST_SLOT + PLAYER_INV_SIZE;       // 31
+    private static final int HOTBAR_FIRST_SLOT = INV_LAST_SLOT_EXCL;                      // 31
+    private static final int HOTBAR_LAST_SLOT_EXCL = HOTBAR_FIRST_SLOT + HOTBAR_SIZE;     // 40
+
+    private final WoodOvenBlockEntity be;
+    private final ContainerLevelAccess access;
+    private final ContainerData data; // [0]=burn, [1]=burnMax, [2]=cook, [3]=cookTotal
+
+    // --- Client ctor (receives BlockPos over the wire) ---
+    public WoodOvenMenu(int id, Inventory playerInv, FriendlyByteBuf buf) {
+        this(id, playerInv, getBlockEntity(playerInv.player.level(), buf.readBlockPos()),
+                new SimpleContainerData(4));
     }
 
-    public WoodOvenMenu(int id, Inventory playerInv, BlockEntity be) {
+    // --- Server ctor (BE passes its live ContainerData) ---
+    public WoodOvenMenu(int id, Inventory playerInv, WoodOvenBlockEntity be, ContainerData data) {
         super(ModMenuTypes.WOOD_OVEN_MENU.get(), id);
-        this.blockEntity = (WoodOvenBlockEntity) be;
+        this.be = be;
+        this.data = data;
+        this.access = ContainerLevelAccess.create(Objects.requireNonNull(be.getLevel()), be.getBlockPos());
 
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 0, 56, 17)); // Input
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 1, 56, 53)); // Fuel
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 2, 116, 35)); // Output
-        addSlot(new SlotItemHandler(blockEntity.getItemHandler(null), 3, 145, 35)); // Output
+        // ---- BE item handler + slots ----
+        IItemHandler handler = be.getItemHandler(null);
 
-        // Player inventory
-        for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 9; ++col) {
-                this.addSlot(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
+        // NOTE: slot positions are GUI-coordinates; tweak as needed for your texture
+        // Input (dough/panned dough)
+        this.addSlot(new InputSlot(handler, SLOT_INPUT, 56, 17));
+
+        // Fuel (split pine logs only)
+        this.addSlot(new FuelSlot(handler, SLOT_FUEL, 56, 53));
+
+        // Output (no insert)
+        this.addSlot(new OutputSlot(handler, SLOT_OUTPUT, 116, 35));
+
+        // Pan return (no insert)
+        this.addSlot(new PanReturnSlot(handler, SLOT_PAN_RETURN, 134, 53));
+
+        // ---- Player inventory (3×9) ----
+        int invY = 84;
+        int invX = 8;
+        for (int row = 0; row < PLAYER_INV_ROWS; row++) {
+            for (int col = 0; col < PLAYER_INV_COLS; col++) {
+                this.addSlot(new Slot(playerInv, col + row * 9 + 9, invX + col * 18, invY + row * 18));
             }
         }
 
-        for (int i = 0; i < 9; ++i) {
-            this.addSlot(new Slot(playerInv, i, 8 + i * 18, 142));
+        // ---- Hotbar (9) ----
+        int hotbarY = invY + 58;
+        for (int i = 0; i < HOTBAR_SIZE; i++) {
+            this.addSlot(new Slot(playerInv, i, invX + i * 18, hotbarY));
         }
+
+        // ---- live data sync ----
+        this.addDataSlots(data);
     }
 
+    private static WoodOvenBlockEntity getBlockEntity(Level level, BlockPos pos) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof WoodOvenBlockEntity oven)) {
+            throw new IllegalStateException("WoodOvenMenu: expected WoodOvenBlockEntity at " + pos);
+        }
+        return oven;
+    }
 
     @Override
     public boolean stillValid(Player player) {
-        return blockEntity.getLevel().getBlockState(blockEntity.getBlockPos()).getBlock() instanceof WoodOvenBlock;
+        return stillValid(this.access, player, ModBlocks.WOOD_OVEN.get());
     }
 
-    // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
-    // must assign a slot number to each of the slots used by the GUI.
-    // For this container, we can see both the tile inventory's slots as well as the player inventory slots and the hotbar.
-    // Each time we add a Slot to the container, it automatically increases the slotIndex, which means
-    //  0 - 8 = hotbar slots (which will map to the InventoryPlayer slot numbers 0 - 8)
-    //  9 - 35 = player inventory slots (which map to the InventoryPlayer slot numbers 9 - 35)
-    //  36 - 44 = TileInventory slots, which map to our TileEntity slot numbers 0 - 8)
-    private static final int HOTBAR_SLOT_COUNT = 9;
-    private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
-    private static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
-    private static final int PLAYER_INVENTORY_SLOT_COUNT = PLAYER_INVENTORY_COLUMN_COUNT * PLAYER_INVENTORY_ROW_COUNT;
-    private static final int VANILLA_SLOT_COUNT = HOTBAR_SLOT_COUNT + PLAYER_INVENTORY_SLOT_COUNT;
-    private static final int VANILLA_FIRST_SLOT_INDEX = 0;
-    private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
+    // ---------------- Screen helpers ----------------
 
-    // THIS YOU HAVE TO DEFINE!
-    private static final int TE_INVENTORY_SLOT_COUNT = 4;  // must be the number of slots you have!
+    /** true while any burn time remains */
+    public boolean isLit() {
+        return data.get(0) > 0;
+    }
+
+    /** show the arrow when cooking is in progress or there is a valid input present */
+    public boolean isCrafting() {
+        return data.get(2) > 0 || beHasPotentialRecipe();
+    }
+
+    /** width in pixels (0..px) */
+    public int getCookingProgressScaled(int px) {
+        final int cook  = data.get(2);
+        final int total = Math.max(1, data.get(3));
+        return Mth.clamp(Math.round((cook / (float) total) * px), 0, px);
+    }
+
+    /** height in pixels (0..px) for the flame fill */
+    public int getLitProgressScaled(int px) {
+        final int remaining = data.get(0);
+        final int total     = Math.max(1, data.get(1));
+        return Mth.clamp(Math.round((remaining / (float) total) * px), 0, px);
+    }
+
+    private boolean beHasPotentialRecipe() {
+        ItemStack in = be.getItemHandler(null).getStackInSlot(SLOT_INPUT);
+        return isValidInputItem(in);
+    }
+
+    // ---------------- Shift-click logic ----------------
+
     @Override
-    public ItemStack quickMoveStack(Player playerIn, int pIndex) {
-        Slot sourceSlot = slots.get(pIndex);
-        if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;  //EMPTY_ITEM
-        ItemStack sourceStack = sourceSlot.getItem();
-        ItemStack copyOfSourceStack = sourceStack.copy();
+    public ItemStack quickMoveStack(Player player, int index) {
+        ItemStack empty = ItemStack.EMPTY;
+        Slot slot = this.slots.get(index);
+        if (slot == null || !slot.hasItem()) return empty;
 
-        // Check if the slot clicked is one of the vanilla container slots
-        if (pIndex < VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT) {
-            // This is a vanilla container slot so merge the stack into the tile inventory
-            if (!moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
-                    + TE_INVENTORY_SLOT_COUNT, false)) {
-                return ItemStack.EMPTY;  // EMPTY_ITEM
-            }
-        } else if (pIndex < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
-            // This is a TE slot so merge the stack into the players inventory
-            if (!moveItemStackTo(sourceStack, VANILLA_FIRST_SLOT_INDEX, VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT, false)) {
-                return ItemStack.EMPTY;
+        ItemStack stack = slot.getItem();
+        ItemStack original = stack.copy();
+
+        // From BE slots -> player inventory/hotbar
+        if (index < INV_FIRST_SLOT) {
+            if (index == SLOT_OUTPUT || index == SLOT_PAN_RETURN) {
+                // outputs: always to player first
+                if (!this.moveItemStackTo(stack, INV_FIRST_SLOT, HOTBAR_LAST_SLOT_EXCL, true))
+                    return ItemStack.EMPTY;
+                slot.onQuickCraft(stack, original);
+            } else {
+                // input/fuel -> try player
+                if (!this.moveItemStackTo(stack, INV_FIRST_SLOT, HOTBAR_LAST_SLOT_EXCL, false))
+                    return ItemStack.EMPTY;
             }
         } else {
-            System.out.println("Invalid slotIndex:" + pIndex);
+            // From player inventory/hotbar -> BE
+            if (isFuel(stack)) {
+                if (!this.moveItemStackTo(stack, SLOT_FUEL, SLOT_FUEL + 1, false))
+                    return ItemStack.EMPTY;
+            } else if (isValidInputItem(stack)) {
+                if (!this.moveItemStackTo(stack, SLOT_INPUT, SLOT_INPUT + 1, false))
+                    return ItemStack.EMPTY;
+            } else {
+                // move between inv <-> hotbar to keep things flowing
+                if (index < HOTBAR_FIRST_SLOT) {
+                    if (!this.moveItemStackTo(stack, HOTBAR_FIRST_SLOT, HOTBAR_LAST_SLOT_EXCL, false))
+                        return ItemStack.EMPTY;
+                } else if (!this.moveItemStackTo(stack, INV_FIRST_SLOT, INV_LAST_SLOT_EXCL, false)) {
+                    return ItemStack.EMPTY;
+                }
+            }
+        }
+
+        if (stack.isEmpty()) {
+            slot.setByPlayer(ItemStack.EMPTY);
+        } else {
+            slot.setChanged();
+        }
+
+        if (stack.getCount() == original.getCount()) {
             return ItemStack.EMPTY;
         }
-        // If stack size == 0 (the entire stack was moved) set slot contents to null
-        if (sourceStack.getCount() == 0) {
-            sourceSlot.set(ItemStack.EMPTY);
-        } else {
-            sourceSlot.setChanged();
+
+        slot.onTake(player, stack);
+        return original;
+    }
+
+    // ---------------- Slot filters ----------------
+
+    /** dough or a panned dough that is fully proofed according to its components (BE will validate) */
+    private static boolean isValidInputItem(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        if (stack.is(ModItems.DOUGH.get())) return true;
+
+        if (stack.is(ModItems.PAN.get())) {
+            boolean hasProof = stack.has(ModDataComponentTypes.PROOFING_STATE.get());
+            boolean hasProc  = stack.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+            return hasProof && hasProc;
         }
-        sourceSlot.onTake(playerIn, sourceStack);
-        return copyOfSourceStack;
+        return false;
+        // (The BE ultimately decides if it can cook; this keeps the slot sane.)
     }
 
-    public int getLitProgressScaled(int pixels) {
-        int bt  = blockEntity.getBurnTime();
-        int mbt = Math.max(blockEntity.getMaxBurnTime(), 1);
-        return (int) Math.ceil((bt * pixels) / (float) mbt); // bottom-up fill
+    private static boolean isFuel(ItemStack stack) {
+        return !stack.isEmpty() && stack.is(ModItems.SPLIT_PINE_LOGS.get());
     }
 
-    public int getCookingProgressScaled(int pixels) {
-        int ct = blockEntity.getCookTime();
-        return (int) Math.floor((ct * pixels) / 200f); // MAX_COOK_TIME = 200
+    // ---------------- Custom Slot types ----------------
+
+    private static class InputSlot extends SlotItemHandler {
+        public InputSlot(IItemHandler handler, int index, int x, int y) {
+            super(handler, index, x, y);
+        }
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return isValidInputItem(stack);
+        }
     }
 
-    public boolean isLit() {
-        return blockEntity.getBurnTime() > 0;
+    private static class FuelSlot extends SlotItemHandler {
+        public FuelSlot(IItemHandler handler, int index, int x, int y) {
+            super(handler, index, x, y);
+        }
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return isFuel(stack);
+        }
     }
 
-    public boolean isCrafting() {
-        return blockEntity.getCookTime() > 0;
+    private static class OutputSlot extends SlotItemHandler {
+        public OutputSlot(IItemHandler handler, int index, int x, int y) {
+            super(handler, index, x, y);
+        }
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return false;
+        }
+        @Override
+        public int getMaxStackSize() { return 64; }
     }
 
+    private static class PanReturnSlot extends SlotItemHandler {
+        public PanReturnSlot(IItemHandler handler, int index, int x, int y) {
+            super(handler, index, x, y);
+        }
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return false;
+        }
+        @Override
+        public int getMaxStackSize() { return 64; }
+    }
+
+    // -------------- Public helpers for screens/tests --------------
+
+    public boolean isClientLitCached() { return isLit(); }
+    public int getBurnTime()    { return data.get(0); }
+    public int getMaxBurnTime() { return data.get(1); }
+    public int getCookTime()    { return data.get(2); }
+    public int getCookTotal()   { return data.get(3); }
 }
-

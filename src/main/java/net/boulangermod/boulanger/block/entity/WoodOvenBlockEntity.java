@@ -23,6 +23,8 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -48,7 +50,35 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
     private int burnTime    = 0;
     private int maxBurnTime = 0;
     private int cookTime    = 0;
-    private static final int MAX_COOK_TIME = 200;
+    public static final int MAX_COOK_TIME = 200;
+
+    private final ContainerData dataAccess =
+            new SimpleContainerData(4) {
+                @Override
+                public int get(int index) {
+                    return switch (index) {
+                        case 0 -> burnTime;          // remaining burn
+                        case 1 -> maxBurnTime;       // burn duration
+                        case 2 -> cookTime;          // elapsed cook
+                        case 3 -> MAX_COOK_TIME;     // total cook time
+                        default -> 0;
+                    };
+                }
+
+                @Override
+                public void set(int index, int value) {
+                    // Not strictly needed by server->client sync, but keep it safe:
+                    switch (index) {
+                        case 0 -> burnTime = value;
+                        case 1 -> maxBurnTime = value;
+                        case 2 -> cookTime = value;
+                        case 3 -> { /* read-only */ }
+                    }
+                }
+
+                @Override
+                public int getCount() { return 4; }
+            };
 
     public WoodOvenBlockEntity(BlockPos pos, BlockState state) {
         // now 4 slots: input, fuel, output, pan-return
@@ -250,7 +280,7 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
 
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new WoodOvenMenu(id, inv, this);
+        return new WoodOvenMenu(id, inv, this, this.dataAccess);
     }
 
     @Override
