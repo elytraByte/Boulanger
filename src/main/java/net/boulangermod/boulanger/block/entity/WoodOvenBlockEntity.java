@@ -2,6 +2,7 @@
 package net.boulangermod.boulanger.block.entity;
 
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
+import net.boulangermod.boulanger.block.WoodOvenBlock;
 import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.ModItems;
@@ -26,6 +27,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -75,10 +77,12 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
         boolean canSmelt = canCook();
         ItemStack fuelStack = itemHandler.getStackInSlot(SLOT_FUEL);
 
+        // Start a new burn if empty, we can smelt, and valid fuel is present
         if (burnTime == 0 && canSmelt && fuelStack.getItem() == ModItems.SPLIT_PINE_LOGS.get()) {
-            burnTime = (int)(160 * 1.5f);
+            burnTime = (int) (160 * 1.5f); // 240 ticks
             maxBurnTime = burnTime;
             fuelStack.shrink(1);
+            setChanged();
         }
 
         if (isBurning() && canSmelt) {
@@ -91,10 +95,16 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
             cookTime = 0;
         }
 
-        if (wasBurning != isBurning()) {
+        // If lit state changed, update the blockstate so the model swaps
+        boolean nowBurning = isBurning();
+        if (wasBurning != nowBurning) {
             setChanged();
+            // import net.boulangermod.boulanger.block.WoodOvenBlock;
+            level.setBlock(pos, state.setValue(WoodOvenBlock.LIT, nowBurning), Block.UPDATE_CLIENTS);
+            level.sendBlockUpdated(pos, state, level.getBlockState(pos), Block.UPDATE_CLIENTS);
         }
     }
+
 
     private boolean tryBake() {
         ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);

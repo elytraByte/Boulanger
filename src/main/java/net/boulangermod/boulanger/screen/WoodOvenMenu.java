@@ -95,19 +95,24 @@ public class WoodOvenMenu extends AbstractContainerMenu {
         return copyOfSourceStack;
     }
 
-    public int getCookingProgress() {
-        int cookTime = blockEntity.getCookTime();
-        int maxCookTime = 200; // same as WoodOvenBlockEntity.MAX_COOK_TIME
-        return maxCookTime != 0 ? cookTime / maxCookTime * 86  : 0; // 64 = ARROW_WIDTH
+    public int getLitProgressScaled(int pixels) {
+        int bt  = blockEntity.getBurnTime();
+        int mbt = Math.max(blockEntity.getMaxBurnTime(), 1);
+        return (int) Math.ceil((bt * pixels) / (float) mbt); // bottom-up fill
     }
 
+    public int getCookingProgressScaled(int pixels) {
+        int ct = blockEntity.getCookTime();
+        return (int) Math.floor((ct * pixels) / 200f); // MAX_COOK_TIME = 200
+    }
 
     public boolean isLit() {
-        return true;
+        return blockEntity.getBurnTime() > 0;
     }
 
     public boolean isCrafting() {
-        return true;
+        return blockEntity.getCookTime() > 0;
     }
+
 }
 

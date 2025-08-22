@@ -17,18 +17,20 @@ public class WoodOvenScreen extends AbstractContainerScreen<WoodOvenMenu> {
     private static final ResourceLocation ARROW_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/arrow_progress.png");
 
-    // Native sizes (no scaling needed since textures are 1:1)
-    private static final int FLAME_WIDTH = 14;
+    // Native sprite sizes
+    private static final int FLAME_WIDTH  = 14;
     private static final int FLAME_HEIGHT = 14;
-    private static final int ARROW_WIDTH = 87;
+    private static final int ARROW_WIDTH  = 87;
     private static final int ARROW_HEIGHT = 60;
 
-    // Origin positions in 1024x1024 GUI coordinates (before scaling)
+    // Origins in the 1024×1024 background (pre-scale coordinates)
     private static final int FLAME_X_ORIGIN = 224;
     private static final int FLAME_Y_ORIGIN = 144;
     private static final int ARROW_X_ORIGIN = 320;
     private static final int ARROW_Y_ORIGIN = 140;
 
+    // Background scale (1024 → 256)
+    private static final float BG_SCALE = 0.25f;
 
     public WoodOvenScreen(WoodOvenMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -42,63 +44,64 @@ public class WoodOvenScreen extends AbstractContainerScreen<WoodOvenMenu> {
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics gui, float partialTick, int mouseX, int mouseY) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+
+        final int x = (this.width - this.imageWidth) / 2;
+        final int y = (this.height - this.imageHeight) / 2;
+
+        // ---- Background at 0.25 scale ----
         RenderSystem.setShaderTexture(0, GUI_TEXTURE);
+        gui.pose().pushPose();
+        gui.pose().translate(x, y, 0);
+        gui.pose().scale(BG_SCALE, BG_SCALE, 1.0f);
+        gui.blit(GUI_TEXTURE, 0, 0, 0f, 0f, 1024, 1024, 1024, 1024);
 
-        int x = (this.width - this.imageWidth) / 2;
-        int y = (this.height - this.imageHeight) / 2;
-
-        guiGraphics.pose().pushPose();
-
-        // Apply 0.25 scale to everything inside
-        guiGraphics.pose().translate(x, y, 0);
-        guiGraphics.pose().scale(0.25f, 0.25f, 1.0f);
-
-        // Main GUI background (1024x1024)
-        guiGraphics.blit(GUI_TEXTURE, 0, 0, 0.0f, 0.0f, 1024, 1024, 1024, 1024);
-
-        // 🔥 Flame
-        if (this.menu.isLit()) {
-            RenderSystem.setShaderTexture(0, FLAME_TEXTURE);
-            guiGraphics.blit(FLAME_TEXTURE,
-                    FLAME_X_ORIGIN, FLAME_Y_ORIGIN, // inside scaled coords
-                    0, 0,
-                    FLAME_WIDTH, FLAME_HEIGHT,
-                    FLAME_WIDTH, FLAME_HEIGHT);
-        }
-
-        // ➡️ Arrow
+        // ➡️ Arrow (cooking progress) inside scaled pose
         if (this.menu.isCrafting()) {
-            int progress = this.menu.getCookingProgress(); // 0–ARROW_WIDTH
-
+            int progress = this.menu.getCookingProgressScaled(ARROW_WIDTH); // 0..ARROW_WIDTH
             RenderSystem.setShaderTexture(0, ARROW_TEXTURE);
-            guiGraphics.blit(ARROW_TEXTURE,
+            gui.blit(ARROW_TEXTURE,
                     ARROW_X_ORIGIN, ARROW_Y_ORIGIN,
                     0, 0,
                     progress, ARROW_HEIGHT,
                     ARROW_WIDTH, ARROW_HEIGHT);
         }
 
-        guiGraphics.pose().popPose();
+        gui.pose().popPose();
+
+        // 🔥 Flame (burn progress) OUTSIDE scaled pose to render at native 14×14
+        if (this.menu.isLit()) {
+            final int flameX = x + Math.round(FLAME_X_ORIGIN * BG_SCALE);
+            final int flameY = y + Math.round(FLAME_Y_ORIGIN * BG_SCALE);
+
+            int litPixels = this.menu.getLitProgressScaled(FLAME_HEIGHT); // 0..14
+            if (litPixels > 0) {
+                RenderSystem.setShaderTexture(0, FLAME_TEXTURE);
+                int visibleH = Math.min(litPixels, FLAME_HEIGHT);
+                int yOffset  = FLAME_HEIGHT - visibleH;
+
+                gui.blit(FLAME_TEXTURE,
+                        flameX, flameY + yOffset,
+                        0, yOffset,
+                        FLAME_WIDTH, visibleH,
+                        FLAME_WIDTH, FLAME_HEIGHT);
+            }
+        }
     }
 
 
-
-
-
-
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        renderBackground(guiGraphics, mouseX, mouseY, delta);
-        super.render(guiGraphics, mouseX, mouseY, delta);
-        renderTooltip(guiGraphics, mouseX, mouseY);
+    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
+        renderBackground(gui, mouseX, mouseY, delta);
+        super.render(gui, mouseX, mouseY, delta);
+        renderTooltip(gui, mouseX, mouseY);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0x404040, false);
-        guiGraphics.drawString(this.font, this.playerInventoryTitle, 8, 72, 0x404040, false);
+    protected void renderLabels(GuiGraphics gui, int mouseX, int mouseY) {
+        gui.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0x404040, false);
+        gui.drawString(this.font, this.playerInventoryTitle, 8, 72, 0x404040, false);
     }
 }

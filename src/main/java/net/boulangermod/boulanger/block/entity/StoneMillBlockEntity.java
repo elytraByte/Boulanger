@@ -40,15 +40,18 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
 
     /* ───────────── tuning ───────────── */
     private static final int MAX_MILL_TIME    = 200;  // ticks per operation
-    private static final int FE_COST_PER_TICK = 5;   // FE/t while milling
+    private static final int FE_COST_PER_TICK = 5;    // FE/t while milling
 
-    // Internal battery (acts like your EnergyStorageBlockEntity pull behavior)
+    // Internal battery
     private static final int FE_CAPACITY    = FE_COST_PER_TICK * 500;
-    private static final int FE_MAX_RECEIVE = FE_COST_PER_TICK * 40; // pull up to 400/tick (adjust as desired)
-    private static final int STARVE_GRACE_TICKS = 2;                 // tolerate brief hiccups
+    private static final int FE_MAX_RECEIVE = FE_COST_PER_TICK * 40;
+    private static final int STARVE_GRACE_TICKS = 2;
 
-    private static final int PROGRESS_PARTICLE_PERIOD = 20; // ticks between small puffs while milling
+    private static final int PROGRESS_PARTICLE_PERIOD = 20; // ticks between small puffs
 
+    // ── NEW: manual turning (number of clicks per craft) ───────────────────────
+    private static final int HAND_TURNS_PER_OP = 12;
+    private static final int MANUAL_TURN_TICKS = Math.max(1, MAX_MILL_TIME / HAND_TURNS_PER_OP);
 
     // UI lamp state
     private boolean lampOn = false;
@@ -67,11 +70,7 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
                 /*maxReceive*/     FE_MAX_RECEIVE,
                 /*energyPerTick*/  FE_COST_PER_TICK
         );
-        // Default I/O from AbstractPoweredBlockEntity: INPUT on all sides, autoPull enabled.
-        // If you ever want to push excess energy out, enable autoPush in a custom ctor or setter.
     }
-
-    /* ───────────── API / capability exposure ───────────── */
 
     /** Screen uses this to draw the “on” bulb. True if we currently hold any energy. */
     public boolean isGridPowered() { return getEnergyStored() > 0; }
@@ -119,7 +118,6 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         int craftable = craftableNow();
         if (craftable <= 0) return;
 
-        // Consume up to 1 wheat from each input slot, but not exceeding 'craftable'
         int produced = 0;
         int[] ins = {SLOT_IN0, SLOT_IN1, SLOT_IN2};
         for (int idx : ins) {
@@ -142,16 +140,14 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
             out.grow(produced);
         }
 
-        // 🔊 + 🌫️ effects every time we successfully craft
-        float vol   = 0.9f + level.random.nextFloat() * 0.1f;  // 0.9–1.0
-        float pitch = 0.9f + level.random.nextFloat() * 0.2f;  // 0.9–1.1
+        float vol   = 0.9f + level.random.nextFloat() * 0.1f;
+        float pitch = 0.9f + level.random.nextFloat() * 0.2f;
         level.playSound(null, pos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, vol, pitch);
         spawnMillParticles(level, pos, state, 8);
 
         dbg("Crafted {}x WHOLE_WHEAT_FLOUR (out now {}), inputs consumed across up to 3 slots",
                 produced, itemHandler.getStackInSlot(SLOT_OUT).getCount());
     }
-
 
     private void spawnMillParticles(Level level, BlockPos pos, BlockState state, int count) {
         if (!(level instanceof ServerLevel sl)) return;
@@ -176,6 +172,49 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
     public boolean isMilling()         { return milling; }
     public static int getMaxMixTime()  { return MAX_MILL_TIME; }
 
+    /* ───────────── NEW: manual turning API ───────────── */
+    /**
+     * Advance the mill by a hand turn. Returns true if we actually progressed
+     * (i.e., had inputs + output space), false otherwise.
+     */
+    public boolean manualTurnByPlayer(@Nullable Player player) {
+        Level level = getLevel();
+        if (level == null) return false;
+
+        if (!canMill()) {
+            // light “thunk” feedback when turning with no work to do
+            level.playSound(null, worldPosition, SoundEvents.STONE_BUTTON_CLICK_OFF,
+                    SoundSource.BLOCKS, 0.25f, 0.8f + level.random.nextFloat() * 0.2f);
+            return false;
+        }
+
+        // Show progress on UI while hand-cranking too
+        milling = true;
+        starvedTicks = 0;
+
+        int before = millProgress;
+        millProgress = Math.min(MAX_MILL_TIME, millProgress + MANUAL_TURN_TICKS);
+
+        // light sound + dust for each turn
+        level.playSound(null, worldPosition, SoundEvents.GRINDSTONE_USE,
+                SoundSource.BLOCKS, 0.45f, 1.0f + level.random.nextFloat() * 0.1f);
+        spawnMillParticles(level, worldPosition, getBlockState(), 2);
+
+        boolean finished = (millProgress >= MAX_MILL_TIME);
+        if (finished) {
+            if (canMill()) craftResultAndEffects(level, worldPosition, getBlockState());
+            resetMilling();
+        }
+
+        setChanged();
+        level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+
+        dbg("Manual turn by {}, progress {}→{}, finished={}",
+                (player != null ? player.getGameProfile().getName() : "unknown"),
+                before, millProgress, finished);
+        return true;
+    }
+
     /* ───────────── persistence ───────────── */
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
@@ -183,7 +222,6 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         tag.putInt("MillProgress", millProgress);
         tag.putBoolean("Milling", milling);
         tag.putInt("StarvedTicks", starvedTicks);
-        // Energy is saved by AbstractPoweredBlockEntity
     }
 
     @Override
@@ -205,17 +243,15 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         return new net.boulangermod.boulanger.screen.StoneMillBlockMenu(id, inv, this);
     }
 
-    /* ───────────── ticking ───────────── */
+    /* ───────────── ticking (RF path) ───────────── */
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide()) return;
 
         boolean dirty = false;
 
-        // Pull power like the battery (fair neighbor order). Auto-pull size = FE_MAX_RECEIVE.
         serverEnergyTick();
 
-        // Lamp is on if we currently hold any energy
         boolean newLamp = getEnergyStored() > 0;
         if (newLamp != lampOn) {
             lampOn = newLamp;
@@ -223,7 +259,6 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
             dbg("Lamp {} (energy={}/{})", lampOn ? "ON" : "OFF", getEnergyStored(), getEnergyCapacity());
         }
 
-        // Start if we can craft and we can afford this tick
         if (!milling) {
             if (canMill() && hasPowerForTick()) {
                 milling = true;
@@ -239,10 +274,8 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
                 millProgress++;
 
                 if (millProgress > 0 && (millProgress % PROGRESS_PARTICLE_PERIOD) == 0) {
-                    // light count so it doesn't get spammy
                     spawnMillParticles(level, pos, state, 3);
                 }
-
 
                 starvedTicks = 0;
                 if (millProgress >= MAX_MILL_TIME) {
@@ -251,7 +284,6 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
                     dirty = true;
                 }
             } else {
-                // brief hiccup tolerance to avoid flicker
                 starvedTicks++;
                 if (starvedTicks > STARVE_GRACE_TICKS) {
                     milling = false;
