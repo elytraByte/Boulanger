@@ -1,10 +1,7 @@
 {
   "variants": {
-    "lit=false": {
-      "model": "boulanger:block/energy_bedrock"
-    },
-    "lit=true": {
-      "model": "boulanger:block/energy_bedrock"
+    "": {
+      "model": "boulanger:block/battery"
     }
   }
 }

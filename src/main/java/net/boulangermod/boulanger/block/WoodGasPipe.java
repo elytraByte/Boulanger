@@ -45,17 +45,27 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
     public static final BooleanProperty DOWN  = BlockStateProperties.DOWN;
 
     // ---- slim voxel shapes (center nub + 6 arms), precomputed for 64 states ----
-    // tweak these two to change thickness
+// ---- slim voxel shapes (center nub + 6 arms), precomputed for 64 states ----
+// tweak these two to change thickness
     private static final int A = 6;   // inner min (0..16)
     private static final int B = 10;  // inner max (0..16)
 
-    private static final VoxelShape CORE = box(A, A, A, B, B, B);
-    private static final VoxelShape ARM_N = box(A, A, 0,  B, B, A);
-    private static final VoxelShape ARM_S = box(A, A, B,  B, B, 16);
-    private static final VoxelShape ARM_W = box(0,  A, A, A, B, B);
-    private static final VoxelShape ARM_E = box(B,  A, A, 16, B, B);
-    private static final VoxelShape ARM_U = box(A,  B, A,  B, 16, B);
-    private static final VoxelShape ARM_D = box(A,  0, A,  B, A,  B);
+    // shift hitbox DOWN by 1px to match the model
+    private static final int Y_OFF = 0;
+
+    private static VoxelShape boxY(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        int y0 = Math.max(0, minY + Y_OFF);
+        int y1 = Math.min(16, maxY + Y_OFF);
+        return Block.box(minX, y0, minZ, maxX, y1, maxZ);
+    }
+
+    private static final VoxelShape CORE  = boxY(A, A, A, B, B, B);
+    private static final VoxelShape ARM_N = boxY(A, A, 0,  B, B, A);
+    private static final VoxelShape ARM_S = boxY(A, A, B,  B, B, 16);
+    private static final VoxelShape ARM_W = boxY(0,  A, A, A, B, B);
+    private static final VoxelShape ARM_E = boxY(B,  A, A, 16, B, B);
+    private static final VoxelShape ARM_U = boxY(A,  B, A,  B, 16, B);
+    private static final VoxelShape ARM_D = boxY(A,  0, A,  B, A,  B);
 
     private static final VoxelShape[] SHAPES = new VoxelShape[64];
     static {
@@ -70,6 +80,8 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
             SHAPES[m] = s.optimize();
         }
     }
+
+
 
     private static int mask(BlockState s) {
         int m = 0;

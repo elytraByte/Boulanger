@@ -394,22 +394,29 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 "energy_bedrock",
                 bedrockTex
         );
+// ─── BATTERY: bottom = input texture, top/sides = output texture ─────────────
+        {
+            ResourceLocation texIn  = modLoc("block/battery_in");
+            ResourceLocation texOut = modLoc("block/battery_out");
 
-        simpleBlockWithItem(
-                ModBlocks.ENERGY_CABLE.get(),
-                energyModel
-        );
+            // Order is: down, up, north, south, west, east
+            ModelFile batteryModel = models().cube(
+                    "battery",
+                    texIn,   // down  (INPUT)
+                    texOut,  // up    (OUTPUT)
+                    texOut,  // north (OUTPUT)
+                    texOut,  // south (OUTPUT)
+                    texOut,  // west  (OUTPUT)
+                    texOut   // east  (OUTPUT)
+            );
 
-        simpleBlockItem(
-                ModBlocks.BATTERY.get(),
-                energyModel
-        );
+            // One model for every state (LIT is visual-only for light level)
+            simpleBlock(ModBlocks.BATTERY.get(), batteryModel);
 
-        getVariantBuilder(ModBlocks.BATTERY.get())
-                .forAllStates(s -> ConfiguredModel.builder()
-                        .modelFile(energyModel)
-                        .build()
-                );
+            // Item uses the same model
+            simpleBlockItem(ModBlocks.BATTERY.get(), batteryModel);
+        }
+
         // ————————————————————————————————————————————————————————————————————————
 
         ResourceLocation coalTex = ResourceLocation.fromNamespaceAndPath("minecraft", "block/coal_block");
@@ -455,6 +462,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         }
 
         woodgasPipeStates(ModBlocks.WOODGAS_PIPE);
+        energyCableStates(ModBlocks.ENERGY_CABLE);
     }
 
     private void woodgasPipeStates(DeferredBlock<? extends Block> pipeBlock) {
@@ -507,18 +515,74 @@ public class ModBlockStateProvider extends BlockStateProvider {
         }
     }
 
-    // Helper: add a part tied to the exact connection mask (prevents arms/isolated in pure straights)
+    // Call this from registerStatesAndModels()
+    private void energyCableStates(DeferredBlock<? extends Block> cableBlock) {
+        Block b = cableBlock.get();
+        var m = getMultipartBuilder(b);
+
+        // Direction boolean properties — make sure your EnergyCableBlock exposes these:
+        final BooleanProperty N = EnergyCableBlock.NORTH;
+        final BooleanProperty E = EnergyCableBlock.EAST;
+        final BooleanProperty S = EnergyCableBlock.SOUTH;
+        final BooleanProperty W = EnergyCableBlock.WEST;
+        final BooleanProperty U = EnergyCableBlock.UP;
+        final BooleanProperty D = EnergyCableBlock.DOWN;
+
+        // Models: center/core + one arm + full straights
+        ModelFile core      = models().getExistingFile(modLoc("block/cable_core")); // small center cube
+        ModelFile arm       = models().getExistingFile(modLoc("block/cable_arm"));
+        ModelFile straightH = models().getExistingFile(modLoc("block/cable_h")); // base N–S
+        ModelFile straightV = models().getExistingFile(modLoc("block/cable_v")); // base U–D
+
+        // 0-connections → just the core
+        m.part().modelFile(core).uvLock(true).addModel()
+                .condition(N,false).condition(E,false).condition(S,false)
+                .condition(W,false).condition(U,false).condition(D,false);
+
+        // Enumerate all other states (1..63)
+        for (int mask = 1; mask < 64; mask++) {
+            boolean n = (mask & 1)  != 0;
+            boolean e = (mask & 2)  != 0;
+            boolean s = (mask & 4)  != 0;
+            boolean w = (mask & 8)  != 0;
+            boolean u = (mask & 16) != 0;
+            boolean d = (mask & 32) != 0;
+
+            boolean isNS = n && s && !e && !w && !u && !d;
+            boolean isEW = e && w && !n && !s && !u && !d;
+            boolean isUD = u && d && !n && !e && !s && !w;
+
+            // Pure straights: one-piece model only
+            if (isNS) { partExact(m, straightH, n,e,s,w,u,d, 0,   0);  continue; }
+            if (isEW) { partExact(m, straightH, n,e,s,w,u,d, 0,  90);  continue; }
+            if (isUD) { partExact(m, straightV, n,e,s,w,u,d, 0,   0);  continue; }
+
+            // All other shapes: core + one arm per true side
+            partExact(m, core, n,e,s,w,u,d, 0, 0);
+            if (n) partExact(m, arm, n,e,s,w,u,d,   0,   0);
+            if (e) partExact(m, arm, n,e,s,w,u,d,   0,  90);
+            if (s) partExact(m, arm, n,e,s,w,u,d,   0, 180);
+            if (w) partExact(m, arm, n,e,s,w,u,d,   0, 270);
+            if (u) partExact(m, arm, n,e,s,w,u,d, -90,   0);
+            if (d) partExact(m, arm, n,e,s,w,u,d,  90,   0);
+        }
+
+        // Item model: show a straight piece in inventory
+        simpleBlockItem(cableBlock.get(), straightH);
+    }
+
+    // Reuse your helper exactly like with woodgas pipes:
     private void partExact(MultiPartBlockStateBuilder m, ModelFile model,
                            boolean n, boolean e, boolean s, boolean w, boolean u, boolean d,
                            int xRot, int yRot) {
         m.part().modelFile(model).rotationX(xRot).rotationY(yRot).uvLock(true)
-                .addModel() // now on PartBuilder
-                .condition(WoodGasPipe.NORTH, n)
-                .condition(WoodGasPipe.EAST,  e)
-                .condition(WoodGasPipe.SOUTH, s)
-                .condition(WoodGasPipe.WEST,  w)
-                .condition(WoodGasPipe.UP,    u)
-                .condition(WoodGasPipe.DOWN,  d);
+                .addModel()
+                .condition(EnergyCableBlock.NORTH, n)
+                .condition(EnergyCableBlock.EAST,  e)
+                .condition(EnergyCableBlock.SOUTH, s)
+                .condition(EnergyCableBlock.WEST,  w)
+                .condition(EnergyCableBlock.UP,    u)
+                .condition(EnergyCableBlock.DOWN,  d);
     }
 
     private void leavesBlock(DeferredBlock<Block> block) {

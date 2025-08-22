@@ -25,14 +25,12 @@ import org.jetbrains.annotations.Nullable;
 public class StoneMillBlock extends AbstractProcessingBlock {
     public static final MapCodec<StoneMillBlock> CODEC = simpleCodec(StoneMillBlock::new);
 
-    // Outline/collision shape (adjust to match your model)
+    // 16×10 base + 12×6 top (centered)
     private static final VoxelShape SHAPE = Shapes.or(
-            // base ring
-            net.minecraft.world.level.block.Block.box(4, 0, 4, 12, 2, 12),
-            // body/frame
-            net.minecraft.world.level.block.Block.box(3, 2, 3, 13, 10, 13),
-            // top stone/wheel
-            net.minecraft.world.level.block.Block.box(5, 10, 5, 11, 13, 11)
+            // Base: full footprint, 10 tall
+            net.minecraft.world.level.block.Block.box(0, 0, 0, 16, 10, 16),
+            // Top cube: 12×12×6, centered on top of the base
+            net.minecraft.world.level.block.Block.box(2, 10, 2, 14, 16, 14)
     );
 
     public StoneMillBlock(Properties properties) {
@@ -60,19 +58,19 @@ public class StoneMillBlock extends AbstractProcessingBlock {
         return SHAPE;
     }
 
-    // Make occlusion empty so we don't cull neighbor faces like a full cube
+    // Avoid culling neighbors like a full cube (model is not a solid cube)
     @Override
     public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.empty();
     }
 
-    // Optional: also match physical collision to the smaller shape
+    // Match physical collision to our custom shape
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
         return SHAPE;
     }
 
-    // Optional: use our shape for light occlusion to avoid dark artifacts
+    // Use our shape for light occlusion to prevent dark artifacts
     @Override
     public boolean useShapeForLightOcclusion(BlockState state) {
         return true;
@@ -98,7 +96,7 @@ public class StoneMillBlock extends AbstractProcessingBlock {
                 }
                 // Normal open
                 if (be instanceof MenuProvider provider) {
-                    player.openMenu(provider, pos); // send BlockPos to client
+                    player.openMenu(provider, pos);
                 }
             } else {
                 throw new IllegalStateException("StoneMillBlockEntity missing at " + pos);

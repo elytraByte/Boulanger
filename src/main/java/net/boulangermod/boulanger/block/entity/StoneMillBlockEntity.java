@@ -40,10 +40,10 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
 
     /* ───────────── tuning ───────────── */
     private static final int MAX_MILL_TIME    = 200;  // ticks per operation
-    private static final int FE_COST_PER_TICK = 10;   // FE/t while milling
+    private static final int FE_COST_PER_TICK = 5;   // FE/t while milling
 
     // Internal battery (acts like your EnergyStorageBlockEntity pull behavior)
-    private static final int FE_CAPACITY    = FE_COST_PER_TICK * 1; // 400 FE buffer
+    private static final int FE_CAPACITY    = FE_COST_PER_TICK * 500;
     private static final int FE_MAX_RECEIVE = FE_COST_PER_TICK * 40; // pull up to 400/tick (adjust as desired)
     private static final int STARVE_GRACE_TICKS = 2;                 // tolerate brief hiccups
 

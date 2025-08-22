@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
 
     /* ── tuning ─────────────────────────────────────────────────── */
-    private static final int TANK_CAP_MB        = 1000;
+    private static final int TANK_CAP_MB        = 10000;
     private static final int DRAIN_MB_PER_TICK  = 25;    // gas consumed when running
     private static final int FE_PER_TICK        = 5;     // generation rate
     private static final int START_THRESHOLD_MB = 100;   // start at/above

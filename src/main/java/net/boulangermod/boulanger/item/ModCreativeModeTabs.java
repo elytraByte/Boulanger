@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.fluid.ModFluids;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -8,6 +9,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;

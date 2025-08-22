@@ -102,25 +102,26 @@ public abstract class AbstractPoweredBlockEntity extends AbstractProcessingBlock
         return sideCaps[side.ordinal()];
     }
 
-//    public IOMode getSideMode(Direction side) {
-//        return sideModes[side.ordinal()];
-//    }
+    public IOMode getSideMode(Direction side) {
+        return sideModes[side.ordinal()];
+    }
 
-//    /** Mutators you can call from a wrench UI or block-state cycle. */
-//    public void setSideMode(Direction side, IOMode mode) {
-//        sideModes[side.ordinal()] = mode;
-//        setChangedAndNotify();
-//    }
-//    public void cycleSideMode(Direction side) {
-//        IOMode cur = sideModes[side.ordinal()];
-//        IOMode next = switch (cur) {
-//            case DISABLED -> IOMode.INPUT;
-//            case INPUT    -> IOMode.OUTPUT;
-//            case OUTPUT   -> IOMode.BOTH;
-//            case BOTH     -> IOMode.DISABLED;
-//        };
-//        setSideMode(side, next);
-//    }
+    /** Mutators you can call from a block ctor / wrench UI. */
+    public void setSideMode(Direction side, IOMode mode) {
+        sideModes[side.ordinal()] = mode;
+        setChangedAndNotify();
+    }
+
+    public void cycleSideMode(Direction side) {
+        IOMode cur = sideModes[side.ordinal()];
+        IOMode next = switch (cur) {
+            case DISABLED -> IOMode.INPUT;
+            case INPUT    -> IOMode.OUTPUT;
+            case OUTPUT   -> IOMode.BOTH;
+            case BOTH     -> IOMode.DISABLED;
+        };
+        setSideMode(side, next);
+    }
 
     // ─────────────────────────── Common helpers ───────────────────────────
     /** Machines can call this at the start of their server tick. */

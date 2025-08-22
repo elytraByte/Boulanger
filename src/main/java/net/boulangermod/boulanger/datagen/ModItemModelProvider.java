@@ -105,9 +105,11 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .end();
         }
 
-        // WOODGAS_PIPE item → show the isolated pipe segment
-        withExistingParent(ModBlocks.WOODGAS_PIPE.getId().getPath(),
-                modLoc("block/woodgas_pipe_isolated"));
+//        // WOODGAS_PIPE item → show the isolated pipe segment
+//        withExistingParent(ModBlocks.WOODGAS_PIPE.getId().getPath(),
+//                modLoc("block/woodgas_pipe_isolated"));
+        basicItem(ModBlocks.ENERGY_CABLE.asItem());
+        basicItem(ModBlocks.WOODGAS_PIPE.asItem());
 
         basicItem(ModItems.BUTTER.get());
         basicItem(ModItems.FANCY_EGG.get());

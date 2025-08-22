@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "boulanger:item/energy_cable"
+    "layer0": "boulanger:item/woodgas_pipe"
   }
 }
