@@ -17,6 +17,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -347,6 +348,29 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         if (!be.isFormed() || !be.isAnchor()) return; // only the anchor runs logic
         be.performCookingTick();
     }
+
+    /** Drop all item stacks from this gasifier's inventory into the world. */
+    public void dropInventoryToWorld() {
+        if (level == null) return;
+
+        IItemHandler items = getItemHandler(null);
+        if (items == null) return;
+
+        // Drop at the anchor's position if formed; otherwise, current position.
+        BlockPos dropHere = isFormed() ? (anchorPos != null ? anchorPos : worldPosition) : worldPosition;
+
+        for (int i = 0; i < items.getSlots(); i++) {
+            ItemStack stack = items.getStackInSlot(i);
+            if (stack.isEmpty()) continue;
+
+            // spawn a copy, then extract to actually clear the slot
+            Block.popResource(level, dropHere, stack.copy());
+            items.extractItem(i, stack.getCount(), false);
+        }
+
+        setChanged();
+    }
+
 
     private void performCookingTick() {
         // Cook cycle

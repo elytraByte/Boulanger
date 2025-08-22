@@ -143,6 +143,47 @@ public class WoodGasifierBlock extends BaseEntityBlock {
     }
 
     @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        // Only when the block type actually changes (break/replace), not just property flips.
+        if (!state.is(newState.getBlock())) {
+            if (!level.isClientSide) {
+                // 1) Prefer the BE that still exists at this position before super.onRemove()
+                WoodGasifierBlockEntity anchor = null;
+
+                BlockEntity here = level.getBlockEntity(pos);
+                if (here instanceof WoodGasifierBlockEntity part) {
+                    // If this was any multiblock part, ask it for the anchor while it's still formed
+                    if (part.isFormed()) {
+                        anchor = part.getAnchorBE();
+                        if (anchor == null && part.isAnchor()) {
+                            anchor = part; // breaking the anchor itself
+                        }
+                    }
+                }
+
+                // 2) Fallback: try to resolve via old heuristic (may fail after a cell is gone)
+                if (anchor == null) {
+                    BlockPos anchorPos = WoodGasifierBlockEntity.resolveAnchor(level, pos);
+                    BlockEntity be = level.getBlockEntity(anchorPos);
+                    if (be instanceof WoodGasifierBlockEntity g) {
+                        anchor = g.isAnchor() ? g : g.getAnchorBE();
+                    }
+                }
+
+                // 3) Drop once from the real anchor, then dismantle
+                if (anchor != null) {
+                    anchor.dropInventoryToWorld();  // extracts from slots so they won't persist
+                    anchor.dismantleMultiblock();   // clears formed state on all parts
+                }
+            }
+        }
+
+        // Now let vanilla/neoforge handle removing the BE at 'pos'
+        super.onRemove(state, level, pos, newState, isMoving);
+    }
+
+
+    @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(type, ModBlockEntities.WOOD_GASIFIER_BE.get(),
                 (lvl, pos, st, be) -> WoodGasifierBlockEntity.tick(lvl, pos, st, (WoodGasifierBlockEntity) be));
@@ -245,16 +286,6 @@ public class WoodGasifierBlock extends BaseEntityBlock {
             }
         }
 
-    }
-
-
-    @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.is(newState.getBlock())) {
-            var be = level.getBlockEntity(pos);
-            if (be instanceof WoodGasifierBlockEntity gas) gas.dismantleMultiblock();
-        }
-        super.onRemove(state, level, pos, newState, isMoving);
     }
 
 }

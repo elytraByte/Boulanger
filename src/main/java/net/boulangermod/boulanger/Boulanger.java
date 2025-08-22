@@ -2,9 +2,7 @@ package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.WoodGasifierBlock;
-import net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity;
 import net.boulangermod.boulanger.client.renderer.SugarRefineryRenderer;
-import net.boulangermod.boulanger.client.renderer.WoodGasifierRenderer;
 import net.boulangermod.boulanger.command.RecipeWeightsCommand;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
@@ -19,10 +17,8 @@ import net.boulangermod.boulanger.util.MyModLootFunctions;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -111,9 +107,6 @@ public class Boulanger {
         public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerEntityRenderer(ModEntities.HEN.get(), HenRenderer::new);
             event.registerEntityRenderer(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), HolsteinFriesianCowRenderer::new);
-//            event.registerBlockEntityRenderer(
-//                    ModBlockEntities.WOOD_GASIFIER_BE.get(),
-//                    WoodGasifierRenderer::new);
             event.registerBlockEntityRenderer(
                     ModBlockEntities.SUGAR_REFINERY_BE.get(),
                     SugarRefineryRenderer::new
