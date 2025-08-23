@@ -1,5 +1,5 @@
 {
-  "parent": "boulanger:block/scale1",
+  "parent": "boulanger:block/gas_tank",
   "display": {
     "firstperson_lefthand": {
       "rotation": [

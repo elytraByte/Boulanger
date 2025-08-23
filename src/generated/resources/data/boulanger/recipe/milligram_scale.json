@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "L": {
+      "item": "minecraft:lapis_lazuli"
+    },
+    "S": {
+      "item": "boulanger:scale_block"
+    }
+  },
+  "pattern": [
+    "LIL",
+    "ISI",
+    "LIL"
+  ],
+  "result": {
+    "count": 1,
+    "id": "boulanger:milligram_scale"
+  }
+}

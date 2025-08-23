@@ -1,4 +1,4 @@
-// 1.21	2025-08-22T11:49:16.4000258	Item Models: boulanger
+// 1.21	2025-08-23T09:47:58.1819004	Item Models: boulanger
 782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
 5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
 604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
@@ -83,7 +83,7 @@ c70e17894be3382fec108e25fb37082d758b0f95 assets/boulanger/models/item/rye_flour_
 f31b7129e5bd9db34501b8213ba1c47c796dcee5 assets/boulanger/models/item/saf_gold.json
 ed6aa5143c57ac392067e78295b011a1a6098ce7 assets/boulanger/models/item/saf_red.json
 90ffbcdd1d764c3f46fe88df3c50b57a79c9cb5c assets/boulanger/models/item/salt_kosher.json
-719d0031fa7bb7e3223c6b9650b3ff3804e5404b assets/boulanger/models/item/scale_block.json
+ea636a22c13718b6e56df955279ce1c67e6ba7be assets/boulanger/models/item/scale_block.json
 e1c24d73503add74ae6e020355a4b8379af9e082 assets/boulanger/models/item/semolina_flour_fifty_pound_bag.json
 a744a3a5a294221b04accf766117a29e7b96082b assets/boulanger/models/item/sledgehammer.json
 6e9bafa61f357a373f6a98956db68633e3a0d178 assets/boulanger/models/item/sourdough_starter.json

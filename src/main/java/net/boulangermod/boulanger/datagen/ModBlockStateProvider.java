@@ -339,26 +339,24 @@ public class ModBlockStateProvider extends BlockStateProvider {
             // Do NOT call simpleBlockItem here—item is generated in ModItemModelProvider via machineItem.
         }
 
-        // ─── BAKER'S TABLE ─────────────────────────────────────────────────────
+// ─── BAKER'S TABLE ─────────────────────────────────────────────────────
         ModelFile bakersTableModel = models().orientable(
                 "bakers_table",
-                modLoc("block/bakers_table_side"),   // all four side faces
-                modLoc("block/bakers_table_front"),  // “front” face
-                modLoc("block/bakers_table_top")     // top face
+                modLoc("block/bakers_table_side"),
+                modLoc("block/bakers_table_front"),
+                modLoc("block/bakers_table_top")
         );
 
-// use the same orientable model for the item form
+// Generate blockstate variants that rotate the model by FACING
+// If your model's "front" points SOUTH (like vanilla furnace), use:
+        horizontalBlock(ModBlocks.BAKERS_TABLE.get(), bakersTableModel);
+
+// If you still see the back facing the player, flip with an offset:
+// horizontalBlock(ModBlocks.BAKERS_TABLE.get(), bakersTableModel, 180);
+
+// Item model
         simpleBlockItem(ModBlocks.BAKERS_TABLE.get(), bakersTableModel);
 
-// rotate the block in-world based on its facing property
-        getVariantBuilder(ModBlocks.BAKERS_TABLE.get())
-                .forAllStates(s -> {
-                    Direction dir = s.getValue(BlockStateProperties.HORIZONTAL_FACING);
-                    return ConfiguredModel.builder()
-                            .modelFile(bakersTableModel)
-                            .rotationY((int) dir.toYRot())
-                            .build();
-                });
 
         // ─── TREE TAP ─────────────────────────────────────────────────────────
         ModelFile tapModel = models().getExistingFile(modLoc("block/tree_tap"));

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 0.35,
+  "ingredient": {
+    "item": "boulanger:unfired_blue_porcelain_brick"
+  },
+  "result": {
+    "count": 1,
+    "id": "boulanger:blue_porcelain_brick"
+  }
+}

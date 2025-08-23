@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "boulanger:pcb"
+    },
+    "C": {
+      "item": "minecraft:cauldron"
+    },
+    "F": {
+      "item": "minecraft:campfire"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "pattern": [
+    "ICI",
+    "IFI",
+    "CBC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "boulanger:wood_gasifier"
+  }
+}
