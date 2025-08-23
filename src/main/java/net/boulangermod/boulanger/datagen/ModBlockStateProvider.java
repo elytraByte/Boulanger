@@ -464,6 +464,25 @@ public class ModBlockStateProvider extends BlockStateProvider {
             woodGasTankStates();
         }
 
+        // ─── FEED-THROUGH (default look = vanilla chiseled stone bricks) ─────────────
+        {
+            // Use the registry path of your block so model/item names line up
+            String id = BuiltInRegistries.BLOCK.getKey(ModBlocks.FEED_THROUGH_BLOCK.get()).getPath();
+
+            // Point cube-all model at the vanilla texture
+            ModelFile feedthroughModel = models().cubeAll(
+                    id,
+                    mcLoc("block/chiseled_stone_bricks")
+            );
+
+            // Blockstate → single variant using that model
+            simpleBlock(ModBlocks.FEED_THROUGH_BLOCK.get(), feedthroughModel);
+
+            // Item model → same model so it looks right in inventory
+            simpleBlockItem(ModBlocks.FEED_THROUGH_BLOCK.get(), feedthroughModel);
+        }
+
+
     }
 
     public void woodGasTankStates() {
@@ -491,23 +510,39 @@ public class ModBlockStateProvider extends BlockStateProvider {
                     .build();
         });
     }
-
     private void woodgasFlareStates() {
-        ModelFile flare = models().getExistingFile(modLoc("block/woodgas_flare"));
+        ModelFile flare = models()
+                .withExistingParent("woodgas_flare_rt", modLoc("block/woodgas_flare"))
+                .renderType("cutout");
 
         getVariantBuilder(ModBlocks.WOODGAS_FLARE.get())
                 .forAllStatesExcept(state -> {
                     Direction f = state.getValue(WoodGasFlareBlock.FACING);
 
-                    int xRot, yRot;
+                    // Goal:
+                    //  - FACING = nozzle direction (points AWAY from pipe)
+                    //  - the “bottom/back” of the model is on the ATTACH side (opposite FACING)
+
+                    int xRot = 0, yRot = 0;
                     switch (f) {
-                        case UP    -> { xRot = 0;   yRot = 0;   }
-                        case DOWN  -> { xRot = 180; yRot = 0;   }
-                        case NORTH -> { xRot = 90;  yRot = 0;   }   // ← fixed
-                        case SOUTH -> { xRot = 90;  yRot = 180; }   // ← fixed
-                        case EAST  -> { xRot = 90;  yRot = 90;  }
-                        case WEST  -> { xRot = 90;  yRot = 270; }
-                        default    -> { xRot = 0;   yRot = 0;   }
+                        case UP -> {               // pipe is below, nozzle up
+                            xRot = 0;  yRot = 0;
+                        }
+                        case DOWN -> {             // pipe is above, nozzle down
+                            xRot = 180; yRot = 0;
+                        }
+                        case NORTH -> {            // pipe is SOUTH, nozzle north
+                            xRot = 90; yRot = 0;    // ← flipped from the previous 180
+                        }
+                        case SOUTH -> {            // pipe is NORTH, nozzle south
+                            xRot = 90; yRot = 180;  // ← flipped from the previous 0
+                        }
+                        case EAST -> {             // pipe is WEST, nozzle east
+                            xRot = 90; yRot = 90;   // ← flipped from the previous 270
+                        }
+                        case WEST -> {             // pipe is EAST, nozzle west
+                            xRot = 90; yRot = 270;  // ← flipped from the previous 90
+                        }
                     }
 
                     return ConfiguredModel.builder()

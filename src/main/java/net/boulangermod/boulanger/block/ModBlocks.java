@@ -76,7 +76,9 @@ public class ModBlocks {
             );
 
 
-
+    public static final DeferredBlock<Block> FEED_THROUGH_BLOCK =
+            registerBlock("feed_through_block",
+                    () -> new WoodGasFeedThroughBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)));
 
     public static final DeferredBlock<Block> MOTIVATOR =
             registerBlock("motivator",

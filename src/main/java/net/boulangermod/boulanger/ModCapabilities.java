@@ -93,6 +93,13 @@ public final class ModCapabilities {
                     }
                 }
         );
+
+        event.registerBlockEntity(
+                net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.WALL_FEED_THROUGH_BE.get(),
+                (be, side) -> ((WoodGasFeedThroughBlockEntity) be).getHandlerFor(side)
+        );
+
     }
 
     static boolean isPortCell(net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity be) {

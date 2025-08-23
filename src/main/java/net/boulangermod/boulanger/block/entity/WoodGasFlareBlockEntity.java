@@ -121,8 +121,9 @@ public class WoodGasFlareBlockEntity extends BlockEntity {
 
     private boolean pipeStillValid(Level level, BlockState state, BlockPos pos) {
         Direction attach = state.getValue(WoodGasFlareBlock.FACING).getOpposite();
-        return level.getBlockState(pos.relative(attach))
-                .is(net.boulangermod.boulanger.block.ModBlocks.WOODGAS_PIPE.get());
+        BlockState neighbor = level.getBlockState(pos.relative(attach));
+        return neighbor.is(net.boulangermod.boulanger.block.ModBlocks.WOODGAS_PIPE.get())
+                || neighbor.is(net.boulangermod.boulanger.block.ModBlocks.FEED_THROUGH_BLOCK.get());
     }
 
     private void setLit(Level level, BlockState state, BlockPos pos, boolean newLit) {

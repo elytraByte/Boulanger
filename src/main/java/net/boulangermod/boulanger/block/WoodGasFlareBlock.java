@@ -5,6 +5,10 @@ import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.block.entity.WoodGasFlareBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -21,7 +25,9 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,13 +67,44 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
         };
     }
 
-    // Compact rod-ish shape that rotates with FACING
-    private static final VoxelShape SHAPE_UP = box(6, 0, 6, 10, 12, 10);
-    private static final VoxelShape SHAPE_DOWN = box(6, 4, 6, 10, 16, 10);
-    private static final VoxelShape SHAPE_NORTH = box(6, 6, 10, 10, 10, 16);
-    private static final VoxelShape SHAPE_SOUTH = box(6, 6, 0, 10, 10, 6);
-    private static final VoxelShape SHAPE_WEST = box(10, 6, 6, 16, 10, 10);
-    private static final VoxelShape SHAPE_EAST = box(0, 6, 6, 6, 10, 10);
+    // --- helpers ---
+    private static VoxelShape mirrorY(VoxelShape s) {
+        VoxelShape out = Shapes.empty();
+        for (AABB a : s.toAabbs()) {
+            out = Shapes.or(out, Shapes.create(
+                    a.minX, 1.0 - a.maxY, a.minZ,
+                    a.maxX, 1.0 - a.minY, a.maxZ
+            ));
+        }
+        return out.optimize();
+    }
+
+    // 6×6 cross-section (centered), 8 px deep, always anchored to the ATTACH face (= opposite of FACING)
+    private static final VoxelShape SHAPE_UP    = box(5, 0, 5, 11, 8, 11);    // pipe below → rod from bottom up
+    private static final VoxelShape SHAPE_DOWN  = box(5, 8, 5, 11,16, 11);    // pipe above → rod from top down  (your “good” one)
+
+    // Horizontals anchored to the pipe side (opposite FACING)
+    private static final VoxelShape SHAPE_NORTH = box(5, 5, 8,  11,11,16);    // FACING=NORTH → pipe SOUTH (z=16)
+    private static final VoxelShape SHAPE_SOUTH = box(5, 5, 0,  11,11, 8);    // FACING=SOUTH → pipe NORTH (z=0)
+    private static final VoxelShape SHAPE_EAST  = box(0,  5, 5,   8,11,11);   // FACING=EAST  → pipe WEST  (x=0)
+    private static final VoxelShape SHAPE_WEST  = box(8,  5, 5,  16,11,11);   // FACING=WEST  → pipe EAST  (x=16)
+
+    private static VoxelShape shapeFor(Direction f) {
+        return switch (f) {
+            case UP    -> SHAPE_UP;
+            case DOWN  -> SHAPE_DOWN;
+            case NORTH -> SHAPE_NORTH;
+            case SOUTH -> SHAPE_SOUTH;
+            case EAST  -> SHAPE_EAST;
+            case WEST  -> SHAPE_WEST;
+        };
+    }
+
+    // Use the same oriented shape for all queries
+    @Override public VoxelShape getShape(BlockState s, BlockGetter g, BlockPos p, CollisionContext c)         { return shapeFor(s.getValue(FACING)); }
+    @Override public VoxelShape getCollisionShape(BlockState s, BlockGetter g, BlockPos p, CollisionContext c){ return shapeFor(s.getValue(FACING)); }
+    @Override public VoxelShape getOcclusionShape(BlockState s, BlockGetter g, BlockPos p)                    { return shapeFor(s.getValue(FACING)); }
+    @Override public VoxelShape getVisualShape(BlockState s, BlockGetter g, BlockPos p, CollisionContext c)   { return shapeFor(s.getValue(FACING)); }
 
 
     @Override
@@ -90,11 +127,15 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
 
     @Override
     public boolean canSurvive(BlockState state, LevelReader world, BlockPos pos) {
-        Direction attachDir = state.getValue(FACING).getOpposite(); // where the pipe must be
+        Direction attachDir = state.getValue(FACING).getOpposite(); // block behind the flare
         BlockPos behind = pos.relative(attachDir);
         BlockState neighbor = world.getBlockState(behind);
-        // Require the neighbor to be your woodgas pipe block
-        return neighbor.is(net.boulangermod.boulanger.block.ModBlocks.WOODGAS_PIPE.get());
+
+        // ✅ allow either a pipe OR the passthrough block
+        return neighbor.is(net.boulangermod.boulanger.block.ModBlocks.WOODGAS_PIPE.get())
+                || neighbor.is(net.boulangermod.boulanger.block.ModBlocks.FEED_THROUGH_BLOCK.get());
+
+
     }
 
     @Override
@@ -111,52 +152,62 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
         return super.updateShape(state, fromDir, fromState, level, pos, fromPos);
     }
 
-    @Override
-    public VoxelShape getShape(BlockState state, BlockGetter getter, BlockPos pos, CollisionContext ctx) {
-        return switch (state.getValue(FACING)) {
-            case UP -> SHAPE_UP;
-            case DOWN -> SHAPE_DOWN;
-            case NORTH -> SHAPE_NORTH;
-            case SOUTH -> SHAPE_SOUTH;
-            case WEST -> SHAPE_WEST;
-            case EAST -> SHAPE_EAST;
-        };
-    }
 
-    @Nullable
-    @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new WoodGasFlareBlockEntity(pos, state);
     }
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource rand) {
-        if (!state.getValue(LIT)) return;
+        if (!state.getValue(WoodGasFlareBlock.LIT)) return;
 
-        // dead-center of the block (your nub’s “top” is the center)
-        double cx = pos.getX() + 0.5;
-        double cy = pos.getY() + 0.5;
-        double cz = pos.getZ() + 0.5;
+        // Oriented shape → bounds per current FACING
+        VoxelShape shape = state.getShape(level, pos);
+        AABB box = shape.isEmpty() ? new AABB(0,0,0,1,1,1) : shape.bounds();
 
-        // steady flame
-        level.addParticle(net.minecraft.core.particles.ParticleTypes.FLAME, cx, cy, cz, 0.0, 0.005, 0.0);
+        // Center + half-extent in each axis (in block coords)
+        final double cx0 = pos.getX() + (box.minX + box.maxX) * 0.5;
+        final double cy0 = pos.getY() + (box.minY + box.maxY) * 0.5;
+        final double cz0 = pos.getZ() + (box.minZ + box.maxZ) * 0.5;
 
-        // soft smoke puff sometimes
-        if (rand.nextFloat() < 0.45f) {
-            level.addParticle(net.minecraft.core.particles.ParticleTypes.SMOKE, cx, cy, cz, 0.0, 0.01, 0.0);
+        final double hx = (box.maxX - box.minX) * 0.5;
+        final double hy = (box.maxY - box.minY) * 0.5;
+        final double hz = (box.maxZ - box.minZ) * 0.5;
+
+        // Offset IN from the outward face by 3px (and we removed the previous -1px lowering)
+        final double off = 5.0 / 16.0;   // distance inward from the face
+        final double pad = 1.0 / 16.0;   // keep away from edges
+
+        double cx = cx0, cy = cy0, cz = cz0;
+
+        Direction f = state.getValue(WoodGasFlareBlock.FACING);
+        switch (f) {
+            case UP ->    cy = cy0 + (hy - off);
+            case DOWN ->  cy = cy0 - (hy - off);
+            case SOUTH -> cz = cz0 + (hz - off);
+            case NORTH -> cz = cz0 - (hz - off);
+            case EAST ->  cx = cx0 + (hx - off);
+            case WEST ->  cx = cx0 - (hx - off);
         }
 
-        // occasional extra flicker + crackle
-        if (rand.nextFloat() < 0.15f) {
-            level.addParticle(net.minecraft.core.particles.ParticleTypes.SMALL_FLAME, cx, cy, cz, 0.0, 0.01, 0.0);
-        }
-        if (rand.nextFloat() < 0.04f) {
-            level.playLocalSound(cx, cy, cz,
-                    net.minecraft.sounds.SoundEvents.CAMPFIRE_CRACKLE,
-                    net.minecraft.sounds.SoundSource.BLOCKS,
-                    0.35f, 1.0f, false);
-        }
+        // Clamp within the oriented box so we never escape on rotations
+        cx = Mth.clamp(cx, pos.getX() + box.minX + pad, pos.getX() + box.maxX - pad);
+        cy = Mth.clamp(cy, pos.getY() + box.minY + pad, pos.getY() + box.maxY - pad);
+        cz = Mth.clamp(cz, pos.getZ() + box.minZ + pad, pos.getZ() + box.maxZ - pad);
+
+        // Flame (small upward drift looks fine even when sideways)
+        level.addParticle(ParticleTypes.FLAME, cx, cy, cz, 0.0, 0.01, 0.0);
+
+        if (rand.nextFloat() < 0.20f)
+            level.addParticle(ParticleTypes.SMALL_FLAME, cx, cy + 0.02, cz, 0.0, 0.015, 0.0);
+
+        if (rand.nextFloat() < 0.35f)
+            level.addParticle(ParticleTypes.SMOKE, cx, cy + 0.04, cz, 0.0, 0.02, 0.0);
+
+        if (rand.nextFloat() < 0.04f)
+            level.playLocalSound(cx, cy, cz, SoundEvents.CAMPFIRE_CRACKLE, SoundSource.BLOCKS, 0.35f, 1.0f, false);
     }
+
 
     @Override
     public PushReaction getPistonPushReaction(BlockState state) {
@@ -177,4 +228,5 @@ public class WoodGasFlareBlock extends BaseEntityBlock {
             level.sendBlockUpdated(pipePos, pipeState, pipeState, 3);
         }
     }
+
 }

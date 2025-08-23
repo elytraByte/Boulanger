@@ -1,4 +1,4 @@
-// 1.21	2025-08-22T10:17:01.7851038	Loot Tables
+// 1.21	2025-08-23T10:55:07.2797851	Loot Tables
 4ebdab791e29c52dd9dfbe24d51d2a30b9e2ff8e data/boulanger/loot_table/blocks/bakers_table.json
 c1bacd790c44e22980716bc33478735b6413ed29 data/boulanger/loot_table/blocks/battery.json
 9e2ca5e329d104d7ee8d3b109bbf4d6a06536147 data/boulanger/loot_table/blocks/black_tile.json
@@ -6,6 +6,7 @@ e44ec093c87edbba6c68aa71fa8aec26e4a99919 data/boulanger/loot_table/blocks/blue_t
 db614f394c6ffca96158ceab32f691361845ce84 data/boulanger/loot_table/blocks/blue_white_tile.json
 bc29c27a8ef02917d9d6167d91360c94d8e3dccc data/boulanger/loot_table/blocks/dough_divider.json
 5cad4920a1e4bea8ac29b1d39b1075702576b98b data/boulanger/loot_table/blocks/energy_cable.json
+14511be17da2812d4fc964d87e3fc3ecc2e7e198 data/boulanger/loot_table/blocks/feed_through_block.json
 cb6f30d02196b5fc16e9bb4245f861979196ab88 data/boulanger/loot_table/blocks/gas_tank.json
 1316f7504f1835fda7f6a12bb38c47c9fc6f65c5 data/boulanger/loot_table/blocks/hard_red_spring_wheat_crop.json
 f896ece1c2a4aa6fa72cb2941aa5bb3b4fec17bd data/boulanger/loot_table/blocks/iron_frame.json
