@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.WoodGasifierBlock;
 import net.boulangermod.boulanger.client.renderer.SugarRefineryRenderer;
 import net.boulangermod.boulanger.client.renderer.WoodGasFeedThroughRenderer;
+import net.boulangermod.boulanger.command.DevTestCommands;
 import net.boulangermod.boulanger.command.RecipeWeightsCommand;
 import net.boulangermod.boulanger.datagen.ModFluidTagProvider;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
@@ -162,5 +163,6 @@ public class Boulanger {
     public void onRegisterCommands(RegisterCommandsEvent event) {
         // pass the dispatcher into your command’s constructor:
         new RecipeWeightsCommand(event.getDispatcher());
+        DevTestCommands.register(event.getDispatcher());
     }
 }

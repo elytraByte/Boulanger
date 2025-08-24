@@ -171,4 +171,6 @@ public record DoughRecipeComponent(
                     return new DoughRecipeComponent(id, targets, ings, total);
                 }
             };
+
+
 }

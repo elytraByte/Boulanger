@@ -229,10 +229,15 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
     }
 
     private ProofingStateComponent bumpProofStep(ItemStack stack) {
-        var old = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
-        int next = old != null ? old.stepIndex() + 1 : 0;
-        return new ProofingStateComponent(next, /*ticks=*/0, /*shaped=*/true);
+        var old  = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
+        int next = (old != null ? old.stepIndex() + 1 : 0);
+        // Never mark shaped here; preserve whatever it was (spawned dough: false)
+        boolean shaped = (old != null && old.shaped());
+        return new ProofingStateComponent(next, /*ticks=*/0, /*shaped=*/shaped);
     }
+
+
+
 
     private DoughRecipeComponent scaleRecipeForWeight(DoughRecipeComponent old, double newWeight) {
         double scale = newWeight / old.totalWeight();
@@ -249,12 +254,12 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
 
     @SuppressWarnings("unchecked")
     private static void copyDoughMetadataExceptWeight(ItemStack src, ItemStack dst) {
+        // Intentionally NOT copying PAN_TYPE here; the pan item should supply that later.
         List<DataComponentType<?>> toCopy = List.of(
                 ModDataComponentTypes.PROOFING_STATE.get(),
                 ModDataComponentTypes.BAKER_PERCENTAGES.get(),
                 ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(),
-                ModDataComponentTypes.INGREDIENT_TYPE.get(),
-                ModDataComponentTypes.PAN_TYPE.get()
+                ModDataComponentTypes.INGREDIENT_TYPE.get()
         );
 
         for (DataComponentType<?> type : toCopy) {

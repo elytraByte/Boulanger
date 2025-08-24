@@ -76,7 +76,6 @@ public class WoodGasFlareBlockEntity extends BlockEntity {
     /** Expose handler ONLY on the face that touches the pipe (attach face). */
     public @Nullable IFluidHandler getFluidHandler(@Nullable Direction side) {
         Direction attach = getBlockState().getValue(WoodGasFlareBlock.FACING).getOpposite();
-        LOGGER.debug("[Flare] cap query side={} (attach={}) at {}", side, attach, worldPosition);
         return (side == null || side == attach) ? sidedHandler : null;
     }
 
