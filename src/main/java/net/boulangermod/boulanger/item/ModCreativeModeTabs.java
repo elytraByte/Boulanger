@@ -108,6 +108,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept((new ItemStack(ModBlocks.FEED_THROUGH_BLOCK.get(), 1)));
                         pOutput.accept((new ItemStack(ModBlocks.WOODGAS_PIPE.get(), 1)));
                         pOutput.accept((new ItemStack(ModBlocks.WOODGAS_FLARE.get(), 1)));
+                        pOutput.accept((new ItemStack(ModBlocks.WOODGAS_VALVE.get(), 1)));
                         pOutput.accept(new ItemStack(ModItems.HEN_SPAWN_EGG.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.HOLSTEIN_FRIESIAN_COW_SPAWN_EGG.get(), 1));
 
@@ -172,6 +173,17 @@ public class ModCreativeModeTabs {
 
                         }
                         pOutput.accept((new ItemStack(ModItems.PAN.get())));
+// Optional: give variants a readable name in the tab
+                        ItemStack loafPan = new ItemStack(ModItems.PAN.get());
+                        loafPan.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(0));
+                        loafPan.set(DataComponents.CUSTOM_NAME, Component.translatable("item.boulanger.pan.loaf")); // add lang key
+                        pOutput.accept(loafPan);
+
+                        ItemStack baguettePan = new ItemStack(ModItems.PAN.get());
+                        baguettePan.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(4));
+                        baguettePan.set(DataComponents.CUSTOM_NAME, Component.translatable("item.boulanger.pan.baguette")); // add lang key
+                        pOutput.accept(baguettePan);
+
 
 
 

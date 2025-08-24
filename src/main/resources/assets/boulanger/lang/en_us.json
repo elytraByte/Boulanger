@@ -99,7 +99,9 @@
     "item.boulanger.flour.ww": "Whole Wheat",
     "item.boulanger.flour.s": "Semolina",
     "item.boulanger.flour.vwg": "Vital Wheat Gluten",
-    "fluid.boulanger.wood_gas": "Wood Gas"
+    "fluid.boulanger.wood_gas": "Wood Gas",
+    "entity.minecraft.villager.boulanger.baker": "Baker"
+
 
 
 

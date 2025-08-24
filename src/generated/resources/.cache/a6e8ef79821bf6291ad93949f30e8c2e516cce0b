@@ -1,4 +1,4 @@
-// 1.21	2025-08-23T09:47:58.1819004	Item Models: boulanger
+// 1.21	2025-08-23T19:20:12.6892306	Item Models: boulanger
 782811369c401d6b4b50b43e0d0e3c8196cf58fd assets/boulanger/models/bread/baguette.json
 5c68025768f55f9452ca99aa4d9d047303e86265 assets/boulanger/models/bread/croissant.json
 604fd5c1d1ea5cf67c7e1ed83505ce166d0c4b51 assets/boulanger/models/bread/whole_wheat_bread.json
@@ -104,6 +104,7 @@ af67ff14a893e7cbeef53141e1914db13af06683 assets/boulanger/models/item/wooden_buc
 2388291b589418804ef78ad91a6df8054509e471 assets/boulanger/models/item/wooden_shell_egg_bucket.json
 df0247347d9d2795ea2d97589bed0e8ea693f10f assets/boulanger/models/item/woodgas_engine.json
 b9ed889e5cd29c55582ed8045dbcaf50aa9b9622 assets/boulanger/models/item/woodgas_pipe.json
+867a160a2b20688d0955ea1e82c758ee1dc5c20e assets/boulanger/models/item/woodgas_valve.json
 2f1e338015987ca12117c46303d359692c876b03 assets/boulanger/models/item/wood_oven.json
 a263f1b106b1e2e4975b43290f679ba13f99b48d assets/boulanger/models/pan/baguette/empty.json
 6b79cdbf619b6afe9da4993b04a1ea2c97bff929 assets/boulanger/models/pan/baguette/full.json

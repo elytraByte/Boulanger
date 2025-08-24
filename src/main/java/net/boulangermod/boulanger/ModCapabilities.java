@@ -100,6 +100,12 @@ public final class ModCapabilities {
                 (be, side) -> ((WoodGasFeedThroughBlockEntity) be).getHandlerFor(side)
         );
 
+
+        event.registerBlockEntity(
+                Capabilities.FluidHandler.BLOCK,
+                ModBlockEntities.WOODGAS_VALVE_BE.get(),
+                (be, side) -> ((WoodGasValveBlockEntity) be).getFluidHandler(side)
+        );
     }
 
     static boolean isPortCell(net.boulangermod.boulanger.block.entity.WoodGasifierBlockEntity be) {

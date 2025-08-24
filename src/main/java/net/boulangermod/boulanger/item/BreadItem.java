@@ -1,5 +1,6 @@
 package net.boulangermod.boulanger.item;
 
+import net.boulangermod.boulanger.component.FlourType;
 import net.boulangermod.boulanger.component.IngredientInfo;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.util.IngredientCategory;
@@ -96,28 +97,55 @@ public class BreadItem extends Item {
 
     private String getTypeName(ItemStack stack) {
         var type = stack.get(ModDataComponentTypes.BREAD_TYPE.get());
-        return (type != null)
-                ? type.name().toLowerCase(Locale.ROOT)
-                : "unknown";
+        return (type != null) ? titleCaseTokens(type.name()) : "Unknown";
     }
+
 
     private Map<String, Double> getFlourPercentages(ItemStack stack) {
         var recipe = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
         if (recipe == null) return Collections.emptyMap();
 
-        double totalFlour = recipe.ingredients().stream()
+        // total flour grams
+        int totalFlour = recipe.ingredients().stream()
                 .filter(i -> i.category() == IngredientCategory.FLOUR)
-                .mapToDouble(IngredientInfo::weight)
+                .mapToInt(IngredientInfo::weight)
                 .sum();
         if (totalFlour <= 0) return Collections.emptyMap();
 
-        Map<String, Double> map = new LinkedHashMap<>();
+        // aggregate grams by flour-type id (fallback to itemId if no flourType present)
+        Map<String, Integer> gramsByType = new LinkedHashMap<>();
         for (IngredientInfo info : recipe.ingredients()) {
-            if (info.category() == IngredientCategory.FLOUR) {
-                map.put(info.itemId(), info.weight() / totalFlour);
+            if (info.category() != IngredientCategory.FLOUR) continue;
+
+            FlourType ft = info.flourType();
+            String key = (ft != null) ? ft.type() : info.itemId(); // e.g. "bread_flour", "vital_wheat_gluten"
+            gramsByType.merge(key, info.weight(), Integer::sum);
+        }
+
+        // convert to fraction of TOTAL FLOUR
+        Map<String, Double> out = new LinkedHashMap<>();
+        for (var e : gramsByType.entrySet()) {
+            out.put(prettyFlourName(e.getKey()), e.getValue() / (double) totalFlour);
+        }
+        return out;
+    }
+
+    private static String prettyFlourName(String id) {
+        // strip namespace if present
+        String key = id.contains(":") ? id.substring(id.indexOf(':') + 1) : id;
+
+        // title-case each underscore-separated token
+        String[] parts = key.split("_");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            String p = parts[i];
+            if (!p.isEmpty()) {
+                sb.append(Character.toUpperCase(p.charAt(0)))
+                        .append(p.length() > 1 ? p.substring(1) : "");
+                if (i < parts.length - 1) sb.append(' ');
             }
         }
-        return map;
+        return titleCaseTokens(id);
     }
 
     private Map<String, Double> getOtherIngredientPercentages(ItemStack stack) {
@@ -127,10 +155,7 @@ public class BreadItem extends Item {
         Map<String, Double> map = new LinkedHashMap<>();
         for (Map.Entry<IngredientCategory, Double> e : pctComp.percentages().entrySet()) {
             if (e.getKey() != IngredientCategory.FLOUR) {
-                map.put(
-                        e.getKey().name().toLowerCase(Locale.ROOT),
-                        e.getValue()
-                );
+                map.put(titleCaseTokens(e.getKey().name()), e.getValue());
             }
         }
         return map;
@@ -150,4 +175,23 @@ public class BreadItem extends Item {
                 ? Math.round(wComp.getWeight())
                 : 0;
     }
+
+    private static String titleCaseTokens(String raw) {
+        if (raw == null || raw.isEmpty()) return "";
+        // strip namespace if present
+        String key = raw.contains(":") ? raw.substring(raw.indexOf(':') + 1) : raw;
+        // split on underscores and uppercase words like WATER/YEAST/SALT
+        String[] parts = key.toLowerCase(Locale.ROOT).split("_");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            String p = parts[i];
+            if (!p.isEmpty()) {
+                sb.append(Character.toUpperCase(p.charAt(0)))
+                        .append(p.length() > 1 ? p.substring(1) : "");
+                if (i < parts.length - 1) sb.append(' ');
+            }
+        }
+        return sb.toString();
+    }
+
 }

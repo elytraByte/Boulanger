@@ -1,21 +1,28 @@
 package net.boulangermod.boulanger.component;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.StreamCodecsCompat;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public record BakerPctComponent(Map<IngredientCategory, Double> percentages) {
+
+    // Compact ctor: reassign the *parameter*; don't touch this.percentages
     public BakerPctComponent {
-        // wrap in an unmodifiable copy to ensure immutability
+        Objects.requireNonNull(percentages, "percentages");
         percentages = Map.copyOf(percentages);
     }
 
-    // === network serialization ===
+    // Convenience factory
+    public static BakerPctComponent of(Map<IngredientCategory, Double> map) {
+        return new BakerPctComponent(map);
+    }
+
+    // --- network ---
     public static final StreamCodec<FriendlyByteBuf, BakerPctComponent> STREAM_CODEC = StreamCodec.of(
             (buf, comp) -> {
                 buf.writeInt(comp.percentages.size());
@@ -36,7 +43,7 @@ public record BakerPctComponent(Map<IngredientCategory, Double> percentages) {
             }
     );
 
-    // === JSON/NBT serialization ===
+    // --- json/nbt ---
     private static final Codec<Map<IngredientCategory, Double>> CODEC_OF_MAP =
             StreamCodecsCompat.mapCodec(IngredientCategory.CODEC, Codec.DOUBLE);
 

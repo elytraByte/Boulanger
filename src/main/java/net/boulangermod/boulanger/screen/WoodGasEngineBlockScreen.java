@@ -52,36 +52,39 @@ public class WoodGasEngineBlockScreen extends AbstractContainerScreen<WoodGasEng
         RenderSystem.setShaderTexture(0, TEXTURE);
         gfx.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
-        // Percent elapsed for flame/bubbles
-        float elapsed = Mth.clamp(menu.getBurnPercent(), 0f, 1f);
+        // 🔥 Draw lit progress only when the engine is burning
+        if (menu.isBurning()) {
+            float elapsed = Mth.clamp(menu.getBurnPercent(), 0f, 1f);
 
-        // FLAME (starts full, empties TOP→DOWN)
-        int flameH = Math.round(FLAME_H * (1f - elapsed));
-        if (flameH > 0) {
-            int srcV  = FLAME_H - flameH;
-            int destY = y + FLAME_Y + srcV;
-            RenderSystem.setShaderTexture(0, FLAME_TEX);
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            gfx.blit(FLAME_TEX, x + FLAME_X, destY, 0, srcV, FLAME_W, flameH, FLAME_W, FLAME_H);
-            RenderSystem.disableBlend();
+            // FLAME (full at start, shrinks TOP→DOWN)
+            int flameH = Math.round(FLAME_H * (1f - elapsed));
+            if (flameH > 0) {
+                int srcV  = FLAME_H - flameH;
+                int destY = y + FLAME_Y + srcV;
+                RenderSystem.setShaderTexture(0, FLAME_TEX);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                gfx.blit(FLAME_TEX, x + FLAME_X, destY, 0, srcV, FLAME_W, flameH, FLAME_W, FLAME_H);
+                RenderSystem.disableBlend();
+            }
+
+            // BUBBLES (reveal from TOP downward)
+            int bubbleFill = Math.round(elapsed * BUB_H);
+            if (bubbleFill > 0) {
+                RenderSystem.setShaderTexture(0, BUBBLES_TEX);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                gfx.blit(BUBBLES_TEX, x + BUB_X, y + BUB_Y, 0, 0, BUB_W, bubbleFill, BUB_W, BUB_H);
+                RenderSystem.disableBlend();
+            }
+
+            // restore main sheet if needed later
+            RenderSystem.setShaderTexture(0, TEXTURE);
         }
 
-        // BUBBLES (reveal from TOP downward)
-        int bubbleFill = Math.round(elapsed * BUB_H);
-        if (bubbleFill > 0) {
-            RenderSystem.setShaderTexture(0, BUBBLES_TEX);
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            gfx.blit(BUBBLES_TEX, x + BUB_X, y + BUB_Y, 0, 0, BUB_W, bubbleFill, BUB_W, BUB_H);
-            RenderSystem.disableBlend();
-        }
-
-        // Gas values
+        // Gauge always draws (independent of burning)
         int cap = Math.max(menu.getGasCapacity(), 0);
         int amt = Math.min(Math.max(menu.getGasAmount(), 0), cap);
-
-        // Gauge: bottom→up, 1:1 draw from 7×62 gui texture
         int gasFill = (cap > 0) ? (amt * GAS_H / cap) : 0;
         if (gasFill > 0) {
             int srcV  = GAS_H - gasFill;
@@ -91,10 +94,8 @@ public class WoodGasEngineBlockScreen extends AbstractContainerScreen<WoodGasEng
             RenderSystem.defaultBlendFunc();
             gfx.blit(WOODGAS_TEX, x + GAS_X, destY, 0, srcV, GAS_W, gasFill, GAS_W, GAS_H);
             RenderSystem.disableBlend();
+            RenderSystem.setShaderTexture(0, TEXTURE);
         }
-
-        // restore main sheet if needed later
-        RenderSystem.setShaderTexture(0, TEXTURE);
     }
 
     private void renderGasTooltip(GuiGraphics gfx, int mouseX, int mouseY) {

@@ -10,47 +10,73 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.*;
 
-public record DoughRecipeComponent(ResourceLocation recipeId,
-                                   Map<IngredientCategory, Double> targetPercentages,
-                                   List<IngredientInfo> ingredients,
-                                   int totalWeight) {
+public record DoughRecipeComponent(
+        ResourceLocation recipeId,
+        Map<IngredientCategory, Double> targetPercentages,
+        List<IngredientInfo> ingredients,
+        int totalWeight
+) {
 
-    public ResourceLocation id() {
-        return recipeId;
+    public DoughRecipeComponent {
+        Objects.requireNonNull(recipeId, "recipeId");
+        Objects.requireNonNull(targetPercentages, "targetPercentages");
+        Objects.requireNonNull(ingredients, "ingredients");
+
+        // copy → EnumMap → unmodifiable, then reassign the PARAMETER
+        EnumMap<IngredientCategory, Double> tmp = new EnumMap<>(IngredientCategory.class);
+        tmp.putAll(targetPercentages);
+        targetPercentages = Collections.unmodifiableMap(tmp);
+
+        // make list unmodifiable (reassign the PARAMETER)
+        ingredients = List.copyOf(ingredients);
+        // totalWeight stays as-is
     }
 
 
-    /**
-     * Helper method to extract the map keys as a list.
-     */
+
+    /* ── Factories (both orders for convenience) ──────────────────────────── */
+    /** Matches how you're calling it in trades: (id, ingredients, totalWeight, targets). */
+    public static DoughRecipeComponent of(ResourceLocation recipeId,
+                                          List<IngredientInfo> ingredients,
+                                          int totalWeight,
+                                          Map<IngredientCategory, Double> targetPercentages) {
+        return new DoughRecipeComponent(recipeId, targetPercentages, ingredients, totalWeight);
+    }
+
+    /** Canonical order factory matching record field order. */
+    public static DoughRecipeComponent of(ResourceLocation recipeId,
+                                          Map<IngredientCategory, Double> targetPercentages,
+                                          List<IngredientInfo> ingredients,
+                                          int totalWeight) {
+        return new DoughRecipeComponent(recipeId, targetPercentages, ingredients, totalWeight);
+    }
+
+    /* ── Helpers ──────────────────────────────────────────────────────────── */
+    public ResourceLocation id() { return recipeId; }
+
+    /** Keys as a list (enum natural order due to EnumMap). */
     public List<IngredientCategory> targetPercentagesKeys() {
         return new ArrayList<>(targetPercentages.keySet());
     }
 
-    /**
-     * Helper method to extract the map values as a list.
-     */
+    /** Values as a list (aligned with keys because EnumMap preserves enum order). */
     public List<Double> targetPercentagesValues() {
         return new ArrayList<>(targetPercentages.values());
     }
 
+    /* ── CODEC (unchanged from yours, with a tiny safety check) ───────────── */
     public static final Codec<DoughRecipeComponent> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     ResourceLocation.CODEC.fieldOf("recipeId").forGetter(DoughRecipeComponent::recipeId),
-                    // Encode the map as two parallel lists.
                     Codec.STRING.listOf().fieldOf("targetPercentagesKeys").forGetter(
-                            comp -> {
-                                List<String> keyNames = new ArrayList<>();
-                                for (IngredientCategory cat : comp.targetPercentages().keySet()) {
-                                    keyNames.add(cat.name());
-                                }
-                                return keyNames;
-                            }
+                            comp -> comp.targetPercentages().keySet().stream().map(Enum::name).toList()
                     ),
                     Codec.DOUBLE.listOf().fieldOf("targetPercentagesValues").forGetter(DoughRecipeComponent::targetPercentagesValues),
                     IngredientInfo.CODEC.listOf().fieldOf("ingredients").forGetter(DoughRecipeComponent::ingredients),
                     Codec.INT.fieldOf("totalWeight").forGetter(DoughRecipeComponent::totalWeight)
             ).apply(instance, (recipeId, keyNames, values, ingredients, totalWeight) -> {
+                if (keyNames.size() != values.size())
+                    throw new IllegalArgumentException("targetPercentages keys/values size mismatch");
                 Map<IngredientCategory, Double> percentages = new EnumMap<>(IngredientCategory.class);
                 for (int i = 0; i < keyNames.size(); i++) {
                     percentages.put(IngredientCategory.valueOf(keyNames.get(i)), values.get(i));
@@ -59,149 +85,90 @@ public record DoughRecipeComponent(ResourceLocation recipeId,
             })
     );
 
-    // For reading/writing a single INT
+    /* ── StreamCodec helpers (unchanged) ──────────────────────────────────── */
     public static final StreamCodec<RegistryFriendlyByteBuf, Integer> INT_STREAM_CODEC =
             new StreamCodec<>() {
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, Integer value) {
-                    net.minecraft.network.codec.ByteBufCodecs.INT.encode(buffer, value);
+                @Override public void encode(RegistryFriendlyByteBuf buf, Integer v) {
+                    net.minecraft.network.codec.ByteBufCodecs.INT.encode(buf, v);
                 }
-
-                @Override
-                public Integer decode(RegistryFriendlyByteBuf buffer) {
-                    return net.minecraft.network.codec.ByteBufCodecs.INT.decode(buffer);
+                @Override public Integer decode(RegistryFriendlyByteBuf buf) {
+                    return net.minecraft.network.codec.ByteBufCodecs.INT.decode(buf);
                 }
             };
 
-    // For reading/writing a single DOUBLE
     public static final StreamCodec<RegistryFriendlyByteBuf, Double> DOUBLE_STREAM_CODEC =
             new StreamCodec<>() {
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, Double value) {
-                    net.minecraft.network.codec.ByteBufCodecs.DOUBLE.encode(buffer, value);
+                @Override public void encode(RegistryFriendlyByteBuf buf, Double v) {
+                    net.minecraft.network.codec.ByteBufCodecs.DOUBLE.encode(buf, v);
                 }
-
-                @Override
-                public Double decode(RegistryFriendlyByteBuf buffer) {
-                    return net.minecraft.network.codec.ByteBufCodecs.DOUBLE.decode(buffer);
+                @Override public Double decode(RegistryFriendlyByteBuf buf) {
+                    return net.minecraft.network.codec.ByteBufCodecs.DOUBLE.decode(buf);
                 }
             };
 
-    // For reading/writing a list of DOUBLES
     public static final StreamCodec<RegistryFriendlyByteBuf, List<Double>> DOUBLE_LIST_STREAM_CODEC =
             new StreamCodec<>() {
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, List<Double> list) {
-                    // Write size
-                    INT_STREAM_CODEC.encode(buffer, list.size());
-                    // Write each double
-                    for (Double d : list) {
-                        DOUBLE_STREAM_CODEC.encode(buffer, d);
-                    }
+                @Override public void encode(RegistryFriendlyByteBuf buf, List<Double> list) {
+                    INT_STREAM_CODEC.encode(buf, list.size());
+                    for (Double d : list) DOUBLE_STREAM_CODEC.encode(buf, d);
                 }
-
-                @Override
-                public List<Double> decode(RegistryFriendlyByteBuf buffer) {
-                    int size = INT_STREAM_CODEC.decode(buffer);
-                    List<Double> result = new ArrayList<>(size);
-                    for (int i = 0; i < size; i++) {
-                        result.add(DOUBLE_STREAM_CODEC.decode(buffer));
-                    }
-                    return result;
+                @Override public List<Double> decode(RegistryFriendlyByteBuf buf) {
+                    int size = INT_STREAM_CODEC.decode(buf);
+                    List<Double> out = new ArrayList<>(size);
+                    for (int i = 0; i < size; i++) out.add(DOUBLE_STREAM_CODEC.decode(buf));
+                    return out;
                 }
             };
 
-    // For reading/writing a single STRING
     public static final StreamCodec<RegistryFriendlyByteBuf, String> STRING_STREAM_CODEC =
             new StreamCodec<>() {
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, String value) {
-                    net.boulangermod.boulanger.util.StreamCodecsCompat.STRING.encode(buffer, value);
+                @Override public void encode(RegistryFriendlyByteBuf buf, String v) {
+                    StreamCodecsCompat.STRING.encode(buf, v);
                 }
-
-                @Override
-                public String decode(RegistryFriendlyByteBuf buffer) {
-                    return net.boulangermod.boulanger.util.StreamCodecsCompat.STRING.decode(buffer);
+                @Override public String decode(RegistryFriendlyByteBuf buf) {
+                    return StreamCodecsCompat.STRING.decode(buf);
                 }
             };
 
     public static final StreamCodec<RegistryFriendlyByteBuf, List<IngredientCategory>> INGREDIENT_CATEGORY_LIST_CODEC =
             IngredientCategory.listOf();
 
-    // Codec for a list of IngredientInfo.
-    // We assume that IngredientInfo has a static field STREAM_CODEC defined. We now define a helper list codec for IngredientInfo.
     public static final StreamCodec<RegistryFriendlyByteBuf, List<IngredientInfo>> INGREDIENT_INFO_LIST =
             new StreamCodec<>() {
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, List<IngredientInfo> list) {
-                    INT_STREAM_CODEC.encode(buffer, list.size());
-                    for (IngredientInfo info : list) {
-                        IngredientInfo.STREAM_CODEC.encode(buffer, info);
-                    }
+                @Override public void encode(RegistryFriendlyByteBuf buf, List<IngredientInfo> list) {
+                    INT_STREAM_CODEC.encode(buf, list.size());
+                    for (IngredientInfo info : list) IngredientInfo.STREAM_CODEC.encode(buf, info);
                 }
-
-                @Override
-                public List<IngredientInfo> decode(RegistryFriendlyByteBuf buffer) {
-                    int size = INT_STREAM_CODEC.decode(buffer);
-                    List<IngredientInfo> result = new ArrayList<>(size);
-                    for (int i = 0; i < size; i++) {
-                        result.add(IngredientInfo.STREAM_CODEC.decode(buffer));
-                    }
-                    return result;
+                @Override public List<IngredientInfo> decode(RegistryFriendlyByteBuf buf) {
+                    int size = INT_STREAM_CODEC.decode(buf);
+                    List<IngredientInfo> out = new ArrayList<>(size);
+                    for (int i = 0; i < size; i++) out.add(IngredientInfo.STREAM_CODEC.decode(buf));
+                    return out;
                 }
             };
 
-    /*
-     * --- End StreamCodec Helpers ---
-     */
-
-    /**
-     * StreamCodec for DoughRecipeComponent that writes:
-     * - recipeName (String)
-     * - targetPercentages as two parallel lists (keys and values)
-     * - ingredients (List<IngredientInfo>)
-     * - totalWeight (int)
-     */
     public static final StreamCodec<RegistryFriendlyByteBuf, DoughRecipeComponent> STREAM_CODEC =
             new StreamCodec<>() {
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, DoughRecipeComponent doughRecipe) {
-                    // Encode recipeId as ResourceLocation
-                    ResourceLocation.STREAM_CODEC.encode(buffer, doughRecipe.recipeId());
-
-                    // Encode targetPercentages as two parallel lists.
-                    List<IngredientCategory> keyList = new ArrayList<>(doughRecipe.targetPercentages().keySet());
-                    List<Double> valueList = new ArrayList<>(doughRecipe.targetPercentages().values());
-                    INGREDIENT_CATEGORY_LIST_CODEC.encode(buffer, keyList);
-                    DOUBLE_LIST_STREAM_CODEC.encode(buffer, valueList);
-
-                    // Encode the list of IngredientInfo.
-                    INGREDIENT_INFO_LIST.encode(buffer, doughRecipe.ingredients());
-
-                    // Encode totalWeight.
-                    INT_STREAM_CODEC.encode(buffer, doughRecipe.totalWeight());
+                @Override public void encode(RegistryFriendlyByteBuf buf, DoughRecipeComponent dr) {
+                    ResourceLocation.STREAM_CODEC.encode(buf, dr.recipeId());
+                    List<IngredientCategory> keyList = new ArrayList<>(dr.targetPercentages().keySet());
+                    List<Double> valueList = new ArrayList<>(dr.targetPercentages().values());
+                    INGREDIENT_CATEGORY_LIST_CODEC.encode(buf, keyList);
+                    DOUBLE_LIST_STREAM_CODEC.encode(buf, valueList);
+                    INGREDIENT_INFO_LIST.encode(buf, dr.ingredients());
+                    INT_STREAM_CODEC.encode(buf, dr.totalWeight());
                 }
-
-                @Override
-                public DoughRecipeComponent decode(RegistryFriendlyByteBuf buffer) {
-                    ResourceLocation recipeId = ResourceLocation.STREAM_CODEC.decode(buffer);
-                    List<IngredientCategory> keyList = INGREDIENT_CATEGORY_LIST_CODEC.decode(buffer);
-                    List<Double> valueList = DOUBLE_LIST_STREAM_CODEC.decode(buffer);
-
-                    Map<IngredientCategory, Double> targetPercentages = new EnumMap<>(IngredientCategory.class);
-                    Iterator<IngredientCategory> keyIter = keyList.iterator();
-                    Iterator<Double> valueIter = valueList.iterator();
-                    while (keyIter.hasNext() && valueIter.hasNext()) {
-                        targetPercentages.put(keyIter.next(), valueIter.next());
-                    }
-
-                    List<IngredientInfo> ingredients = INGREDIENT_INFO_LIST.decode(buffer);
-                    int totalWeight = INT_STREAM_CODEC.decode(buffer);
-
-                    return new DoughRecipeComponent(recipeId, targetPercentages, ingredients, totalWeight);
+                @Override public DoughRecipeComponent decode(RegistryFriendlyByteBuf buf) {
+                    ResourceLocation id = ResourceLocation.STREAM_CODEC.decode(buf);
+                    List<IngredientCategory> keys = INGREDIENT_CATEGORY_LIST_CODEC.decode(buf);
+                    List<Double> vals = DOUBLE_LIST_STREAM_CODEC.decode(buf);
+                    if (keys.size() != vals.size())
+                        throw new IllegalStateException("targetPercentages keys/values size mismatch");
+                    Map<IngredientCategory, Double> targets = new EnumMap<>(IngredientCategory.class);
+                    for (int i = 0; i < keys.size(); i++) targets.put(keys.get(i), vals.get(i));
+                    List<IngredientInfo> ings = INGREDIENT_INFO_LIST.decode(buf);
+                    int total = INT_STREAM_CODEC.decode(buf);
+                    return new DoughRecipeComponent(id, targets, ings, total);
                 }
             };
-
 }
-
-

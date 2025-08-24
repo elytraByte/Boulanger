@@ -165,6 +165,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         machineItem("iron_frame",     "block/iron_frame_0",    0.62F);
         machineItem("gas_tank",     "block/gas_tank",    0.62F);
         machineItem("woodgas_engine",     "block/woodgas_engine_off",    0.62F);
+        machineItem("woodgas_valve",     "block/woodgas_valve",    0.62F);
     }
 
     // Helper to make a nice isometric block-item render using the block model as parent

@@ -30,17 +30,16 @@ import org.slf4j.Logger;
 public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
 
     /* ── tuning ─────────────────────────────────────────────────── */
-    private static final int TANK_CAP_MB        = 10000;
+    private static final int TANK_CAP_MB        = 10_000;
     private static final int DRAIN_MB_PER_TICK  = 25;    // gas consumed when running
     private static final int FE_PER_TICK        = 5;     // generation rate
     private static final int START_THRESHOLD_MB = 100;   // start at/above
     private static final int STOP_THRESHOLD_MB  = 50;    // stop at/below
     private static final int PULL_PER_TICK_MB   = 250;   // pull from neighbors per tick
 
-    private static final int FE_CAPACITY        = 1000;
-    private static final int FE_MAX_EXTRACT     = 1000;  // allow cables to pull generously
-    private static final int PER_SIDE_LIMIT     = 1000; // max FE to try per neighbor per tick
-
+    private static final int FE_CAPACITY        = 1_000;
+    private static final int FE_MAX_EXTRACT     = 1_000; // allow cables to pull generously
+    private static final int PER_SIDE_LIMIT     = 1_000; // max FE to try per neighbor per tick
 
     // simple visual cycle for GUI
     private static final int BURN_TOTAL_TICKS   = 200;
@@ -56,7 +55,6 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
         }
         @Override
         protected void onContentsChanged() {
-            // LOGGER.debug("[ICE] Wood-gas: {} mB", getFluidAmount());
             setChangedAndNotify();
         }
     };
@@ -73,7 +71,6 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
         @Override public boolean canReceive()     { return false; }
     };
 
-
     // maxReceive=0, maxExtract=FE_MAX_EXTRACT so **pullers can extract freely**
     private final ModEnergyStorage energy = new ModEnergyStorage(FE_CAPACITY, 1000, FE_MAX_EXTRACT) {
         @Override protected void onEnergyChanged() {
@@ -86,19 +83,16 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
         super(ModBlockEntities.WOODGAS_ENGINE_BE.get(), pos, state, 0);
     }
 
-    // was: public IFluidHandler getFluidHandler(@Nullable Direction side) { return tank; }
     public IFluidHandler getFluidHandler(@Nullable Direction side) {
         // wood-gas input only on the back; unsided queries allowed
         return (side == null || side == getBackSide()) ? tank : null;
     }
 
-    // was: public IEnergyStorage getEnergyForSide(@Nullable Direction side) { return outOnlyView; }
     public IEnergyStorage getEnergyForSide(@Nullable Direction side) {
         // no energy output on the back
         if (side != null && side == getBackSide()) return null;
         return outOnlyView;
     }
-
 
     /* ── ticking ─────────────────────────────────────────────────── */
     public static void tick(Level level, BlockPos pos, BlockState state, WoodGasEngineBlockEntity be) {
@@ -112,28 +106,40 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
         boolean running = state.getValue(WoodGasEngineBlock.LIT);
         int amt = tank.getFluidAmount();
 
-        // hysteresis
-        if (!running && amt >= START_THRESHOLD_MB) {
-            running = true;
-            level.setBlock(worldPosition, state.setValue(WoodGasEngineBlock.LIT, true), 3);
-        } else if (running && amt <= STOP_THRESHOLD_MB) {
-            running = false;
-            level.setBlock(worldPosition, state.setValue(WoodGasEngineBlock.LIT, false), 3);
+        // hysteresis: decide desired lit state
+        boolean shouldRun = running
+                ? amt > STOP_THRESHOLD_MB
+                : amt >= START_THRESHOLD_MB;
+
+        if (shouldRun != running) {
+            running = shouldRun;
+            // transition: set blockstate and reset the GUI cycle at start
+            level.setBlock(worldPosition, state.setValue(WoodGasEngineBlock.LIT, running), 3);
+            if (running) {
+                burnProgress = 0;                 // show full flame at cycle start
+                burnTotal    = BURN_TOTAL_TICKS;  // ensure sane total
+            } else {
+                burnProgress = 0;                 // hide instantly (screen gates on isLit)
+            }
+            setChangedAndNotify();
         }
 
         if (running) {
             int drained = tank.drain(DRAIN_MB_PER_TICK, IFluidHandler.FluidAction.EXECUTE).getAmount();
             if (drained < DRAIN_MB_PER_TICK) {
+                // ran out mid-tick → stop
                 level.setBlock(worldPosition, state.setValue(WoodGasEngineBlock.LIT, false), 3);
+                burnProgress = 0;
+                setChangedAndNotify();
             } else {
                 energy.receiveEnergy(FE_PER_TICK, false);
+                // loop the progress 0..(total-1)
                 burnProgress = (burnProgress + 1) % burnTotal;
             }
-        } else if (burnProgress > 0) {
-            burnProgress = Math.max(0, burnProgress - 2);
         }
+        // else: not running; screen won't render lit textures because isLit() is false
 
-// --- fair push to all output sides (skip back) ---
+        // --- fair push to all output sides (skip back) ---
         int remaining = energy.getEnergyStored();
         if (remaining > 0) {
             Direction back = getBackSide();
@@ -177,7 +183,6 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
         }
     }
 
-
     private void pullFromNeighbors() {
         if (level == null) return;
         int room = tank.getCapacity() - tank.getFluidAmount();
@@ -202,7 +207,6 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
         FluidStack drained = src.drain(fit, IFluidHandler.FluidAction.EXECUTE);
         if (!drained.isEmpty()) tank.fill(drained, IFluidHandler.FluidAction.EXECUTE);
     }
-
 
     /* ── NBT / sync ──────────────────────────────────────────────── */
     @Override
@@ -257,6 +261,13 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
     public int getBurnTotal()    { return Math.max(this.burnTotal, 1); }
     public int getGasAmount()    { return tank.getFluidAmount(); }
     public int getGasCapacity()  { return Math.max(tank.getCapacity(), 1); }
+
+    /** Authoritative lit state for UI: mirrors blockstate. */
+    public boolean isLit() {
+        BlockState st = getBlockState();
+        return st.hasProperty(WoodGasEngineBlock.LIT) && st.getValue(WoodGasEngineBlock.LIT);
+    }
+
     private Direction getFrontSide() {
         BlockState st = getBlockState();
         return st.hasProperty(WoodGasEngineBlock.FACING)
@@ -267,5 +278,4 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
     private Direction getBackSide() {
         return getFrontSide().getOpposite();
     }
-
 }

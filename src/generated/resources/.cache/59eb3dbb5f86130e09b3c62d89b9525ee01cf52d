@@ -1,4 +1,4 @@
-// 1.21	2025-08-23T10:55:07.2797851	Loot Tables
+// 1.21	2025-08-23T19:20:12.6956153	Loot Tables
 4ebdab791e29c52dd9dfbe24d51d2a30b9e2ff8e data/boulanger/loot_table/blocks/bakers_table.json
 c1bacd790c44e22980716bc33478735b6413ed29 data/boulanger/loot_table/blocks/battery.json
 9e2ca5e329d104d7ee8d3b109bbf4d6a06536147 data/boulanger/loot_table/blocks/black_tile.json
@@ -42,5 +42,6 @@ eb1f33005e4672668813773c75df1eaf520fcd46 data/boulanger/loot_table/blocks/wild_w
 d8d5924f236ea0c6e422886c09f637ca1d112e67 data/boulanger/loot_table/blocks/woodgas_engine.json
 6f4ec7025202b06fe2584741ce19d1a6e2078fda data/boulanger/loot_table/blocks/woodgas_flare.json
 5819b63e89fb933eb2e5f7ca9d21799b00817024 data/boulanger/loot_table/blocks/woodgas_pipe.json
+e56c1e503ceb65f3b9ff5fc2046ad7eed2a13c4d data/boulanger/loot_table/blocks/woodgas_valve.json
 d8abce73b0649eddb5632eecb4a606d71ce73803 data/boulanger/loot_table/blocks/wood_gasifier.json
 4ce7af937b65c23c8840fdc68a44bcb9a1f36d87 data/boulanger/loot_table/blocks/wood_oven.json

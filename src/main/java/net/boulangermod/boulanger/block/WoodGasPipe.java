@@ -33,7 +33,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import org.jetbrains.annotations.Nullable;
 
 public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
@@ -47,12 +47,10 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
     private static final int PARTICLE_MIN_MB = 10;
 
     // ---- slim voxel shapes (center nub + 6 arms), precomputed for 64 states ----
-// ---- slim voxel shapes (center nub + 6 arms), precomputed for 64 states ----
-// tweak these two to change thickness
     private static final int A = 6;   // inner min (0..16)
     private static final int B = 10;  // inner max (0..16)
 
-    // shift hitbox DOWN by 1px to match the model
+    // Adjust if you want the hitbox vertically offset (currently no offset)
     private static final int Y_OFF = 0;
 
     private static VoxelShape boxY(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
@@ -83,8 +81,6 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
         }
     }
 
-
-
     private static int mask(BlockState s) {
         int m = 0;
         if (s.getValue(NORTH)) m |= 1;
@@ -97,10 +93,7 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
     }
 
     public WoodGasPipe(Properties props) {
-        super(props
-                .noOcclusion()
-                .randomTicks()
-        );
+        super(props.noOcclusion().randomTicks());
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(NORTH, false).setValue(EAST,  false)
                 .setValue(SOUTH, false).setValue(WEST,  false)
@@ -108,42 +101,24 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
         );
     }
 
-    // Tell lighting to use our (non-full) shape instead of a cube
-    @Override
-    public boolean useShapeForLightOcclusion(BlockState state) {
-        return true;
-    }
+    @Override public boolean useShapeForLightOcclusion(BlockState state) { return true; }
+    @Override public boolean propagatesSkylightDown(BlockState s, BlockGetter l, BlockPos p) { return true; }
+    @Override public int getLightBlock(BlockState s, BlockGetter l, BlockPos p) { return 0; }
 
-    // Let skylight pass and don't block light—kills the “cube shadow”
-    @Override
-    public boolean propagatesSkylightDown(BlockState state, BlockGetter level, BlockPos pos) {
-        return true;
-    }
-
-    @Override
-    public int getLightBlock(BlockState state, BlockGetter level, BlockPos pos) {
-        return 0;
-    }
-
-    // Selection / outline
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
         return SHAPES[mask(state)];
     }
-
-    // Collision (you can return SHAPES[...] or Shapes.empty() if you want ghost pipes)
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
         return SHAPES[mask(state)];
     }
-
-    // Light occlusion/culling shape (non-full shape prevents dark halos on the ground)
     @Override
     public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
         return SHAPES[mask(state)];
     }
 
-    // Hide the internal faces where two pipes connect on that side (removes z-fighting lines)
+    // Hide internal faces where two pipes connect (prevents z-fighting seams)
     @Override
     public boolean skipRendering(BlockState state, BlockState adjacentState, Direction side) {
         if (adjacentState.getBlock() instanceof WoodGasPipe) {
@@ -167,7 +142,8 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
 
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
-        return null; // keep as-is if you’re not using map codecs for this block
+        // Return null if you’re not using map codecs. If datagen complains, we can wire one up.
+        return null;
     }
 
     @Override
@@ -175,9 +151,7 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
         b.add(NORTH, EAST, SOUTH, WEST, UP, DOWN);
     }
 
-    // ----- CONNECTIVITY (updated) -----
-
-    // checks a specific direction and neighbor face
+    // ----- CONNECTIVITY -----
     private static boolean connects(LevelAccessor level, BlockPos pos, Direction dir) {
         BlockPos adjPos = pos.relative(dir);
         BlockState adj  = level.getBlockState(adjPos);
@@ -188,13 +162,12 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
         // 2) Connect to any block exposing a fluid handler on the face toward this pipe
         BlockEntity be = level.getBlockEntity(adjPos);
         if (level instanceof Level lvl) {
-            var cap = lvl.getCapability(
+            IFluidHandler cap = lvl.getCapability(
                     Capabilities.FluidHandler.BLOCK,
                     adjPos, adj, be, dir.getOpposite()
             );
             if (cap != null) return true;
         }
-
         return false;
     }
 
@@ -217,17 +190,14 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
         return s.setValue(prop(dir), connects(w, pos, dir));
     }
 
-    @Override
-    public RenderShape getRenderShape(BlockState st) {
-        return RenderShape.MODEL;
-    }
+    @Override public RenderShape getRenderShape(BlockState st) { return RenderShape.MODEL; }
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         if (!(level.getBlockEntity(pos) instanceof WoodGasPipeBlockEntity pipe)) return;
 
         int amount = pipe.getTank().getFluidAmount();
-        if (amount < PARTICLE_MIN_MB) return; // only render smoke if we have at least 10 mB
+        if (amount < PARTICLE_MIN_MB) return;
 
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
         double a = random.nextDouble() * Math.PI * 2;
@@ -248,19 +218,14 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
         return new WoodGasPipeBlockEntity(pos, st);
     }
 
-    // tiny helper so we can declare boxes with ints
-    private static VoxelShape box(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
-        return Block.box(minX, minY, minZ, maxX, maxY, maxZ);
-    }
-
-    // Let item-uses (even when holding something) fall through to the block's default interaction
+    // Let item-uses fall through to default interaction
     @Override
     public ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                            Player player, InteractionHand hand, BlockHitResult hit) {
         return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
-    // Right-click interaction that doesn't depend on the held item
+    // Right-click to read the tank (server-side)
     @Override
     public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                             Player player, BlockHitResult hit) {
@@ -270,19 +235,9 @@ public class WoodGasPipe extends BaseEntityBlock implements EntityBlock {
         if (be instanceof WoodGasPipeBlockEntity pipe) {
             int amt = pipe.getTank().getFluidAmount();
             int cap = pipe.getTank().getCapacity();
-            FluidStack stack = pipe.getTank().getFluid();
-
-            Component fluidName = stack.isEmpty() ? Component.literal("empty") : stack.getHoverName();
-            Component msg = Component.literal("Pipe: ")
-                    .append(Component.literal(Integer.toString(amt)))
-                    .append(Component.literal(" / "))
-                    .append(Component.literal(Integer.toString(cap)))
-                    .append(Component.literal(" mB "))
-                    .append(fluidName.copy());
-
+            Component msg = Component.literal("Pipe: " + amt + " / " + cap + " mB");
             player.displayClientMessage(msg, false);
         }
-
         return InteractionResult.CONSUME;
     }
 }

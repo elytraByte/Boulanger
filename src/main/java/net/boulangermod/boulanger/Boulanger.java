@@ -9,6 +9,7 @@ import net.boulangermod.boulanger.datagen.ModFluidTagProvider;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
+import net.boulangermod.boulanger.entity.ModVillagers;
 import net.boulangermod.boulanger.fluid.ModFluids;
 import net.boulangermod.boulanger.item.ModCreativeModeTabs;
 import net.boulangermod.boulanger.multiblock.MultiblockRegistry;
@@ -65,6 +66,7 @@ public class Boulanger {
         ModTrunkPlacers.TRUNK_PLACERS.register(modEventBus);
         ModFluids.register(modEventBus);
         ModAttachments.ATTACHMENTS.register(modEventBus);
+        ModVillagers.register(modEventBus);
 
 
 

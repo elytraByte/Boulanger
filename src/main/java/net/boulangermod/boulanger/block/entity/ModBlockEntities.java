@@ -94,6 +94,12 @@ public class ModBlockEntities {
                     ModBlocks.WOODGAS_FLARE.get()
             ).build(null));
 
+    public static final Supplier<BlockEntityType<WoodGasValveBlockEntity>> WOODGAS_VALVE_BE =
+            BLOCK_ENTITIES.register("woodgas_valve_be", () -> BlockEntityType.Builder.of(
+                    WoodGasValveBlockEntity::new,
+                    ModBlocks.WOODGAS_VALVE.get()
+            ).build(null));
+
     public static final Supplier<BlockEntityType<WoodGasTankBlockEntity>> WOODGAS_TANK_BE =
             BLOCK_ENTITIES.register("woodgas_tank_be", () -> BlockEntityType.Builder.of(
                     WoodGasTankBlockEntity::new,

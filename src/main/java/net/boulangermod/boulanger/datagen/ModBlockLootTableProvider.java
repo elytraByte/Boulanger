@@ -140,6 +140,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.WOODGAS_FLARE.get());
         dropSelf(ModBlocks.GAS_TANK.get());
         dropSelf(ModBlocks.FEED_THROUGH_BLOCK.get());
+        dropSelf(ModBlocks.WOODGAS_VALVE.get());
 
         // your custom wheat crop:
         Block crop = ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get();

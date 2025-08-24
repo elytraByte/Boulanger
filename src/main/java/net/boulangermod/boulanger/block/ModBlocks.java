@@ -75,6 +75,10 @@ public class ModBlocks {
                     )
             );
 
+    public static final DeferredBlock<Block> WOODGAS_VALVE =
+            registerBlock("woodgas_valve",
+                    () -> new WoodGasValveBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)));
+
 
     public static final DeferredBlock<Block> FEED_THROUGH_BLOCK =
             registerBlock("feed_through_block",
