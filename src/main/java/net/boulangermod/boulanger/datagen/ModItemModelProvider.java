@@ -19,28 +19,33 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
+
         // ─── Flour with overrides via custom_model_data ───────────────────────
-        ItemModelBuilder flour = withExistingParent("flour", "item/generated")
-                .texture("layer0", modLoc("item/flour"));
+// Base flour texture moved to textures/flour/flour.png
+        ItemModelBuilder flour = withExistingParent("flour", mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/flour/flour"));
 
         for (FlourItemType type : FlourItemType.values()) {
             flour.override()
                     .predicate(ResourceLocation.fromNamespaceAndPath("minecraft", "custom_model_data"), type.getModelIndex())
-                    .model(withExistingParent("flour/" + type.getId(), "item/generated"))
+                    .model(withExistingParent("item/flour/" + type.getId(), mcLoc("item/generated")))
                     .end();
 
-            withExistingParent("flour/" + type.getId(), "item/generated")
+            // If you ALSO moved variant textures into textures/flour/<id>.png,
+            // change "item/flour/" below to just "flour/".
+            withExistingParent("item/flour/" + type.getId(), mcLoc("item/generated"))
                     .texture("layer0", modLoc("item/flour/" + type.getId()));
+            // .texture("layer0", modLoc("flour/" + type.getId())); // <— use this if you moved them
         }
 
-        // ─── Bread with overrides ─────────────────────────────────────────────
+        // ─── Bread with overrides (textures moved to textures/bread/) ─────────
         ItemModelBuilder bread = withExistingParent("bread", mcLoc("item/generated"))
-                .texture("layer0", modLoc("item/bread"));
+                .texture("layer0", modLoc("item/bread/bread"));
 
         for (BreadType type : BreadType.values()) {
             String id = type.getId();
-            ItemModelBuilder overrideModel = withExistingParent("bread/" + id, mcLoc("item/generated"))
-                    .texture("layer0", modLoc("item/" + id));
+            ItemModelBuilder overrideModel = withExistingParent("item/bread/" + id, mcLoc("item/generated"))
+                    .texture("layer0", modLoc("item/bread/" + id));
 
             bread.override()
                     .predicate(mcLoc("custom_model_data"), type.getModelIndex())
@@ -48,16 +53,16 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .end();
         }
 
-        // ─── Fifty Pound Bags (overrides) ─────────────────────────────────────
+// ─── Fifty Pound Bags (moved to textures/flour/) ───────────────────────────
         ItemModelBuilder fiftyBag = withExistingParent("fifty_pound_bag", mcLoc("item/generated"))
-                .texture("layer0", modLoc("item/blank_fifty_pound_bag"));
+                .texture("layer0", modLoc("item/flour/blank_fifty_pound_bag"));
 
         for (FiftyPoundBagType type : FiftyPoundBagType.values()) {
             String id = type.getId() + "_fifty_pound_bag";
             int modelIndex = type.getModelIndex();
 
             ItemModelBuilder overrideModel = withExistingParent(id, mcLoc("item/generated"))
-                    .texture("layer0", modLoc("item/" + id));
+                    .texture("layer0", modLoc("item/flour/" + id));
 
             fiftyBag.override()
                     .predicate(mcLoc("custom_model_data"), modelIndex)
@@ -65,7 +70,8 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .end();
         }
 
-        // ─── Pans with overrides (empty/full) ─────────────────────────────────
+
+        // ─── Pans with overrides (unchanged) ──────────────────────────────────
         ItemModelBuilder pan = withExistingParent("pan", mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/loaf_pan"));
 
@@ -91,8 +97,6 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get());
         basicItem(ModItems.BROWN_SUGAR.get());
         basicItem(ModItems.SALT_KOSHER.get());
-        basicItem(ModItems.SOURDOUGH_STARTER.get());
-        basicItem(ModItems.RYE_SOUR_STARTER.get());
         basicItem(ModItems.SOYBEAN_OIL.get());
         basicItem(ModItems.CANOLA_OIL.get());
         basicItem(ModItems.MOLASSES.get());
@@ -102,11 +106,24 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.WHOLE_MILK.get());
         basicItem(ModItems.EURO_BUTTER.get());
         basicItem(ModItems.EURO_BUTTER_BLEND.get());
-        basicItem(ModItems.SAF_RED.get());
-        basicItem(ModItems.SAF_GOLD.get());
-        basicItem(ModItems.BREWERS_YEAST.get());
-        basicItem(ModItems.FLEISCHMANN.get());
-        basicItem(ModItems.FRESH_YEAST.get());
+
+        // YEAST textures moved to textures/yeast/<id>.png
+        // Replace the five yeast items with explicit models pointing at the new folder:
+        withExistingParent(ModItems.SAF_RED.getId().getPath(), mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/yeast/" + ModItems.SAF_RED.getId().getPath()));
+        withExistingParent(ModItems.SAF_GOLD.getId().getPath(), mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/yeast/" + ModItems.SAF_GOLD.getId().getPath()));
+        withExistingParent(ModItems.BREWERS_YEAST.getId().getPath(), mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/yeast/" + ModItems.BREWERS_YEAST.getId().getPath()));
+        withExistingParent(ModItems.FLEISCHMANN.getId().getPath(), mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/yeast/" + ModItems.FLEISCHMANN.getId().getPath()));
+        withExistingParent(ModItems.FRESH_YEAST.getId().getPath(), mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/yeast/" + ModItems.FRESH_YEAST.getId().getPath()));
+        withExistingParent(ModItems.SOURDOUGH_STARTER.getId().getPath(), mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/yeast/" + ModItems.SOURDOUGH_STARTER.getId().getPath()));
+        withExistingParent(ModItems.RYE_SOUR_STARTER.getId().getPath(), mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/yeast/" + ModItems.RYE_SOUR_STARTER.getId().getPath()));
+
         basicItem(ModItems.WHEAT_BERRIES.get());
         basicItem(ModItems.WHEAT_SEED.get());
         basicItem(ModItems.HARD_RED_SPRING_WHEAT.get());
@@ -141,7 +158,6 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.MILLIGRAM_SCALE.get());
 
         // ─── Block items that should show the block’s 3D model ───────────────
-        // (pipes/cables often use simple item models; adjust if you prefer block parents)
         basicItem(ModBlocks.ENERGY_CABLE.asItem());
         basicItem(ModBlocks.WOODGAS_PIPE.asItem());
 
@@ -158,14 +174,22 @@ public class ModItemModelProvider extends ItemModelProvider {
         machineItem("wood_oven",      "block/wood_oven_off",   0.62F);
         machineItem("mixing_block",   "block/mixing_block",    0.62F);
         machineItem("stone_mill",     "block/stone_mill_block",0.62F);
-        machineItem("scale_block",    "block/scale1",     0.62F); // if your block model is 'scale1', change to "block/scale1"
+        machineItem("scale_block",    "block/scale1",          0.62F);
         machineItem("proofing_box",   "block/proofing_box",    0.62F);
         machineItem("machine_housing","block/machine_housing", 0.62F);
         machineItem("dough_divider",  "block/dough_divider",   0.62F);
         machineItem("iron_frame",     "block/iron_frame_0",    0.62F);
-        machineItem("gas_tank",     "block/gas_tank",    0.62F);
-        machineItem("woodgas_engine",     "block/woodgas_engine_off",    0.62F);
-        machineItem("woodgas_valve",     "block/woodgas_valve",    0.62F);
+        machineItem("gas_tank",       "block/gas_tank",        0.62F);
+        machineItem("woodgas_engine", "block/woodgas_engine_off", 0.62F);
+        machineItem("woodgas_valve",  "block/woodgas_valve",   0.62F);
+
+
+        basicItem(ModItems.ASCORBIC_ACID.get());
+        basicItem(ModItems.CALCIUM_PROPIONATE.get());
+        basicItem(ModItems.DIASTATIC_MALT_POWDER.get());
+        basicItem(ModItems.NONDIASTATIC_MALT_POWDER.get());
+        basicItem(ModItems.L_CYSTEINE.get());
+
     }
 
     // Helper to make a nice isometric block-item render using the block model as parent

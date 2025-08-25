@@ -15,7 +15,7 @@ public class WoodOvenScreen extends AbstractContainerScreen<WoodOvenMenu> {
     private static final ResourceLocation FLAME_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/lit_progress.png");
     private static final ResourceLocation ARROW_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/arrow_progress.png");
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/burn_progress.png");
 
     // Native sprite sizes
     private static final int FLAME_WIDTH  = 14;

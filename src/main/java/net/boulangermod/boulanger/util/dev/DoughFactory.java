@@ -148,6 +148,7 @@ public final class DoughFactory {
     /**
      * Create a bread item from a RatioRecipe.
      * Writes NORMALIZED process id; sets PAN_TYPE and BREAD_TYPE; also carries baker % & grams like dough for tooltips.
+     * Additionally sets CustomModelData from the resolved BreadType so the correct texture shows up immediately.
      */
     public static ItemStack createBreadFromRatio(ServerLevel level, ResourceLocation ratioId, int servings) {
         var holderOpt = level.getRecipeManager().byKey(ratioId);
@@ -158,40 +159,59 @@ public final class DoughFactory {
 
         ItemStack bread = new ItemStack(ModItems.BREAD.get());
 
-        // Compute the same math the dough had so bread tooltips look rich
+        // Link process (so we can get pan type, serving size, etc.)
         ResourceLocation procIdRaw = findLinkedDoughProcessId(level, ratioId);
         DoughProcessRecipe proc = null;
         if (procIdRaw != null) {
-            bread.set(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(), normalizeProcessId(procIdRaw)); // normalize on item
+            bread.set(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(), normalizeProcessId(procIdRaw));
             var holder = level.getRecipeManager().byKey(procIdRaw);
             if (holder.isPresent() && holder.get().value() instanceof DoughProcessRecipe p) {
                 proc = p;
-            }
-        }
-
-        Map<IngredientCategory, Double> pctByCat = getPctByCategory(rr);
-        trySetBakerPct(bread, pctByCat);
-
-        BuildResult built = buildIngredientInfos(rr, pctByCat, proc, Math.max(1, servings));
-        bread.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), WeightComponent.ofGrams(built.totalGrams()));
-
-        bread.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
-                DoughRecipeComponent.of(ratioId, pctByCat, built.ingredients(), built.totalGrams()));
-
-        if (proc != null) {
-            ResourceLocation pan = proc.getPanType();
-            if (pan != null) {
-                bread.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(pan.toString()));
-                BreadType bt = breadTypeForPan(pan);
-                if (bt != null) bread.set(ModDataComponentTypes.BREAD_TYPE.get(), bt);
             }
         } else {
             LOG.warn("No DoughProcessRecipe linked to ratio {}. Bread will miss PAN/BREAD_TYPE.", ratioId);
         }
 
+        // Build baker % + ingredient grams for rich tooltips (same math as dough)
+        Map<IngredientCategory, Double> pctByCat = getPctByCategory(rr);
+        trySetBakerPct(bread, pctByCat);
+
+        BuildResult built = buildIngredientInfos(rr, pctByCat, proc, Math.max(1, servings));
+        bread.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), WeightComponent.ofGrams(built.totalGrams()));
+        bread.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
+                DoughRecipeComponent.of(ratioId, pctByCat, built.ingredients(), built.totalGrams()));
+
+        // Prefer BreadType from the recipe id path (e.g., boulanger:baguette → BAGUETTE)
+        BreadType bt = BreadType.fromRecipeId(ratioId).orElse(null);
+
+        // Fallback: infer from pan type if recipe did not map to a known bread type
+        if (bt == null && proc != null) {
+            ResourceLocation pan = proc.getPanType();
+            if (pan != null) {
+                // Expand this mapping if you add more bread/pan combos
+                String path = pan.getPath();
+                if (path.contains("baguette")) bt = BreadType.BAGUETTE;
+                else if (path.contains("loaf")) bt = BreadType.WHOLE_WHEAT_BREAD; // generic loaf fallback
+            }
+        }
+
+        // Stamp PAN_TYPE (from process) and BREAD_TYPE + CustomModelData
+        if (proc != null && proc.getPanType() != null) {
+            bread.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(proc.getPanType().toString()));
+        }
+        if (bt != null) {
+            bread.set(ModDataComponentTypes.BREAD_TYPE.get(), bt);
+            // ← This drives the texture/variant on the bread item
+            bread.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA,
+                    new net.minecraft.world.item.component.CustomModelData(bt.getModelIndex()));
+        } else {
+            LOG.warn("Could not resolve BreadType for {}. Consider adding a BreadType mapping for this recipe/pan.", ratioId);
+        }
+
         debugAssertBread(bread, procIdRaw);
         return bread;
     }
+
 
     // ─────────────────────────────────────────────────────────────────────
     // Ingredient construction

@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 public class WoodGasFlareBlockEntity extends BlockEntity {
-    private static final Logger LOGGER = LogUtils.getLogger();
 
     /* ─────────── tuning ─────────── */
     private static final int CONSUME_MB_TICK = 1;    // steady draw while lit
@@ -130,7 +129,6 @@ public class WoodGasFlareBlockEntity extends BlockEntity {
         this.lit = newLit;
         level.setBlock(pos, state.setValue(WoodGasFlareBlock.LIT, newLit), 3);
         setChanged();
-        if (LOGGER.isDebugEnabled()) LOGGER.debug("[Flare] LIT {}", newLit);
     }
 
     /* ─────────── Persistence ─────────── */
@@ -147,8 +145,6 @@ public class WoodGasFlareBlockEntity extends BlockEntity {
         super.loadAdditional(tag, registries);
         buffer = tag.getInt("buffer");
         lit    = tag.getBoolean("lit");
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("[Flare] Loaded (buffer={}, lit={})", buffer, lit);
-        }
+
     }
 }

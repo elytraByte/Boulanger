@@ -139,25 +139,27 @@ public class Boulanger {
         }
     }
 
-    //
     // —— FORGE‐BUS CLIENT TOOLTIP HANDLER ——
-    // Appends “Weight: X g” for every vanilla sugar stack.
-    //
     @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
     public static class ForgeClientEvents {
         @OnlyIn(Dist.CLIENT)
         @SubscribeEvent
         public static void onItemTooltip(ItemTooltipEvent event) {
             ItemStack stack = event.getItemStack();
-            if (stack.getItem() == Items.SUGAR) {
+
+            if (stack.getItem() == Items.SUGAR || stack.getItem() == Items.HONEY_BOTTLE) {
+                var grams = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS);
+                int shown = (grams != null)
+                        ? Math.round(grams.getWeight())
+                        : (stack.getItem() == Items.SUGAR ? 113 : 454);
                 event.getToolTip().add(
-                        Component.literal("Weight: 113 g")
+                        Component.literal("Weight: " + shown + " g")
                                 .withStyle(ChatFormatting.GREEN)
                 );
             }
-
         }
     }
+
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {

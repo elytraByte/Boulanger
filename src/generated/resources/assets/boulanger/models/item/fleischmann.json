@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "boulanger:item/fleischmann"
+    "layer0": "boulanger:item/yeast/fleischmann"
   }
 }

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "boulanger:item/fresh_yeast"
+    "layer0": "boulanger:item/yeast/fresh_yeast"
   }
 }

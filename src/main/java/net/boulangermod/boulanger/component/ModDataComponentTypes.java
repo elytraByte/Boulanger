@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger.component;
 
 
+import net.boulangermod.boulanger.item.BakeryAdditiveType;
 import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.WheatVariety;
 import net.boulangermod.boulanger.util.IngredientCategory;
@@ -60,13 +61,11 @@ public class ModDataComponentTypes {
             );
 
 
-//    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BakeryAdditiveType>> BAKERY_ADDITIVE =
-//            register("bakery_additive", builder -> builder
-//                    .persistent(BakeryAdditiveType.CODEC)
-//                    .networkSynchronized(BakeryAdditiveType.STREAM_CODEC)
-//            );
-
-
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BakeryAdditiveType>> BAKERY_ADDITIVE =
+            register("bakery_additive", builder -> builder
+                    .persistent(BakeryAdditiveType.CODEC)
+                    .networkSynchronized(BakeryAdditiveType.STREAM_CODEC)
+            );
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<BakerPctComponent>> BAKER_PERCENTAGES =
             register("baker_percentages", builder -> builder

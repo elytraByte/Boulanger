@@ -1,56 +1,58 @@
 package net.boulangermod.boulanger.util;
 
 import net.boulangermod.boulanger.component.FlourType;
-import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.WeightComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-public class IngredientStack {
-    private final ItemStack bowlStack;
-    private final Item       actualItem;
-    private final IngredientCategory category;
-    private int grams;
+import javax.annotation.Nullable;
 
+public class IngredientStack {
+    private final ItemStack bowlStack;          // original bowl (for metadata lookups)
+    private final IngredientCategory category;
+    private final Item actualItem;
+    private final @Nullable FlourType flourType;
+
+    // Store precise weight in milligrams
+    private int milligrams;
+
+    /** Construct from a bowl stack that already carries components (grams as float). */
     public IngredientStack(ItemStack bowlStack) {
         this.bowlStack = bowlStack;
-        // category & grams come from components:
         this.category = bowlStack.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get());
-        WeightComponent wc = bowlStack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-        this.grams    = wc != null ? (int)wc.grams() : 0;
-        // actual item from the type component:
-        var typeComp = bowlStack.get(ModDataComponentTypes.INGREDIENT_TYPE.get());
-        this.actualItem = typeComp != null ? typeComp.item() : bowlStack.getItem();
+        this.actualItem = bowlStack.getItem();
+        this.flourType = bowlStack.get(ModDataComponentTypes.FLOUR_TYPE.get());
+
+        WeightComponent w = bowlStack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        float grams = (w != null) ? w.grams() : 0f;
+        this.milligrams = Math.max(0, Math.round(grams * 1000f));
     }
 
-    /** The bowl ItemStack (with data components). */
-    public ItemStack getBowlStack() {
-        return bowlStack;
+    // Alternate ctor for restoring from NBT (mg exact)
+    public IngredientStack(Item item, IngredientCategory cat, @Nullable FlourType ft, int milligrams) {
+        this.bowlStack = ItemStack.EMPTY; // not needed for restored stacks
+        this.actualItem = item;
+        this.category = cat;
+        this.flourType = ft;
+        this.milligrams = Math.max(0, milligrams);
     }
 
-    /** The real ingredient item (flour, water, etc.). */
-    public Item getActualItem() {
-        return actualItem;
-    }
+    // --- Accessors ------------------------------------------------------------
+    public ItemStack getBowlStack() { return bowlStack; }
+    public IngredientCategory getCategory() { return category; }
+    public Item getActualItem() { return actualItem; }
+    public @Nullable FlourType getFlourType() { return flourType; }
 
-    /** Category (FLOUR, FAT, etc.) */
-    public IngredientCategory getCategory() {
-        return category;
-    }
+    /** Exact weight in milligrams. */
+    public int getMilligrams() { return milligrams; }
 
-    /** Weight in grams */
-    public int getGrams() {
-        return grams;
-    }
+    /** Convenience: grams as double (mg / 1000). */
+    public double getGramsExact() { return milligrams / 1000.0; }
 
-    /** Add more grams (used when merging multiple bowls) */
-    public void addGrams(int delta) {
-        this.grams += delta;
-    }
+    /** Backward-compat for old callers that used grams as int. */
+    public int getGrams() { return (int)Math.round(getGramsExact()); }
 
-    /** FlourType component, if any */
-    public FlourType getFlourType() {
-        return bowlStack.get(ModDataComponentTypes.FLOUR_TYPE.get());
-    }
+    public void addMilligrams(int deltaMg) { this.milligrams = Math.max(0, this.milligrams + deltaMg); }
+    public void addGrams(double grams) { addMilligrams((int)Math.round(grams * 1000.0)); }
 }

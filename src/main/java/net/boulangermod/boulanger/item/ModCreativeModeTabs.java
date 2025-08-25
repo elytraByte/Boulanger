@@ -1,7 +1,10 @@
 package net.boulangermod.boulanger.item;
 
+import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.fluid.ModFluids;
+import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -154,7 +157,14 @@ public class ModCreativeModeTabs {
                         pOutput.accept(new ItemStack(ModItems.EGG_WHITE.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_WHOLE_MILK.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WOODEN_BUCKET_OF_SHELL_EGG.get(), 1));
-                        pOutput.accept(new ItemStack(ModItems.BREAD.get(), 1));
+                        // BREAD VARIANTS
+                        for (BreadType bt : BreadType.values()) {
+                            ItemStack bread = new ItemStack(ModItems.BREAD.get());
+                            bread.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(bt.getModelIndex()));
+                            bread.set(ModDataComponentTypes.BREAD_TYPE.get(), bt);
+                            pOutput.accept(bread);
+                        }
+
                         pOutput.accept(new ItemStack(ModItems.SALT_KOSHER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BUTTER.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.EURO_BUTTER.get(), 1));
@@ -172,8 +182,7 @@ public class ModCreativeModeTabs {
                             pOutput.accept(ModItems.createFlourBag(type));
 
                         }
-                        pOutput.accept((new ItemStack(ModItems.PAN.get())));
-// Optional: give variants a readable name in the tab
+
                         ItemStack loafPan = new ItemStack(ModItems.PAN.get());
                         loafPan.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(0));
                         loafPan.set(DataComponents.CUSTOM_NAME, Component.translatable("item.boulanger.pan.loaf")); // add lang key
@@ -185,9 +194,22 @@ public class ModCreativeModeTabs {
                         pOutput.accept(baguettePan);
 
 
-
+                        pOutput.accept(bakeryAddStack((BakeryAdditiveItem) ModItems.ASCORBIC_ACID.get()));
+                        pOutput.accept(bakeryAddStack((BakeryAdditiveItem) ModItems.CALCIUM_PROPIONATE.get()));
+                        pOutput.accept(bakeryAddStack((BakeryAdditiveItem) ModItems.DIASTATIC_MALT_POWDER.get()));
+                        pOutput.accept(bakeryAddStack((BakeryAdditiveItem) ModItems.NONDIASTATIC_MALT_POWDER.get()));
+                        pOutput.accept(bakeryAddStack((BakeryAdditiveItem) ModItems.L_CYSTEINE.get()));
 
                     }).build());
+
+    private static ItemStack bakeryAddStack(BakeryAdditiveItem item) {
+        var s = new ItemStack(item);
+        s.set(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), IngredientCategory.ADDITIVE);
+        s.set(ModDataComponentTypes.BAKERY_ADDITIVE.get(), item.getType());
+        s.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), new WeightComponent(item.getType().getWeight()));
+        s.set(ModDataComponentTypes.INGREDIENT_TYPE.get(), new IngredientTypeComponent(item)); // optional
+        return s;
+    }
 
     public static void register(IEventBus eventBus) {
         CREATIVE_MODE_TABS.register(eventBus);

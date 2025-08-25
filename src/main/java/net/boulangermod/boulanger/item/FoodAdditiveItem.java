@@ -47,4 +47,8 @@ public class FoodAdditiveItem extends Item {
         FoodAdditiveComponent component = ensureComponent(stack);
         return Component.translatable("item.boulanger.food_additive." + component.getId());
     }
+
+    public FoodAdditiveType getType() {
+        return additiveType;
+    }
 }

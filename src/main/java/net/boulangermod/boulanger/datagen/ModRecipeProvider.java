@@ -481,7 +481,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 )
                 .addComponent(
                         IngredientCategory.DAIRY, 31.0,
-                        List.of(ResourceLocation.fromNamespaceAndPath("boulanger", "whole_milk"))
+                        List.of(ResourceLocation.fromNamespaceAndPath(MODID, "whole_milk"))
                 )
                 // Enrichments & add-ins
                 .addComponent(
@@ -490,7 +490,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 )
                 .addComponent(
                         IngredientCategory.FAT, 4.0,
-                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "unsalted_butter"))
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "butter"))
                 )
                 .addComponent(
                         IngredientCategory.SUGAR, 3.0,

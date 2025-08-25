@@ -45,6 +45,6 @@
     }
   ],
   "textures": {
-    "layer0": "boulanger:item/blank_fifty_pound_bag"
+    "layer0": "boulanger:item/flour/blank_fifty_pound_bag"
   }
 }

@@ -32,6 +32,20 @@ public class DoughItem extends Item {
         super(properties);
     }
 
+    // ── NEW helpers ───────────────────────────────────────────────────────────
+    private static String shortWeightLabelFromGrams(float grams) {
+        int mg = Math.max(0, Math.round(grams * 1000f));
+        if (mg < 1000) return mg + " mg";
+        return String.format(java.util.Locale.ROOT, "%.3f g", mg / 1000.0);
+    }
+
+    private static String shortWeightLabelFromWholeGramsOrLess(int grams, double pctOfFlour) {
+        // If recipe only stored whole grams and says 0g, but pct>0, show "<1 g"
+        if (grams <= 0 && pctOfFlour > 0.0) return "<1 g";
+        return grams + " g";
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     @Override
     public void appendHoverText(
             ItemStack stack, TooltipContext context,
@@ -42,66 +56,55 @@ public class DoughItem extends Item {
 
         DoughRecipeComponent dr = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
         if (dr == null) {
-            tooltipComponents.add(
-                    Component.literal("Unmixed dough")
-                            .withStyle(ChatFormatting.RED)
-            );
+            tooltipComponents.add(Component.literal("Unmixed dough").withStyle(ChatFormatting.RED));
             return;
         }
 
         // Header
-        tooltipComponents.add(
-                Component.literal("Recipe: " + dr.recipeId().toString())
-                        .withStyle(ChatFormatting.GOLD)
-        );
-        tooltipComponents.add(
-                Component.literal("-----")
-                        .withStyle(ChatFormatting.DARK_GRAY)
-        );
-        tooltipComponents.add(
-                Component.literal("Ingredients")
-                        .withStyle(ChatFormatting.GREEN)
-        );
+        tooltipComponents.add(Component.literal("Recipe: " + dr.recipeId()).withStyle(ChatFormatting.GOLD));
+        tooltipComponents.add(Component.literal("-----").withStyle(ChatFormatting.DARK_GRAY));
+        tooltipComponents.add(Component.literal("Ingredients").withStyle(ChatFormatting.GREEN));
 
-        // 1) Compute total flour weight (for baker's % denominator)
-        int flourTotal = dr.ingredients().stream()
+        // 1) Flour total in stored units (whole grams in your current component)
+        int flourTotalG = dr.ingredients().stream()
                 .filter(info -> info.category() == IngredientCategory.FLOUR)
                 .mapToInt(IngredientInfo::weight)
                 .sum();
 
-        // 2) Iterate every ingredient and print "Name: Xg (Y.Y%)"
+        // 2) Print each ingredient
         for (IngredientInfo info : dr.ingredients()) {
-            int w = info.weight();
-            double pct = flourTotal > 0
-                    ? (double) w / flourTotal * 100.0
-                    : 0.0;
+            int wG = info.weight(); // current stored unit = whole grams
+            double pct = flourTotalG > 0 ? (double) wG / flourTotalG * 100.0 : 0.0;
 
-            // e.g. "  whole_wheat_flour: 200g (100.0%)"
+            // If you later add mg to IngredientInfo, prefer that here and format via mg.
+            String weightLabel = shortWeightLabelFromWholeGramsOrLess(wG, pct);
+
             tooltipComponents.add(
                     Component.literal(
-                            String.format("  %s: %dg (%.1f%%)",
-                                    info.itemId(),
-                                    w,
-                                    pct)
+                            String.format("  %s: %s (%.1f%%)", info.itemId(), weightLabel, pct)
                     ).withStyle(ChatFormatting.GRAY)
             );
         }
 
         // Footer
+        tooltipComponents.add(Component.literal("-----").withStyle(ChatFormatting.DARK_GRAY));
+
+        // Prefer the stack's weight component (float grams) so sub-gram totals show as mg
+        var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        String totalLabel = (wComp != null)
+                ? shortWeightLabelFromGrams(wComp.getWeight())
+                : (dr.totalWeight() + " g");
+
         tooltipComponents.add(
-                Component.literal("-----")
-                        .withStyle(ChatFormatting.DARK_GRAY)
-        );
-        tooltipComponents.add(
-                Component.literal(String.format("Total Weight: %dg", dr.totalWeight()))
+                Component.literal("Total Weight: " + totalLabel)
                         .withStyle(ChatFormatting.AQUA)
         );
 
         ProofingStateComponent proof = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
         if (proof != null) {
-            tooltipComponents.add(Component.literal(
-                            String.format("Step %d: %d ticks", proof.stepIndex(), proof.ticksInStep()))
-                    .withStyle(ChatFormatting.LIGHT_PURPLE)
+            tooltipComponents.add(
+                    Component.literal(String.format("Step %d: %d ticks", proof.stepIndex(), proof.ticksInStep()))
+                            .withStyle(ChatFormatting.LIGHT_PURPLE)
             );
         }
     }

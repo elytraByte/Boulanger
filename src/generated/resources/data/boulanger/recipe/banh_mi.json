@@ -38,7 +38,7 @@
     },
     {
       "allowed_items": [
-        "boulanger:unsalted_butter"
+        "boulanger:butter"
       ],
       "category": "FAT",
       "target_percent": 4.0
