@@ -1,0 +1,33 @@
+{
+  "type": "boulanger:dough_process",
+  "dough_type": "boulanger:brioche_roll",
+  "id": "boulanger:dough_process/brioche_roll",
+  "pan_type": "boulanger:loaf",
+  "serving_weight_grams": 90.0,
+  "steps": [
+    {
+      "type": "PROOF",
+      "duration": 1600
+    },
+    {
+      "type": "PUNCHDOWN"
+    },
+    {
+      "type": "PROOF",
+      "duration": 1600
+    },
+    {
+      "type": "PUNCHDOWN"
+    },
+    {
+      "type": "DIVIDE"
+    },
+    {
+      "type": "SHAPE"
+    },
+    {
+      "type": "PROOF",
+      "duration": 800
+    }
+  ]
+}

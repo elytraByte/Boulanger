@@ -1,0 +1,33 @@
+{
+  "type": "boulanger:dough_process",
+  "dough_type": "boulanger:white_pan_bread",
+  "id": "boulanger:dough_process/white_pan_bread",
+  "pan_type": "boulanger:loaf",
+  "serving_weight_grams": 680.0,
+  "steps": [
+    {
+      "type": "PROOF",
+      "duration": 1600
+    },
+    {
+      "type": "PUNCHDOWN"
+    },
+    {
+      "type": "PROOF",
+      "duration": 1600
+    },
+    {
+      "type": "PUNCHDOWN"
+    },
+    {
+      "type": "DIVIDE"
+    },
+    {
+      "type": "SHAPE"
+    },
+    {
+      "type": "PROOF",
+      "duration": 800
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "parent": "boulanger:block/woodgas_pipe_arm",
+  "render_type": "minecraft:cutout"
+}

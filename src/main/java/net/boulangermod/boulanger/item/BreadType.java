@@ -15,7 +15,7 @@ public enum BreadType {
     FRENCH_CROISSANT   (3,  "french_croissant"),
     CROISSANT          (4,  "croissant"),
     WHOLE_WHEAT_BREAD  (5,  "whole_wheat_bread"),
-    BANH_MI            (6,  "banh_mi"),
+    BÁNH_MÌ            (6,  "bánh_mì"),
     BRIOCHE            (7,  "brioche"),
     POTATO_BREAD       (8,  "potato_bread"),
     PAIN_DE_MI         (9,  "pain_de_mi"),

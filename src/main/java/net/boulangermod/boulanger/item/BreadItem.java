@@ -5,6 +5,7 @@ import net.boulangermod.boulanger.component.IngredientInfo;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;            // ← for Shift detection
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -17,6 +18,8 @@ import java.util.*;
 public class BreadItem extends Item {
     public BreadItem(Properties properties) { super(properties); }
 
+    // ── Formatting helpers ────────────────────────────────────────────────
+
     private static String shortWeightLabelFromGrams(float grams) {
         int mg = Math.max(0, Math.round(grams * 1000f));
         if (mg < 1000) return mg + "mg";
@@ -24,104 +27,98 @@ public class BreadItem extends Item {
         return g + "g";
     }
 
-    /** Format a per-ingredient weight stored in milligrams (compact). */
-    private static String shortWeightLabelFromMilligrams(int mg) {
-        if (mg < 1000) return mg + "mg";
-        int g = Math.round(mg / 1000f);
-        return g + "g";
+    private static String titleCaseTokens(String raw) {
+        if (raw == null || raw.isEmpty()) return "";
+        String key = raw.contains(":") ? raw.substring(raw.indexOf(':') + 1) : raw;
+        String[] parts = key.toLowerCase(Locale.ROOT).split("_");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            String p = parts[i];
+            if (!p.isEmpty()) {
+                sb.append(Character.toUpperCase(p.charAt(0)))
+                        .append(p.length() > 1 ? p.substring(1) : "");
+                if (i < parts.length - 1) sb.append(' ');
+            }
+        }
+        return sb.toString();
     }
+
+    // ── Tooltip ───────────────────────────────────────────────────────────
 
     @Override
     public void appendHoverText(
             ItemStack stack,
             @Nullable TooltipContext context,
-            List<Component> tooltipComponents,
-            TooltipFlag tooltipFlag
+            List<Component> tooltip,
+            TooltipFlag flag
     ) {
-        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+        super.appendHoverText(stack, context, tooltip, flag);
 
-        // — Type line
-        tooltipComponents.add(
-                Component.literal("Type: " + getTypeName(stack))
-                        .withStyle(ChatFormatting.GREEN)
-        );
-
-        // — Baker’s percentages
-        tooltipComponents.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
-        tooltipComponents.add(Component.literal("Baker's Percentages").withStyle(ChatFormatting.GREEN));
-        tooltipComponents.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
-
-        // — Flour breakdown
-        tooltipComponents.add(Component.literal("Flours:").withStyle(ChatFormatting.GREEN));
-        getFlourPercentages(stack).forEach((name, frac) -> {
-            int pct = (int) Math.round(frac * 100);
-            tooltipComponents.add(Component.literal(String.format(Locale.ROOT, " * %d%% %s", pct, name)).withStyle(ChatFormatting.GREEN));
-        });
-
-        // — Other ingredients (percent targets)
-        tooltipComponents.add(Component.literal("Other:").withStyle(ChatFormatting.GREEN));
-        getOtherIngredientPercentages(stack).forEach((name, pctVal) -> {
-            int pct = (int) Math.round(pctVal);
-            tooltipComponents.add(Component.literal(String.format(Locale.ROOT, " * %d%% %s", pct, name)).withStyle(ChatFormatting.GREEN));
-        });
-
-        // — Actual ingredients (mg-aware, from snapshot)
-        var recipe = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
-        if (recipe != null && !recipe.ingredients().isEmpty()) {
-            tooltipComponents.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
-            tooltipComponents.add(Component.literal("Ingredients (actual)").withStyle(ChatFormatting.GREEN));
-
-            int totalFlourMg = recipe.ingredients().stream()
-                    .filter(i -> i.category() == IngredientCategory.FLOUR)
-                    .mapToInt(IngredientInfo::milligrams)
-                    .sum();
-
-            for (IngredientInfo info : recipe.ingredients()) {
-                int mg = info.milligrams();
-                double pctOfFlour = (totalFlourMg > 0) ? (mg / (double) totalFlourMg) * 100.0 : 0.0;
-
-                tooltipComponents.add(
-                        Component.literal(
-                                String.format(Locale.ROOT, "  %s: %s (%.1f%%)",
-                                        info.itemId(),
-                                        shortWeightLabelFromMilligrams(mg),
-                                        pctOfFlour)
-                        ).withStyle(ChatFormatting.GRAY)
-                );
-            }
+        // Minimal by default; full details on Shift
+        if (!Screen.hasShiftDown()) {
+            tooltip.add(Component.literal("Hold ").withStyle(ChatFormatting.DARK_GRAY)
+                    .append(Component.literal("Shift").withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" for ingredients & baker’s %").withStyle(ChatFormatting.DARK_GRAY)));
+            return;
         }
 
-        // — Footer: Hydration & Weight (mg-aware total)
-        tooltipComponents.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
-        tooltipComponents.add(
-                Component.literal("Hydration: " + (int) Math.round(getHydration(stack)) + "%")
-                        .withStyle(ChatFormatting.GREEN)
-        );
+        // — Detailed view (Shift held) —
+        tooltip.add(Component.literal("Ingredients (baker’s %)").withStyle(ChatFormatting.GREEN));
+
+        // Flour breakdown
+        Map<String, Double> flourPct = getFlourPercentages(stack);
+        if (!flourPct.isEmpty()) {
+            tooltip.add(Component.literal("• Flours").withStyle(ChatFormatting.GREEN));
+            flourPct.forEach((name, frac) -> {
+                int pct = (int)Math.round(frac * 100);
+                tooltip.add(Component.literal(String.format(Locale.ROOT, "   - %d%% %s", pct, name))
+                        .withStyle(ChatFormatting.GRAY));
+            });
+        }
+
+        // Other ingredients
+        Map<String, Double> others = getOtherIngredientPercentages(stack);
+        if (!others.isEmpty()) {
+            tooltip.add(Component.literal("• Other").withStyle(ChatFormatting.GREEN));
+            others.forEach((name, pctVal) -> {
+                int pct = (int)Math.round(pctVal);
+                tooltip.add(Component.literal(String.format(Locale.ROOT, "   - %d%% %s", pct, name))
+                        .withStyle(ChatFormatting.GRAY));
+            });
+        }
+
+        // Hydration + total weight
+        int hydration = (int)Math.round(getHydration(stack));
         var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-        String weightLabel = (wComp != null)
-                ? shortWeightLabelFromGrams(wComp.getWeight())
-                : "0g";
-        tooltipComponents.add(
-                Component.literal("Weight: " + weightLabel)
-                        .withStyle(ChatFormatting.GREEN)
-        );
+        String weightLabel = (wComp != null) ? shortWeightLabelFromGrams(wComp.getWeight()) : "0g";
+
+        tooltip.add(Component.literal(String.format(Locale.ROOT, "Hydration: %d%%", hydration))
+                .withStyle(ChatFormatting.GREEN));
+        tooltip.add(Component.literal("Weight: " + weightLabel).withStyle(ChatFormatting.GREEN));
     }
 
-    // === Name from enum type =================================================
+    // ── Name line (shows Bread Name + serving weight) ─────────────────────
 
     @Override
     public Component getName(ItemStack stack) {
+        String baseName;
         BreadType bt = resolveBreadType(stack);
         if (bt != null) {
-            return Component.literal(titleCaseTokens(bt.getId()));
+            baseName = titleCaseTokens(bt.getId());
+        } else {
+            // Fallback to vanilla name if no type component
+            baseName = super.getName(stack).getString();
         }
-        return super.getName(stack);
+
+        var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        if (wComp != null && wComp.getWeight() > 0f) {
+            String weight = shortWeightLabelFromGrams(wComp.getWeight());
+            return Component.literal(baseName + " (" + weight + ")");
+        }
+        return Component.literal(baseName);
     }
 
-    private String getTypeName(ItemStack stack) {
-        BreadType bt = resolveBreadType(stack);
-        return (bt != null) ? titleCaseTokens(bt.getId()) : "Unknown";
-    }
+    // ── Type resolution ───────────────────────────────────────────────────
 
     /** Prefer component; otherwise infer from CustomModelData; else null. */
     private BreadType resolveBreadType(ItemStack stack) {
@@ -138,7 +135,7 @@ public class BreadItem extends Item {
         return null;
     }
 
-    // — Helpers —
+    // ── Data helpers for baker’s % and hydration ──────────────────────────
 
     private Map<String, Double> getFlourPercentages(ItemStack stack) {
         var recipe = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
@@ -153,7 +150,6 @@ public class BreadItem extends Item {
         Map<String, Integer> mgByType = new LinkedHashMap<>();
         for (IngredientInfo info : recipe.ingredients()) {
             if (info.category() != IngredientCategory.FLOUR) continue;
-
             FlourType ft = info.flourType();
             String key = (ft != null) ? ft.getId() : info.itemId();
             mgByType.merge(key, info.milligrams(), Integer::sum);
@@ -161,8 +157,7 @@ public class BreadItem extends Item {
 
         Map<String, Double> pctByType = new LinkedHashMap<>();
         for (var e : mgByType.entrySet()) {
-            pctByType.put(titleCaseTokens(e.getKey()),
-                    (e.getValue() * 1.0) / totalFlourMg); // fraction 0..1
+            pctByType.put(titleCaseTokens(e.getKey()), (e.getValue() * 1.0) / totalFlourMg); // fraction 0..1
         }
         return pctByType;
     }
@@ -180,27 +175,12 @@ public class BreadItem extends Item {
         return map;
     }
 
+    /** Hydration = WATER baker’s % (your current definition). */
     private double getHydration(ItemStack stack) {
         var pctComp = stack.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
         if (pctComp != null && pctComp.percentages().containsKey(IngredientCategory.WATER)) {
             return pctComp.percentages().get(IngredientCategory.WATER);
         }
         return 0.0;
-    }
-
-    private static String titleCaseTokens(String raw) {
-        if (raw == null || raw.isEmpty()) return "";
-        String key = raw.contains(":") ? raw.substring(raw.indexOf(':') + 1) : raw;
-        String[] parts = key.toLowerCase(Locale.ROOT).split("_");
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < parts.length; i++) {
-            String p = parts[i];
-            if (!p.isEmpty()) {
-                sb.append(Character.toUpperCase(p.charAt(0)))
-                        .append(p.length() > 1 ? p.substring(1) : "");
-                if (i < parts.length - 1) sb.append(' ');
-            }
-        }
-        return sb.toString();
     }
 }

@@ -8,6 +8,7 @@ import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen; // ← Shift detection
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
@@ -20,14 +21,10 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
 public class DoughItem extends Item {
-    public DoughItem(Properties properties) {
-        super(properties);
-    }
+    public DoughItem(Properties properties) { super(properties); }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     private static String shortWeightLabelFromGrams(float grams) {
@@ -37,78 +34,164 @@ public class DoughItem extends Item {
         return g + "g";
     }
 
-    /** Format a per-ingredient weight stored in milligrams (compact). */
-    private static String shortWeightLabelFromMilligrams(int mg) {
-        if (mg < 1000) return mg + "mg";
-        int g = Math.round(mg / 1000f);
-        return g + "g";
+    private static String titleCaseTokens(String raw) {
+        if (raw == null || raw.isEmpty()) return "";
+        String key = raw.contains(":") ? raw.substring(raw.indexOf(':') + 1) : raw;
+        String[] parts = key.toLowerCase(Locale.ROOT).split("_");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+            String p = parts[i];
+            if (!p.isEmpty()) {
+                sb.append(Character.toUpperCase(p.charAt(0)))
+                        .append(p.length() > 1 ? p.substring(1) : "");
+                if (i < parts.length - 1) sb.append(' ');
+            }
+        }
+        return sb.toString();
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    // === Name line: "<Recipe> Dough (450g)" ================================
+    @Override
+    public Component getName(ItemStack stack) {
+        // Prefer the recipeId (from saved snapshot), else process id, else fallback
+        String base = "Dough";
+        DoughRecipeComponent dr = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        if (dr != null && dr.recipeId() != null) {
+            base = titleCaseTokens(dr.recipeId().getPath()) + " Dough";
+        } else {
+            ResourceLocation proc = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+            if (proc != null) base = titleCaseTokens(proc.getPath()) + " Dough";
+        }
+
+        var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        if (wComp != null && wComp.getWeight() > 0f) {
+            String weight = shortWeightLabelFromGrams(wComp.getWeight());
+            return Component.literal(base + " (" + weight + ")");
+        }
+        return Component.literal(base);
+    }
+
+    // === Tooltip: minimal by default; Shift → details ======================
     @Override
     public void appendHoverText(
             ItemStack stack, TooltipContext context,
-            List<Component> tooltipComponents,
-            TooltipFlag tooltipFlag) {
+            List<Component> tooltip, TooltipFlag tooltipFlag) {
 
-        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+        super.appendHoverText(stack, context, tooltip, tooltipFlag);
 
         DoughRecipeComponent dr = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
         if (dr == null) {
-            tooltipComponents.add(Component.literal("Unmixed dough").withStyle(ChatFormatting.RED));
+            tooltip.add(Component.literal("Unmixed dough").withStyle(ChatFormatting.RED));
             return;
         }
 
-        // Header
-        tooltipComponents.add(Component.literal("Recipe: " + dr.recipeId()).withStyle(ChatFormatting.GOLD));
-        tooltipComponents.add(Component.literal("-----").withStyle(ChatFormatting.DARK_GRAY));
-        tooltipComponents.add(Component.literal("Ingredients").withStyle(ChatFormatting.GREEN));
-
-        // Flour total in MG (precise)
-        int totalFlourMg = dr.ingredients().stream()
-                .filter(info -> info.category() == IngredientCategory.FLOUR)
-                .mapToInt(IngredientInfo::milligrams)
-                .sum();
-
-        // Print each ingredient with mg-aware formatting
-        for (IngredientInfo info : dr.ingredients()) {
-            int mg = info.milligrams();
-            double pct = totalFlourMg > 0 ? (mg / (double) totalFlourMg) * 100.0 : 0.0;
-
-            String weightLabel = shortWeightLabelFromMilligrams(mg);
-
-            tooltipComponents.add(
-                    Component.literal(
-                            String.format(Locale.ROOT, "  %s: %s (%.1f%%)",
-                                    info.itemId(), weightLabel, pct)
-                    ).withStyle(ChatFormatting.GRAY)
-            );
-        }
-
-        // Footer
-        tooltipComponents.add(Component.literal("-----").withStyle(ChatFormatting.DARK_GRAY));
-
-        // Prefer the stack's float-grams component so totals show mg when <1g
-        var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-        String totalLabel = (wComp != null)
-                ? shortWeightLabelFromGrams(wComp.getWeight())
-                : (dr.totalWeight() + "g");  // dr.totalWeight() is grams
-
-        tooltipComponents.add(
-                Component.literal("Total Weight: " + totalLabel)
-                        .withStyle(ChatFormatting.AQUA)
-        );
-
+        // ── Proofing state: always shown (1-based index + friendly step name) ──
         ProofingStateComponent proof = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
+        ResourceLocation procId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
         if (proof != null) {
-            tooltipComponents.add(
-                    Component.literal(String.format(Locale.ROOT, "Step %d: %d ticks",
-                                    proof.stepIndex(), proof.ticksInStep()))
-                            .withStyle(ChatFormatting.LIGHT_PURPLE)
-            );
+            int idx0 = Math.max(0, proof.stepIndex()); // internal 0-based
+            int idx1 = idx0 + 1;                       // player-facing 1-based
+
+            String lineToShow = null;
+            Level lvl = Minecraft.getInstance().level;
+            if (lvl != null && procId != null) {
+                var opt = lvl.getRecipeManager()
+                        .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                        .map(RecipeHolder::value)
+                        .filter(r -> r.getDoughType().equals(procId))
+                        .findFirst();
+
+                if (opt.isPresent()) {
+                    var steps = opt.get().getSteps();
+                    int total = steps.size();
+
+                    if (idx0 >= total) {
+                        lineToShow = "Proofing: Finished";
+                    } else {
+                        // Build "1st Proof", "2nd Proof", "1st Punchdown", etc.
+                        StepType type = steps.get(idx0).type();
+                        // Count how many times we've seen this type up to idx0 (for the ordinal)
+                        int occurrence = 0;
+                        for (int i = 0; i <= idx0; i++) if (steps.get(i).type() == type) occurrence++;
+
+                        // ordinal
+                        int mod100 = occurrence % 100;
+                        String ord;
+                        if (mod100 >= 11 && mod100 <= 13) {
+                            ord = occurrence + "th";
+                        } else {
+                            switch (occurrence % 10) {
+                                case 1 -> ord = occurrence + "st";
+                                case 2 -> ord = occurrence + "nd";
+                                case 3 -> ord = occurrence + "rd";
+                                default -> ord = occurrence + "th";
+                            }
+                        }
+
+                        // Title-case word from enum name
+                        String word = type.name().toLowerCase(Locale.ROOT);
+                        word = Character.toUpperCase(word.charAt(0)) + word.substring(1);
+
+                        String friendly = ord + " " + word;
+                        lineToShow = String.format(Locale.ROOT, "Proofing: Step %d/%d — %s", idx1, total, friendly);
+                    }
+                }
+            }
+
+            if (lineToShow == null) {
+                // Fallback if we couldn't resolve the process recipe on client
+                lineToShow = String.format(Locale.ROOT, "Proofing: Step %d", idx1);
+            }
+            tooltip.add(Component.literal(lineToShow).withStyle(ChatFormatting.LIGHT_PURPLE));
         }
+
+        // ── Minimal by default; full details on Shift ──
+        if (!Screen.hasShiftDown()) {
+            tooltip.add(Component.literal("Hold ")
+                    .withStyle(ChatFormatting.DARK_GRAY)
+                    .append(Component.literal("Shift").withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" for ingredients & baker’s %").withStyle(ChatFormatting.DARK_GRAY)));
+            return;
+        }
+
+        // — Detailed view (Shift held) —
+        tooltip.add(Component.literal("Ingredients (baker’s %)").withStyle(ChatFormatting.GREEN));
+
+        // Flour breakdown (from actual mg snapshot → flour fractions)
+        Map<String, Double> flourPct = getFlourPercentages(stack);
+        if (!flourPct.isEmpty()) {
+            tooltip.add(Component.literal("• Flours").withStyle(ChatFormatting.GREEN));
+            flourPct.forEach((name, frac) -> {
+                int pct = (int) Math.round(frac * 100);
+                tooltip.add(Component.literal(String.format(Locale.ROOT, "   - %d%% %s", pct, name))
+                        .withStyle(ChatFormatting.GRAY));
+            });
+        }
+
+        // Other ingredients (from target baker’s %)
+        Map<String, Double> others = getOtherIngredientPercentages(stack);
+        if (!others.isEmpty()) {
+            tooltip.add(Component.literal("• Other").withStyle(ChatFormatting.GREEN));
+            others.forEach((name, pctVal) -> {
+                int pct = (int) Math.round(pctVal);
+                tooltip.add(Component.literal(String.format(Locale.ROOT, "   - %d%% %s", pct, name))
+                        .withStyle(ChatFormatting.GRAY));
+            });
+        }
+
+        // Hydration + total weight
+        int hydration = (int) Math.round(getHydration(stack));
+        var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        String totalLabel = (wComp != null) ? shortWeightLabelFromGrams(wComp.getWeight())
+                : (dr.totalWeight() + "g");
+
+        tooltip.add(Component.literal("Hydration: " + hydration + "%").withStyle(ChatFormatting.GREEN));
+        tooltip.add(Component.literal("Weight: " + totalLabel).withStyle(ChatFormatting.GREEN));
     }
 
+
+    // === “Punch down” interaction (unchanged) ==============================
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Player player = context.getPlayer();
@@ -142,7 +225,10 @@ public class DoughItem extends Item {
         return InteractionResult.PASS;
     }
 
-    @Override public boolean isBarVisible(ItemStack stack) { return stack.has(ModDataComponentTypes.PROOFING_STATE.get()); }
+    // === Progress bar (unchanged) ==========================================
+    @Override public boolean isBarVisible(ItemStack stack) {
+        return stack.has(ModDataComponentTypes.PROOFING_STATE.get());
+    }
 
     @Override
     public int getBarWidth(ItemStack stack) {
@@ -176,4 +262,84 @@ public class DoughItem extends Item {
 
     @Override public int getMaxStackSize(ItemStack stack) { return 1; }
     @Override public int getBarColor(ItemStack stack) { return 0x55FFFF; } // light blue
+
+    // === Data helpers for baker’s % and hydration ==========================
+
+    private Map<String, Double> getFlourPercentages(ItemStack stack) {
+        DoughRecipeComponent recipe = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        if (recipe == null) return Collections.emptyMap();
+
+        int totalFlourMg = recipe.ingredients().stream()
+                .filter(i -> i.category() == IngredientCategory.FLOUR)
+                .mapToInt(IngredientInfo::milligrams)
+                .sum();
+        if (totalFlourMg <= 0) return Collections.emptyMap();
+
+        Map<String, Integer> mgByType = new LinkedHashMap<>();
+        for (IngredientInfo info : recipe.ingredients()) {
+            if (info.category() != IngredientCategory.FLOUR) continue;
+
+            FlourType ft = info.flourType();
+            String key = (ft != null) ? ft.getId() : info.itemId();
+            mgByType.merge(key, info.milligrams(), Integer::sum);
+        }
+
+        Map<String, Double> pctByType = new LinkedHashMap<>();
+        for (var e : mgByType.entrySet()) {
+            pctByType.put(titleCaseTokens(e.getKey()),
+                    (e.getValue() * 1.0) / totalFlourMg); // fraction 0..1
+        }
+        return pctByType;
+    }
+
+    private Map<String, Double> getOtherIngredientPercentages(ItemStack stack) {
+        BakerPctComponent pctComp = stack.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
+        if (pctComp == null) return Collections.emptyMap();
+
+        Map<String, Double> map = new LinkedHashMap<>();
+        for (var e : pctComp.percentages().entrySet()) {
+            if (e.getKey() != IngredientCategory.FLOUR) {
+                map.put(titleCaseTokens(e.getKey().name()), e.getValue());
+            }
+        }
+        return map;
+    }
+
+    /** Hydration = WATER baker’s % (your current definition). */
+    private double getHydration(ItemStack stack) {
+        BakerPctComponent pctComp = stack.get(ModDataComponentTypes.BAKER_PERCENTAGES.get());
+        if (pctComp != null && pctComp.percentages().containsKey(IngredientCategory.WATER)) {
+            return pctComp.percentages().get(IngredientCategory.WATER);
+        }
+        return 0.0;
+    }
+
+    private static String toTitleWord(String enumName) {
+        if (enumName == null || enumName.isEmpty()) return "";
+        String s = enumName.toLowerCase(Locale.ROOT);
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    private static String ordinal(int n) {
+        int mod100 = n % 100;
+        if (mod100 >= 11 && mod100 <= 13) return n + "th";
+        return switch (n % 10) {
+            case 1 -> n + "st";
+            case 2 -> n + "nd";
+            case 3 -> n + "rd";
+            default -> n + "th";
+        };
+    }
+
+    /** Returns e.g. "1st Proof", "2nd Proof", "1st Punchdown" for steps[ idx ]. */
+    private static String stepLabel(java.util.List<ProcessingStep> steps, int idx) {
+        if (steps == null || idx < 0 || idx >= steps.size()) return "";
+        StepType type = steps.get(idx).type();
+        int occurrence = 0;
+        for (int i = 0; i <= idx; i++) {
+            if (steps.get(i).type() == type) occurrence++;
+        }
+        return ordinal(occurrence) + " " + toTitleWord(type.name());
+    }
+
 }
