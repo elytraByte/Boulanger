@@ -7,6 +7,7 @@ import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.item.PanType;
 import net.boulangermod.boulanger.recipe.*;
 import net.boulangermod.boulanger.screen.MixingBlockMenu;
+import net.boulangermod.boulanger.util.DoughRecipeCanonicalier;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.IngredientStack;
 import net.minecraft.core.BlockPos;
@@ -26,11 +27,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,6 +39,9 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
         implements AbstractProcessingBlock.Tickable {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final ResourceLocation GENERIC_FLOUR_ID =
+            ResourceLocation.fromNamespaceAndPath("boulanger", "flour");
 
     public static final int INPUT_BOWL   = 0;
     public static final int OUTPUT_BOWL  = 1;
@@ -399,7 +403,7 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
         // 2) Build the raw dough stack
         ItemStack dough = new ItemStack(ModItems.DOUGH.get());
 
-        // 3) Baker percentages (category → summed target %)
+        // 3) Baker percentages (category → summed target %), keep exactly as-is (no rounding)
         Map<IngredientCategory, Double> targetMap = ratio.getComponents().stream()
                 .collect(Collectors.groupingBy(
                         IngredientComponent::category,
@@ -407,36 +411,69 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
                 ));
         dough.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(), new BakerPctComponent(targetMap));
 
-        // 4) DoughRecipeComponent + weight (store per-ingredient rounded grams; keep precision internally)
-        List<IngredientInfo> infos = new ArrayList<>();
-        int totalMg = 0;
+        // 4) Canonicalize ingredients using DoughRecipeCanonicalier (merge + deterministic sort)
+        //    Build inputs for the canonicalizer and remember flourType per (category,itemId)
+        List<DoughRecipeCanonicalier.Ingredient> canonInputs = new ArrayList<>();
+        Map<String, FlourType> flourTypeByKey = new HashMap<>();
+        int totalMgUncanonical = 0;
 
         for (IngredientStack st : ingredientList) {
-            String itemId = Optional.ofNullable(
-                            st.getBowlStack().get(ModDataComponentTypes.FLOUR_TYPE.get()))
-                    .map(FlourType::getId)
-                    .orElse(BuiltInRegistries.ITEM.getKey(st.getActualItem()).toString());
+            String cat = st.getCategory().name(); // "FLOUR", "WATER", ...
+            ResourceLocation itemId = canonicalIngredientId(st); // <-- resolves flourType → concrete item id
+            int mg = Math.max(0, st.getMilligrams());
 
-            int mg = st.getMilligrams(); // exact mg from the stack
-            int gramsRounded = (int) Math.round(mg / 1000.0);
+            canonInputs.add(new DoughRecipeCanonicalier.Ingredient(cat, itemId, mg));
+            totalMgUncanonical += mg;
 
-            totalMg += mg;
-            infos.add(new IngredientInfo(itemId, st.getCategory(), gramsRounded));
+            if (st.getCategory() == IngredientCategory.FLOUR && st.getFlourType() != null) {
+                // Key by canonical item id so each flour variant keeps its own FlourType attachment
+                flourTypeByKey.put(cat + "|" + itemId, st.getFlourType());
+            }
+        }
+        // We don't care about canonicalized %; we only need canonicalized ingredients.
+        // Still, build minimal keys/vals from targetMap so the record is valid.
+        List<String> pctKeys = new ArrayList<>();
+        List<Double> pctVals = new ArrayList<>();
+        targetMap.forEach((k, v) -> { pctKeys.add(k.name()); pctVals.add(v); });
+
+        int totalGramsRounded = Math.round(totalMgUncanonical / 1000f);
+        DoughRecipeCanonicalier.DoughRecipe canonIn = new DoughRecipeCanonicalier.DoughRecipe(
+                ratio.getId(),                         // recipeId
+                totalGramsRounded,                     // totalWeight (grams; UI/back-compat)
+                pctKeys,                               // targetPercentagesKeys
+                pctVals,                               // targetPercentagesValues
+                canonInputs                            // ingredients
+        );
+        DoughRecipeCanonicalier.DoughRecipe canonOut = DoughRecipeCanonicalier.canonicalize(canonIn);
+
+        // Map back to your IngredientInfo, re-attaching flourType when present
+        List<IngredientInfo> infos = new ArrayList<>(canonOut.ingredients().size());
+        int totalMg = 0;
+        for (DoughRecipeCanonicalier.Ingredient ing : canonOut.ingredients()) {
+            IngredientCategory cat = IngredientCategory.valueOf(ing.category());
+            String itemIdStr = ing.itemId().toString();
+
+            IngredientInfo info = IngredientInfo.ofMg(itemIdStr, cat, ing.milligrams());
+            if (cat == IngredientCategory.FLOUR) {
+                FlourType ft = flourTypeByKey.get(ing.category() + "|" + ing.itemId());
+                if (ft != null) info = info.withFlourType(ft);
+            }
+            infos.add(info);
+            totalMg += ing.milligrams();
         }
 
-        int totalGramsRounded = (int) Math.round(totalMg / 1000.0);
-
+        // 5) Write components (percentages remain exactly from targetMap; only ingredients are canonicalized)
         dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
                 new DoughRecipeComponent(ratio.getId(), targetMap, infos, totalGramsRounded));
         dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
                 new WeightComponent((float) totalGramsRounded));
 
-        // 5) Proofing state & link to process recipe
+        // 6) Proofing state & link to process recipe
         dough.set(ModDataComponentTypes.PROOFING_STATE.get(),
                 new ProofingStateComponent(0, /*ticks=*/0, /*shaped=*/false));
         dough.set(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(), ratio.getId());
 
-        // 6) Tag the recipe’s pan on the dough (PanTypeComponent)
+        // 7) Tag the recipe’s pan on the dough (PanTypeComponent)
         Optional<DoughProcessRecipe> optProcess = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
                 .map(RecipeHolder::value)
@@ -457,7 +494,7 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
             LOGGER.warn("⚠ No DoughProcessRecipe found for dough type: {}", ratio.getId());
         }
 
-        // 7) Final size check and output
+        // 8) Final size check and output
         double totalGramsExact = totalMg / 1000.0;
         if (totalGramsExact > MAX_DOUGH_WEIGHT_GRAMS) {
             LOGGER.warn("Mixing exceeds maximum allowed dough size ({}g > {}g)",
@@ -470,6 +507,33 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
         preciseTotalsG.clear();
     }
 
+    // Map a stack to a canonical id; for FLOUR, use the flourType’s id if the item is generic.
+    private static ResourceLocation canonicalIngredientId(IngredientStack st) {
+        ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(st.getActualItem());
+        if (st.getCategory() == IngredientCategory.FLOUR) {
+            FlourType ft = st.getFlourType();
+            if (ft != null && ft.type() != null && !ft.type().isBlank()) {
+                // If the item is the generic flour, canonicalize to a concrete flour id like boulanger:bread_flour
+                if (GENERIC_FLOUR_ID.equals(id)) {
+                    return ResourceLocation.fromNamespaceAndPath("boulanger", ft.type());
+                }
+            }
+        }
+        return id;
+    }
+
+    private static ResourceLocation resolveFlourItemIdFromType(@Nullable FlourType ft,
+                                                               Item actualItem) {
+        // If we have a typed flour, prefer the concrete flour item id (e.g. boulanger:bread_flour)
+        if (ft != null && ft.type() != null && !ft.type().isBlank()) {
+            ResourceLocation typed = ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.type()); // bread_flour, vital_wheat_gluten, …
+            if (BuiltInRegistries.ITEM.containsKey(typed)) {
+                return typed;
+            }
+        }
+        // Fallback to the actual item id on the stack (generic boulanger:flour or a concrete flour)
+        return BuiltInRegistries.ITEM.getKey(actualItem);
+    }
     private boolean isWeighedIngredient(ItemStack s) {
         return s.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
                 && s.has(ModDataComponentTypes.INGREDIENT_GRAMS.get());

@@ -1,102 +1,90 @@
+// src/main/java/net/boulangermod/boulanger/component/IngredientInfo.java
 package net.boulangermod.boulanger.component;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.boulangermod.boulanger.util.IngredientCategory;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.annotation.Nullable;
 import java.util.Optional;
 
-import static net.boulangermod.boulanger.component.DoughRecipeComponent.INT_STREAM_CODEC;
-import static net.boulangermod.boulanger.component.DoughRecipeComponent.STRING_STREAM_CODEC;
-
+/**
+ * Per-ingredient snapshot used in DoughRecipeComponent.
+ * - Milligrams are the source of truth.
+ * - Codecs are backward compatible with legacy "grams" snapshots.
+ */
 public record IngredientInfo(
-        String itemId,                  // e.g. "boulanger:flour" or "minecraft:water_bucket"
-        IngredientCategory category,    // FLOUR, WATER, SALT, YEAST, …
-        int weight,                     // grams
-        FlourType flourType             // OPTIONAL; only populated when category == FLOUR
+        String itemId,                 // registry id of the *item* (e.g. boulanger:flour, boulanger:butter, minecraft:water_bucket)
+        IngredientCategory category,   // FLOUR, WATER, ADDITIVE, etc.
+        int milligrams,                // precise weight (mg)
+        @Nullable FlourType flourType  // optional flour variant (only for FLOUR category)
 ) {
+    // ---- Constructors / helpers --------------------------------------------------
 
-    // ----- Constructors / factories -------------------------------------------------
-
-    public IngredientInfo(String itemId, IngredientCategory category, int weight) {
-        this(itemId, category, weight, null);
+    /**
+     * Legacy-style constructor that accepts grams and converts to mg.
+     */
+    public static IngredientInfo of(String itemId, IngredientCategory category, int grams) {
+        return new IngredientInfo(itemId, category, Math.max(0, grams) * 1000, null);
     }
 
-    /** Generic factory (no flour variant). */
-    public static IngredientInfo of(String itemId, IngredientCategory category, int weight) {
-        return new IngredientInfo(itemId, category, weight, null);
+    /**
+     * New precise constructor for mg.
+     */
+    public static IngredientInfo ofMg(String itemId, IngredientCategory category, int milligrams) {
+        return new IngredientInfo(itemId, category, Math.max(0, milligrams), null);
     }
 
-    /** Returns a copy with a flour variant attached (convenient for your single-flour-item setup). */
-    public IngredientInfo withFlourType(FlourType type) {
-        return new IngredientInfo(this.itemId, this.category, this.weight, type);
+    /**
+     * Attach a flour type (used only when category == FLOUR).
+     */
+    public IngredientInfo withFlourType(FlourType ft) {
+        return new IngredientInfo(this.itemId, this.category, this.milligrams, ft);
     }
 
-    /** Quick check. */
-    public boolean isFlour() { return category == IngredientCategory.FLOUR; }
+    // ---- CODEC (NBT/JSON) with back-compat: prefer "milligrams", fall back to "grams" ----
 
-    // ----- CODEC -------------------------------------------------------------------
+    public static final Codec<IngredientInfo> CODEC = RecordCodecBuilder.create(inst -> inst.group(
+            Codec.STRING.fieldOf("itemId").forGetter(IngredientInfo::itemId),
+            IngredientCategory.CODEC.fieldOf("category").forGetter(IngredientInfo::category),
 
-    private static final Codec<IngredientCategory> CATEGORY_CODEC =
-            Codec.STRING.xmap(IngredientCategory::valueOf, IngredientCategory::name);
+            // Prefer milligrams if present; otherwise accept legacy grams
+            Codec.INT.optionalFieldOf("milligrams").forGetter(i -> Optional.of(i.milligrams)),
+            Codec.INT.optionalFieldOf("grams").forGetter(i -> Optional.empty()),
 
-    public static final Codec<IngredientInfo> CODEC = RecordCodecBuilder.create(instance ->
-            instance.group(
-                    Codec.STRING.fieldOf("itemId").forGetter(IngredientInfo::itemId),
-                    CATEGORY_CODEC.fieldOf("category").forGetter(IngredientInfo::category),
-                    Codec.INT.fieldOf("weight").forGetter(IngredientInfo::weight),
-                    // Optional; absent for non-flour entries
-                    FlourType.CODEC.optionalFieldOf("flourType").forGetter(i -> Optional.ofNullable(i.flourType))
-            ).apply(instance, (itemId, category, weight, flourOpt) ->
-                    new IngredientInfo(itemId, category, weight, flourOpt.orElse(null)))
-    );
+            FlourType.CODEC.optionalFieldOf("flourType").forGetter(i -> Optional.ofNullable(i.flourType))
+    ).apply(inst, (itemId, category, mgOpt, gramsOpt, flourOpt) -> {
+        int mg = mgOpt.orElseGet(() -> gramsOpt.map(g -> Math.max(0, g) * 1000).orElse(0));
+        return new IngredientInfo(itemId, category, mg, flourOpt.orElse(null));
+    }));
 
-    // ----- STREAM_CODEC -------------------------------------------------------------
-
+    // ---- STREAM_CODEC (network) --------------------------------------------------
     public static final StreamCodec<RegistryFriendlyByteBuf, IngredientInfo> STREAM_CODEC =
-            new StreamCodec<>() {
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, IngredientInfo info) {
-                    // itemId
-                    STRING_STREAM_CODEC.encode(buffer, info.itemId());
-                    // category
-                    STRING_STREAM_CODEC.encode(buffer, info.category().name());
-                    // weight
-                    INT_STREAM_CODEC.encode(buffer, info.weight());
-                    // flourType presence + payload
-                    boolean hasFlour = info.flourType != null;
-                    buffer.writeBoolean(hasFlour);
-                    if (hasFlour) FlourType.STREAM_CODEC.encode(buffer, info.flourType);
-                }
+            StreamCodec.composite(
+                    ByteBufCodecs.STRING_UTF8,                 // item id
+                    IngredientInfo::itemId,
 
-                @Override
-                public IngredientInfo decode(RegistryFriendlyByteBuf buffer) {
-                    String itemId  = STRING_STREAM_CODEC.decode(buffer);
-                    String catName = STRING_STREAM_CODEC.decode(buffer);
-                    int weight     = INT_STREAM_CODEC.decode(buffer);
-                    FlourType flour = buffer.readBoolean() ? FlourType.STREAM_CODEC.decode(buffer) : null;
-                    return new IngredientInfo(itemId, IngredientCategory.valueOf(catName), weight, flour);
-                }
-            };
+                    IngredientCategory.STREAM_CODEC,           // category (ensure this is also RegistryFriendlyByteBuf-typed)
+                    IngredientInfo::category,
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, List<IngredientInfo>> INGREDIENT_INFO_LIST =
-            new StreamCodec<>() {
-                @Override
-                public void encode(RegistryFriendlyByteBuf buffer, List<IngredientInfo> list) {
-                    INT_STREAM_CODEC.encode(buffer, list.size());
-                    for (IngredientInfo info : list) STREAM_CODEC.encode(buffer, info);
-                }
+                    ByteBufCodecs.VAR_INT,                     // milligrams
+                    IngredientInfo::milligrams,
 
-                @Override
-                public List<IngredientInfo> decode(RegistryFriendlyByteBuf buffer) {
-                    int size = INT_STREAM_CODEC.decode(buffer);
-                    List<IngredientInfo> result = new ArrayList<>(size);
-                    for (int i = 0; i < size; i++) result.add(STREAM_CODEC.decode(buffer));
-                    return result;
-                }
-            };
+                    // Flour type encoded as Optional<String> id (no need for a special nullable codec)
+                    ByteBufCodecs.optional(ByteBufCodecs.STRING_UTF8),
+                    i -> java.util.Optional.ofNullable(i.flourType()).map(FlourType::getId),
+
+                    (itemId, category, mg, flourIdOpt) -> new IngredientInfo(
+                            itemId,
+                            category,
+                            mg,
+                            flourIdOpt
+                                    .map(id -> net.boulangermod.boulanger.item.FlourItemType.fromId(id).toFlourType())
+                                    .orElse(null)
+                    )
+            );
 }

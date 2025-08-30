@@ -91,11 +91,11 @@ public class PanItem extends Item {
 
         int flourTotal = dr.ingredients().stream()
                 .filter(info -> info.category() == IngredientCategory.FLOUR)
-                .mapToInt(IngredientInfo::weight)
+                .mapToInt(IngredientInfo::milligrams)
                 .sum();
 
         for (IngredientInfo info : dr.ingredients()) {
-            int w = info.weight();
+            int w = info.milligrams();
             double pct = flourTotal > 0 ? (double) w / flourTotal * 100.0 : 0.0;
             tooltip.add(Component.literal(String.format("  %s: %dg (%.1f%%)", info.itemId(), w, pct))
                     .withStyle(ChatFormatting.GRAY));

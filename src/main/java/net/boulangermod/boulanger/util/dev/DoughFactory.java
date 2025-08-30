@@ -1,4 +1,3 @@
-// src/main/java/net/boulangermod/boulanger/util/dev/DoughFactory.java
 package net.boulangermod.boulanger.util.dev;
 
 import net.boulangermod.boulanger.component.*;
@@ -7,7 +6,6 @@ import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.recipe.RatioRecipe;
-import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -30,25 +28,14 @@ import java.util.*;
 public final class DoughFactory {
     private static final Logger LOG = LogManager.getLogger("Boulanger/DoughFactory");
 
-    /** Legacy enum kept only so old code that parsed strings still compiles. Not used by commands. */
-    public enum Stage { MIXED, PROOFED, FINAL_PROOFED, BAKED;
-        public static Stage fromString(@Nullable String s) {
-            if (s == null) return FINAL_PROOFED;
-            switch (s.toLowerCase(Locale.ROOT)) {
-                case "mixed": return MIXED;
-                case "proofed": return PROOFED;
-                case "final_proofed":
-                case "final-proofed":
-                case "final":
-                case "finalproofed": return FINAL_PROOFED;
-                case "baked": return BAKED;
-                default: return FINAL_PROOFED;
-            }
-        }
-    }
-
-    /** Set true to always stamp PAN_TYPE on dough (even pre-shape) for model testing. */
-    private static final boolean DEV_ALWAYS_SET_PAN_ON_DOUGH = false;
+    /**
+     * If true, round all non-additives to whole grams (nearest 1000 mg) and then
+     * adjust one ingredient (preferring WATER) so the sum lands exactly on the
+     * target serving grams. Additives always remain exact mg.
+     *
+     * Leave false for fully precise test stacks. Turn on for "human" ingredient lists.
+     */
+    private static final boolean HUMANIZE_NON_ADDITIVES_TO_GRAMS = false;
 
     private DoughFactory() {}
 
@@ -76,12 +63,12 @@ public final class DoughFactory {
 
         ItemStack dough = new ItemStack(ModItems.DOUGH.get());
 
-        // 0) Link process (serving size / pan / steps). Write NORMALIZED id to the item.
+        // 0) Link process id (normalized onto the stack); fetch process recipe, pan, servings
         ResourceLocation procIdRaw = findLinkedDoughProcessId(level, ratioId);
         DoughProcessRecipe proc = null;
         if (procIdRaw != null) {
             dough.set(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(), normalizeProcessId(procIdRaw));
-            var holder = rm.byKey(procIdRaw); // use raw to fetch (registered with full "dough_process/..." path)
+            var holder = rm.byKey(procIdRaw);
             if (holder.isPresent() && holder.get().value() instanceof DoughProcessRecipe p) {
                 proc = p;
             }
@@ -89,55 +76,30 @@ public final class DoughFactory {
             LOG.warn("No DoughProcessRecipe linked to ratio {}. (dough_type mismatch?)", ratioId);
         }
 
-        // 1) Baker’s % map (display / math)
+        // 1) Baker’s % map
         Map<IngredientCategory, Double> pctByCat = getPctByCategory(rr);
         trySetBakerPct(dough, pctByCat);
 
-        // 2) Concrete ingredient list (rounded grams) + total grams
-        BuildResult built = buildIngredientInfos(rr, pctByCat, proc, Math.max(1, servings));
+        // 2) Concrete ingredient list (+ optional human rounding) and exact total
+        double tolerance = getTolerance(rr); // 0.05 in your JSON → 5%
+        BuildResult built = buildIngredientInfos(rr, pctByCat, proc, Math.max(1, servings),
+                HUMANIZE_NON_ADDITIVES_TO_GRAMS, /*respectTolerance*/ true, tolerance);
 
-        // 3) Total weight
-        dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), WeightComponent.ofGrams(built.totalGrams()));
+        // 3) Total weight component (from serving size, not from mg accumulation)
+        dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), WeightComponent.ofGrams((float) built.totalGrams()));
 
-        // 4) DoughRecipe component (provenance + targets + concrete ingredients)
-        dough.set(
-                ModDataComponentTypes.DOUGH_RECIPE.get(),
-                DoughRecipeComponent.of(ratioId, pctByCat, built.ingredients(), built.totalGrams())
-        );
+        // 4) DoughRecipe snapshot (ratio id + target map + ingredients)
+        dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
+                DoughRecipeComponent.of(ratioId, pctByCat, built.ingredients(), built.totalGrams()));
 
-        // 5) Proofing state from ABSOLUTE ordinal — start at this step, ticks=0, NEVER pre-shaped.
+        // 5) Proofing state by ABSOLUTE step (never shaped on spawn)
         if (proc != null) {
-            ProofingStateComponent st = computeStateByAbsoluteStep(proc, stepOrdinal);
-            dough.set(ModDataComponentTypes.PROOFING_STATE.get(), st);
-
-            // Do NOT stamp pan on dough at spawn; shaping/panning happens at the Baker's Table.
-            if (DEV_ALWAYS_SET_PAN_ON_DOUGH) {
-                ResourceLocation pan = proc.getPanType();
-                if (pan != null) {
-                    dough.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(pan.toString()));
-                }
-            }
-
-            // Defensive: ensure no pan is present (e.g., if a normalizer stamped it).
+            dough.set(ModDataComponentTypes.PROOFING_STATE.get(), computeStateByAbsoluteStep(proc, stepOrdinal));
+            // Ensure no PAN on dough at spawn (shaping happens at table)
             try {
-                if (dough.has(ModDataComponentTypes.PAN_TYPE.get())) {
-                    dough.remove(ModDataComponentTypes.PAN_TYPE.get());
-                }
-            } catch (Throwable ignored) {
-                try { dough.set(ModDataComponentTypes.PAN_TYPE.get(), null); } catch (Throwable ignored2) {}
-            }
-
-            // Defensive: re-force shaped=false in case a normalizer flipped it after set.
-            try {
-                var current = dough.get(ModDataComponentTypes.PROOFING_STATE.get());
-                if (current != null) {
-                    dough.set(ModDataComponentTypes.PROOFING_STATE.get(), forceShaped(current, false));
-                }
-            } catch (Throwable t) {
-                LOG.warn("[DoughFactory] Failed to force shaped=false: {}", t.toString());
-            }
+                if (dough.has(ModDataComponentTypes.PAN_TYPE.get())) dough.remove(ModDataComponentTypes.PAN_TYPE.get());
+            } catch (Throwable ignored) {}
         } else {
-            // No process found: set to finalProofed so machines still accept it
             dough.set(ModDataComponentTypes.PROOFING_STATE.get(), ProofingStateComponent.finalProofed());
         }
 
@@ -159,7 +121,7 @@ public final class DoughFactory {
 
         ItemStack bread = new ItemStack(ModItems.BREAD.get());
 
-        // Link process (so we can get pan type, serving size, etc.)
+        // Link process
         ResourceLocation procIdRaw = findLinkedDoughProcessId(level, ratioId);
         DoughProcessRecipe proc = null;
         if (procIdRaw != null) {
@@ -172,99 +134,132 @@ public final class DoughFactory {
             LOG.warn("No DoughProcessRecipe linked to ratio {}. Bread will miss PAN/BREAD_TYPE.", ratioId);
         }
 
-        // Build baker % + ingredient grams for rich tooltips (same math as dough)
+        // Baker % and concrete ingredients
         Map<IngredientCategory, Double> pctByCat = getPctByCategory(rr);
         trySetBakerPct(bread, pctByCat);
 
-        BuildResult built = buildIngredientInfos(rr, pctByCat, proc, Math.max(1, servings));
-        bread.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), WeightComponent.ofGrams(built.totalGrams()));
+        double tolerance = getTolerance(rr);
+        BuildResult built = buildIngredientInfos(rr, pctByCat, proc, Math.max(1, servings),
+                HUMANIZE_NON_ADDITIVES_TO_GRAMS, /*respectTolerance*/ true, tolerance);
+
+        bread.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), WeightComponent.ofGrams((float) built.totalGrams()));
         bread.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
                 DoughRecipeComponent.of(ratioId, pctByCat, built.ingredients(), built.totalGrams()));
 
-        // Prefer BreadType from the recipe id path (e.g., boulanger:baguette → BAGUETTE)
+        // Resolve bread type & model
         BreadType bt = BreadType.fromRecipeId(ratioId).orElse(null);
-
-        // Fallback: infer from pan type if recipe did not map to a known bread type
-        if (bt == null && proc != null) {
-            ResourceLocation pan = proc.getPanType();
-            if (pan != null) {
-                // Expand this mapping if you add more bread/pan combos
-                String path = pan.getPath();
-                if (path.contains("baguette")) bt = BreadType.BAGUETTE;
-                else if (path.contains("loaf")) bt = BreadType.WHOLE_WHEAT_BREAD; // generic loaf fallback
-            }
+        if (bt == null && proc != null && proc.getPanType() != null) {
+            String path = proc.getPanType().getPath();
+            if (path.contains("baguette")) bt = BreadType.BAGUETTE;
         }
 
-        // Stamp PAN_TYPE (from process) and BREAD_TYPE + CustomModelData
         if (proc != null && proc.getPanType() != null) {
             bread.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(proc.getPanType().toString()));
         }
         if (bt != null) {
             bread.set(ModDataComponentTypes.BREAD_TYPE.get(), bt);
-            // ← This drives the texture/variant on the bread item
             bread.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA,
                     new net.minecraft.world.item.component.CustomModelData(bt.getModelIndex()));
-        } else {
-            LOG.warn("Could not resolve BreadType for {}. Consider adding a BreadType mapping for this recipe/pan.", ratioId);
         }
 
         debugAssertBread(bread, procIdRaw);
         return bread;
     }
 
-
     // ─────────────────────────────────────────────────────────────────────
     // Ingredient construction
     // ─────────────────────────────────────────────────────────────────────
 
-    private record BuildResult(List<IngredientInfo> ingredients, int totalGrams) {}
+    public static record BuildResult(
+            List<IngredientInfo> ingredients,
+            int totalMilligrams,
+            int totalGrams
+    ) {}
 
+    /**
+     * Build the concrete ingredient list from ratio percents & serving size.
+     * Optionally rounds non-additives to whole grams and adjusts one ingredient to hit the exact serving grams.
+     */
     private static BuildResult buildIngredientInfos(RatioRecipe rr,
                                                     Map<IngredientCategory, Double> pctByCat,
                                                     @Nullable DoughProcessRecipe proc,
-                                                    int servings) {
+                                                    int servings,
+                                                    boolean roundNonAdditivesToGrams,
+                                                    boolean respectTolerance,
+                                                    double toleranceFraction /* 0..1, e.g. 0.05 */) {
         servings = Math.max(1, servings);
 
         // Serving basis (prefer process -> ratio -> default 454g)
         double perServing = safeServingWeight(proc, rr);
+        double targetGramsExact = perServing * servings;
+        int targetGramsRounded = (int) Math.round(targetGramsExact);
+        int targetMg = targetGramsRounded * 1000;
 
         // Flour basis math
         double nonFlourPct = pctByCat.entrySet().stream()
                 .filter(e -> e.getKey() != IngredientCategory.FLOUR)
                 .mapToDouble(Map.Entry::getValue).sum();
 
-        double totalTarget = perServing * servings;
-        double flourGrams  = totalTarget / (1.0 + nonFlourPct / 100.0);
+        double flourGrams = targetGramsExact / (1.0 + nonFlourPct / 100.0);
 
         LOG.info("[DoughFactory] basis → perServing={}g, servings={}, nonFlourPct={}, flourBasis={}g",
-                perServing, servings, nonFlourPct, flourGrams);
+                String.format(java.util.Locale.ROOT, "%.3f", perServing),
+                servings,
+                String.format(java.util.Locale.ROOT, "%.3f", nonFlourPct),
+                String.format(java.util.Locale.ROOT, "%.3f", flourGrams));
 
         List<?> comps = getRatioComponents(rr);
         List<IngredientInfo> out = new ArrayList<>();
-        int total = 0;
+        int sumMg = 0;
 
         if (comps != null) {
             for (Object raw : comps) {
                 DetectedRatioComponent det = detRatioComponent(raw);
                 if (det == null) continue;
 
-                int grams = (int) Math.round(flourGrams * (det.percent() / 100.0));
+                // grams → mg (precise, nearest mg)
+                double gramsExact = flourGrams * (det.percent() / 100.0);
+                int mg = (int) Math.round(gramsExact * 1000.0);
 
                 ResourceLocation itemId = det.allowedIds().isEmpty()
                         ? defaultItemForCategory(det.category())
                         : det.allowedIds().get(0);
 
-                LOG.info("[DoughFactory]   comp cat={} pct={} → grams={} item={}",
-                        det.category(), det.percent(), grams, itemId);
+                LOG.info("[DoughFactory]   comp cat={} pct={} → {} mg ({} g) item={}",
+                        det.category(),
+                        String.format(java.util.Locale.ROOT, "%.3f", det.percent()),
+                        mg,
+                        String.format(java.util.Locale.ROOT, "%.3f", mg / 1000.0),
+                        itemId);
 
-                IngredientInfo info = new IngredientInfo(itemId.toString(), det.category(), grams, null);
+                IngredientInfo info = IngredientInfo.ofMg(itemId.toString(), det.category(), mg);
                 out.add(info);
-                total += grams;
+                sumMg += mg;
             }
         }
 
-        LOG.info("[DoughFactory] total grams (rounded sum) = {}", total);
-        return new BuildResult(out, total);
+        // Optional: round non-additives to whole grams for “human” numbers
+        if (roundNonAdditivesToGrams) {
+            out = roundNonAdditivesToGrams(out);
+        }
+
+        // Adjust to exact serving target (prefer WATER), but allow no-op if already exact
+        int afterRoundSum = out.stream().mapToInt(IngredientInfo::milligrams).sum();
+        int delta = targetMg - afterRoundSum;
+
+        if (delta != 0) {
+            // If you ever want to leverage tolerance to *skip* the nudge, do it here:
+            // double allowed = respectTolerance ? Math.abs(targetMg) * toleranceFraction : 0.0;
+            // if (Math.abs(delta) <= allowed) { /* leave as-is */ } else { adjust... }
+            out = adjustToServing(out, targetGramsRounded);
+        }
+
+        int finalSumMg = out.stream().mapToInt(IngredientInfo::milligrams).sum();
+
+        LOG.info("[DoughFactory] total = {} mg ({} g target, {} mg delta after adjust)",
+                finalSumMg, targetGramsRounded, (targetMg - finalSumMg));
+
+        return new BuildResult(out, finalSumMg, targetGramsRounded);
     }
 
     /** Prefer process serving weight; fall back to Ratio; default 454. */
@@ -282,33 +277,23 @@ public final class DoughFactory {
     // Proofing state — ABSOLUTE step (1..N)
     // ─────────────────────────────────────────────────────────────────────
 
-    /**
-     * Build a ProofingStateComponent for the absolute process step.
-     * - Clamps to [0..N-1]
-     * - Sets ticks_in_step = 0 (so it starts at this step, NOT auto-advancing)
-     * - NEVER pre-shaped on spawn
-     */
     private static ProofingStateComponent computeStateByAbsoluteStep(DoughProcessRecipe proc, int stepOrdinal) {
         List<?> steps = proc.getSteps();
         if (steps == null || steps.isEmpty()) {
             return ProofingStateComponent.finalProofed();
         }
         int idx = Math.max(0, Math.min(stepOrdinal - 1, steps.size() - 1)); // 1..N -> 0..N-1
-        // Create the instance with shaped=false and ticks=0
         ProofingStateComponent st = new ProofingStateComponent(idx, /*ticks_in_step=*/0, /*shaped=*/false);
-        // If the component (or its canonical ctor) auto-derives shaped, override it:
         return forceShaped(st, /*value=*/false);
     }
 
     private static ProofingStateComponent forceShaped(ProofingStateComponent st, boolean value) {
-        // 1) Prefer a copy/with method if your component provides one
         try {
             var m = st.getClass().getMethod("withShaped", boolean.class);
             Object out = m.invoke(st, value);
             return (ProofingStateComponent) out;
         } catch (Throwable ignored) {}
 
-        // 2) Try a canonical/“of” factory with (idx, ticks, shaped)
         try {
             int idx   = readIntProp(st, new String[]{"stepIndex","getStepIndex"}, new String[]{"step_index"});
             int ticks = readIntProp(st, new String[]{"ticksInStep","getTicksInStep"}, new String[]{"ticks_in_step"});
@@ -323,7 +308,6 @@ public final class DoughFactory {
             }
         } catch (Throwable ignored) {}
 
-        // 3) Last resort: set the field reflectively (works in dev; avoid in prod)
         try {
             var f = st.getClass().getDeclaredField("shaped");
             f.setAccessible(true);
@@ -331,7 +315,6 @@ public final class DoughFactory {
             return st;
         } catch (Throwable ignored) {}
 
-        // If all else fails, return as-is (but log so you can chase the root cause)
         LOG.warn("[DoughFactory] Could not force shaped={} on ProofingStateComponent (class {}).",
                 value, st.getClass().getName());
         return st;
@@ -351,25 +334,6 @@ public final class DoughFactory {
         return 0;
     }
 
-    /** Get a step's duration (in ticks). Looks for common names; falls back to 1600. */
-    private static int stepDurationTicks(Object step) {
-        Number n = (Number) callAny(step, new String[]{
-                "ticks", "getTicks", "duration", "getDuration", "durationTicks", "getDurationTicks", "time", "getTime"
-        });
-        if (n != null) return Math.max(0, n.intValue());
-        // field scan
-        try {
-            for (String name : new String[]{"ticks", "duration", "durationTicks", "time"}) {
-                Field f = step.getClass().getDeclaredField(name);
-                f.setAccessible(true);
-                Object v = f.get(step);
-                if (v instanceof Number nn) return Math.max(0, nn.intValue());
-            }
-        } catch (Throwable ignored) {}
-        // safe default: matches your data gen
-        return 1600;
-    }
-
     // ─────────────────────────────────────────────────────────────────────
     // Ratio component detection & helpers
     // ─────────────────────────────────────────────────────────────────────
@@ -381,16 +345,13 @@ public final class DoughFactory {
             List<ResourceLocation> allowedIds
     ) {}
 
-    /** Reflect a single ratio component object into {category, percent, allowedIds}. */
     @Nullable
     private static DetectedRatioComponent detRatioComponent(Object comp) {
         if (comp == null) return null;
 
-        // CATEGORY
         IngredientCategory cat = (IngredientCategory) callAny(comp, new String[]{"category", "getCategory"});
         if (cat == null) return null;
 
-        // PERCENT (method first, then field scan)
         Number pctNum = (Number) callAny(comp, new String[]{
                 "percent", "getPercent", "percentage", "getPercentage",
                 "bakersPercent", "getBakersPercent", "value", "getValue", "ratio", "getRatio"
@@ -398,7 +359,6 @@ public final class DoughFactory {
         if (pctNum == null) pctNum = firstNumericField(comp);
         double pct = pctNum == null ? 0.0 : pctNum.doubleValue();
 
-        // ALLOWED IDS (method first, then field scan)
         Object allowedAny = callAny(comp, new String[]{
                 "allowedItemIds", "allowedItems", "allowed",
                 "ingredientIds", "ids", "choices", "options", "items"
@@ -418,9 +378,8 @@ public final class DoughFactory {
         return new DetectedRatioComponent(cat, pct, Collections.unmodifiableList(allowed));
     }
 
-    /** Pull the ratio's component list: supports both record-style `components()` and bean-style `getComponents()`. */
     @Nullable
-    private static List<?> getRatioComponents(RatioRecipe rr) {
+    public static List<?> getRatioComponents(RatioRecipe rr) {
         try {
             var m = rr.getClass().getMethod("components"); // record accessor
             Object o = m.invoke(rr);
@@ -436,7 +395,6 @@ public final class DoughFactory {
         return null;
     }
 
-    /** First allowed item id taken from a component (via detRatioComponent). */
     @Nullable
     private static ResourceLocation firstAllowedId(Object comp) {
         DetectedRatioComponent det = detRatioComponent(comp);
@@ -444,7 +402,6 @@ public final class DoughFactory {
         return det.allowedIds().get(0);
     }
 
-    /** Fallback when a component provides no explicit allowed item ids. Adjust these to your registry ids. */
     private static ResourceLocation defaultItemForCategory(IngredientCategory cat) {
         switch (cat) {
             case WATER:  return ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket");
@@ -454,19 +411,18 @@ public final class DoughFactory {
             case DAIRY:  return ResourceLocation.fromNamespaceAndPath("boulanger", "whole_milk");
             case SUGAR:  return ResourceLocation.fromNamespaceAndPath("boulanger", "brown_sugar");
             case EGGS:   return ResourceLocation.fromNamespaceAndPath("boulanger", "fancy_egg");
-            case FAT:    return ResourceLocation.fromNamespaceAndPath("boulanger", "unsalted_butter");
+            case FAT:    return ResourceLocation.fromNamespaceAndPath("boulanger", "butter");
             default:     return ResourceLocation.fromNamespaceAndPath("minecraft", "air");
         }
     }
 
-    /** Try a list-like object and return the first element parsed as ResourceLocation. Prefers your modid if none given. */
     @Nullable
     private static ResourceLocation firstRLFromAny(Object o) {
         if (o instanceof List<?> list && !list.isEmpty()) {
             Object first = list.get(0);
             if (first instanceof ResourceLocation rl) return rl;
             if (first instanceof String s) {
-                if (s.indexOf(':') < 0) { // prefix our modid if missing
+                if (s.indexOf(':') < 0) {
                     return ResourceLocation.fromNamespaceAndPath("boulanger", s);
                 }
                 ResourceLocation rl = ResourceLocation.tryParse(s);
@@ -480,7 +436,6 @@ public final class DoughFactory {
     // Linking / lookups
     // ─────────────────────────────────────────────────────────────────────
 
-    /** Find the DoughProcessRecipe id linked to the given RatioRecipe id via doughType. */
     @Nullable
     private static ResourceLocation findLinkedDoughProcessId(ServerLevel level, ResourceLocation ratioId) {
         List<RecipeHolder<DoughProcessRecipe>> list =
@@ -497,8 +452,6 @@ public final class DoughFactory {
         if (panId == null) return null;
         String p = panId.getPath();
         if (p.contains("baguette")) return BreadType.BAGUETTE;
-//        if (p.contains("loaf"))     return BreadType.LOAF;
-//        if (p.contains("boule"))    return BreadType.BOULE;
         return null;
     }
 
@@ -507,7 +460,6 @@ public final class DoughFactory {
     // ─────────────────────────────────────────────────────────────────────
 
     private static Map<IngredientCategory, Double> getPctByCategory(RatioRecipe rr) {
-        // 1) Typed: Map<IngredientCategory, Double> percentByCategory()
         try {
             Method m = rr.getClass().getMethod("percentByCategory");
             @SuppressWarnings("unchecked")
@@ -516,7 +468,6 @@ public final class DoughFactory {
         } catch (NoSuchMethodException ignored) {
         } catch (Exception e) { e.printStackTrace(); }
 
-        // 2) Reflect: components()/getComponents()
         List<?> comps = getRatioComponents(rr);
         if (comps != null && !comps.isEmpty()) {
             Map<IngredientCategory, Double> out = new EnumMap<>(IngredientCategory.class);
@@ -527,18 +478,14 @@ public final class DoughFactory {
             }
             return out;
         }
-
-        // 3) Empty default
         return new EnumMap<>(IngredientCategory.class);
     }
 
     private static double getServingWeight(RatioRecipe rr) {
-        // Try methods
         Number n = (Number) callAny(rr, new String[]{
                 "getServingWeight", "servingWeight", "getServingWeightGrams", "servingWeightGrams"
         });
         if (n != null) return n.doubleValue();
-        // Try fields (record case)
         try {
             for (String fName : new String[]{"servingWeight", "servingWeightGrams"}) {
                 Field f = rr.getClass().getDeclaredField(fName);
@@ -546,6 +493,18 @@ public final class DoughFactory {
                 Object v = f.get(rr);
                 if (v instanceof Number nn) return nn.doubleValue();
             }
+        } catch (Throwable ignored) {}
+        return 454.0;
+    }
+
+    private static double getTolerance(RatioRecipe rr) {
+        Number n = (Number) callAny(rr, new String[]{"getTolerance", "tolerance"});
+        if (n != null) return Math.max(0.0, n.doubleValue());
+        try {
+            Field f = rr.getClass().getDeclaredField("tolerance");
+            f.setAccessible(true);
+            Object v = f.get(rr);
+            if (v instanceof Number nn) return Math.max(0.0, nn.doubleValue());
         } catch (Throwable ignored) {}
         return 0.0;
     }
@@ -631,5 +590,122 @@ public final class DoughFactory {
 
         LOG.info("[DoughFactory] Bread → PROC:{} PAN:{} BREAD_TYPE:{} RECIPE:{} PCT:{} GRAMS:{} (procRawId={})",
                 hasProc, hasPan, hasType, hasRecipe, hasPct, hasGrams, procIdRaw);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Rounding / Adjustments
+    // ─────────────────────────────────────────────────────────────────────
+
+    private static List<IngredientInfo> roundNonAdditivesToGrams(List<IngredientInfo> src) {
+        var out = new ArrayList<IngredientInfo>(src.size());
+        for (IngredientInfo ii : src) {
+            if (ii.category() == IngredientCategory.ADDITIVE) { out.add(ii); continue; }
+            int roundedMg = Math.round(ii.milligrams() / 1000f) * 1000;
+            if (roundedMg < 0) roundedMg = 0;
+            IngredientInfo r = IngredientInfo.ofMg(ii.itemId(), ii.category(), roundedMg);
+            if (ii.flourType() != null) r = r.withFlourType(ii.flourType());
+            out.add(r);
+        }
+        return out;
+    }
+
+    private static List<IngredientInfo> adjustToServing(List<IngredientInfo> src, int targetGrams) {
+        int targetMg = targetGrams * 1000;
+        int sum = src.stream().mapToInt(IngredientInfo::milligrams).sum();
+        int delta = targetMg - sum;
+        if (delta == 0) return src;
+
+        int idx = -1;
+        for (int i = 0; i < src.size(); i++) if (src.get(i).category() == IngredientCategory.WATER) { idx = i; break; }
+        if (idx == -1) for (int i = 0; i < src.size(); i++) if (src.get(i).category() != IngredientCategory.ADDITIVE) { idx = i; break; }
+        if (idx == -1) return src;
+
+        var out = new ArrayList<IngredientInfo>(src);
+        IngredientInfo base = out.get(idx);
+        int newMg = Math.max(0, base.milligrams() + delta);
+        IngredientInfo adj = IngredientInfo.ofMg(base.itemId(), base.category(), newMg);
+        if (base.flourType() != null) adj = adj.withFlourType(base.flourType());
+        out.set(idx, adj);
+        return out;
+    }
+
+    public static BuildResult buildIngredientInfosFromRatio(
+            RatioRecipe rr,
+            Map<IngredientCategory, Double> pctByCat,
+            @Nullable DoughProcessRecipe proc,
+            int servings,
+            boolean humanize
+    ) {
+        servings = Math.max(1, servings);
+
+        // Serving basis (prefer process -> ratio -> default 454g)
+        double perServing = safeServingWeight(proc, rr);
+
+        // Flour basis math
+        double nonFlourPct = pctByCat.entrySet().stream()
+                .filter(e -> e.getKey() != IngredientCategory.FLOUR)
+                .mapToDouble(Map.Entry::getValue).sum();
+
+        double totalTargetGrams = perServing * servings;
+        double flourGrams = totalTargetGrams / (1.0 + nonFlourPct / 100.0);
+
+        LOG.info("[DoughFactory] basis → perServing={}g, servings={}, nonFlourPct={}, flourBasis={}g",
+                String.format(java.util.Locale.ROOT, "%.3f", perServing),
+                servings,
+                String.format(java.util.Locale.ROOT, "%.3f", nonFlourPct),
+                String.format(java.util.Locale.ROOT, "%.3f", flourGrams));
+
+        List<?> comps = getRatioComponents(rr);
+        List<IngredientInfo> out = new ArrayList<>();
+        int totalMg = 0;
+
+        if (comps != null) {
+            for (Object raw : comps) {
+                DetectedRatioComponent det = detRatioComponent(raw);
+                if (det == null) continue;
+
+                // grams → mg (precise, with rounding to the nearest mg)
+                double gramsExact = flourGrams * (det.percent() / 100.0);
+                int mg = (int) Math.round(gramsExact * 1000.0);
+
+                ResourceLocation itemId = det.allowedIds().isEmpty()
+                        ? defaultItemForCategory(det.category())
+                        : det.allowedIds().get(0);
+
+                LOG.info("[DoughFactory]   comp cat={} pct={} → {} mg ({} g) item={}",
+                        det.category(),
+                        String.format(java.util.Locale.ROOT, "%.3f", det.percent()),
+                        mg,
+                        String.format(java.util.Locale.ROOT, "%.3f", mg / 1000.0),
+                        itemId);
+
+                IngredientInfo info = IngredientInfo.ofMg(itemId.toString(), det.category(), mg);
+                out.add(info);
+                totalMg += mg;
+            }
+        }
+
+        // Optionally “humanize” (round non-additives to whole grams) then adjust one ingredient to keep the total
+        if (humanize) {
+            out = roundNonAdditivesToGrams(out);
+            out = adjustToServing(out, (int) Math.round(perServing * servings));
+            totalMg = out.stream().mapToInt(IngredientInfo::milligrams).sum();
+        }
+
+        int totalGramsRounded = Math.round(totalMg / 1000f);
+
+        LOG.info("[DoughFactory] total = {} mg ({} g rounded)", totalMg, totalGramsRounded);
+
+        return new BuildResult(out, totalMg, totalGramsRounded);
+    }
+
+    // Handy if you want the exact same key order everywhere
+    public static LinkedHashMap<IngredientCategory, Double> canonicalizeTargets(Map<IngredientCategory, Double> in) {
+        LinkedHashMap<IngredientCategory, Double> out = new LinkedHashMap<>();
+        Arrays.stream(IngredientCategory.values()).forEach(cat -> {
+            Double v = in.get(cat);
+            if (v != null) out.put(cat, v);
+        });
+        return out;
     }
 }

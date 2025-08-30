@@ -1,9 +1,6 @@
 package net.boulangermod.boulanger.item;
 
-import net.boulangermod.boulanger.component.DoughRecipeComponent;
-import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.IngredientInfo;
-import net.boulangermod.boulanger.component.ProofingStateComponent;
+import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.recipe.ProcessingStep;
@@ -22,9 +19,9 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 
-
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class DoughItem extends Item {
@@ -32,17 +29,19 @@ public class DoughItem extends Item {
         super(properties);
     }
 
-    // ── NEW helpers ───────────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────────
     private static String shortWeightLabelFromGrams(float grams) {
         int mg = Math.max(0, Math.round(grams * 1000f));
-        if (mg < 1000) return mg + " mg";
-        return String.format(java.util.Locale.ROOT, "%.3f g", mg / 1000.0);
+        if (mg < 1000) return mg + "mg";
+        int g = Math.round(mg / 1000f);
+        return g + "g";
     }
 
-    private static String shortWeightLabelFromWholeGramsOrLess(int grams, double pctOfFlour) {
-        // If recipe only stored whole grams and says 0g, but pct>0, show "<1 g"
-        if (grams <= 0 && pctOfFlour > 0.0) return "<1 g";
-        return grams + " g";
+    /** Format a per-ingredient weight stored in milligrams (compact). */
+    private static String shortWeightLabelFromMilligrams(int mg) {
+        if (mg < 1000) return mg + "mg";
+        int g = Math.round(mg / 1000f);
+        return g + "g";
     }
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -65,23 +64,23 @@ public class DoughItem extends Item {
         tooltipComponents.add(Component.literal("-----").withStyle(ChatFormatting.DARK_GRAY));
         tooltipComponents.add(Component.literal("Ingredients").withStyle(ChatFormatting.GREEN));
 
-        // 1) Flour total in stored units (whole grams in your current component)
-        int flourTotalG = dr.ingredients().stream()
+        // Flour total in MG (precise)
+        int totalFlourMg = dr.ingredients().stream()
                 .filter(info -> info.category() == IngredientCategory.FLOUR)
-                .mapToInt(IngredientInfo::weight)
+                .mapToInt(IngredientInfo::milligrams)
                 .sum();
 
-        // 2) Print each ingredient
+        // Print each ingredient with mg-aware formatting
         for (IngredientInfo info : dr.ingredients()) {
-            int wG = info.weight(); // current stored unit = whole grams
-            double pct = flourTotalG > 0 ? (double) wG / flourTotalG * 100.0 : 0.0;
+            int mg = info.milligrams();
+            double pct = totalFlourMg > 0 ? (mg / (double) totalFlourMg) * 100.0 : 0.0;
 
-            // If you later add mg to IngredientInfo, prefer that here and format via mg.
-            String weightLabel = shortWeightLabelFromWholeGramsOrLess(wG, pct);
+            String weightLabel = shortWeightLabelFromMilligrams(mg);
 
             tooltipComponents.add(
                     Component.literal(
-                            String.format("  %s: %s (%.1f%%)", info.itemId(), weightLabel, pct)
+                            String.format(Locale.ROOT, "  %s: %s (%.1f%%)",
+                                    info.itemId(), weightLabel, pct)
                     ).withStyle(ChatFormatting.GRAY)
             );
         }
@@ -89,11 +88,11 @@ public class DoughItem extends Item {
         // Footer
         tooltipComponents.add(Component.literal("-----").withStyle(ChatFormatting.DARK_GRAY));
 
-        // Prefer the stack's weight component (float grams) so sub-gram totals show as mg
+        // Prefer the stack's float-grams component so totals show mg when <1g
         var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
         String totalLabel = (wComp != null)
                 ? shortWeightLabelFromGrams(wComp.getWeight())
-                : (dr.totalWeight() + " g");
+                : (dr.totalWeight() + "g");  // dr.totalWeight() is grams
 
         tooltipComponents.add(
                 Component.literal("Total Weight: " + totalLabel)
@@ -103,7 +102,8 @@ public class DoughItem extends Item {
         ProofingStateComponent proof = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
         if (proof != null) {
             tooltipComponents.add(
-                    Component.literal(String.format("Step %d: %d ticks", proof.stepIndex(), proof.ticksInStep()))
+                    Component.literal(String.format(Locale.ROOT, "Step %d: %d ticks",
+                                    proof.stepIndex(), proof.ticksInStep()))
                             .withStyle(ChatFormatting.LIGHT_PURPLE)
             );
         }
@@ -120,8 +120,8 @@ public class DoughItem extends Item {
         ResourceLocation recipeId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
         if (state == null || recipeId == null) return InteractionResult.PASS;
 
-        var level = context.getLevel();
-        var recipeOpt = level.getRecipeManager()
+        Level level = context.getLevel();
+        Optional<DoughProcessRecipe> recipeOpt = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
                 .map(RecipeHolder::value)
                 .filter(r -> r.getDoughType().equals(recipeId))
@@ -132,22 +132,17 @@ public class DoughItem extends Item {
         DoughProcessRecipe recipe = recipeOpt.get();
         if (state.stepIndex() >= recipe.getSteps().size()) return InteractionResult.PASS;
 
-        var currentStep = recipe.getSteps().get(state.stepIndex());
-
+        ProcessingStep currentStep = recipe.getSteps().get(state.stepIndex());
         if (currentStep.type() == StepType.PUNCHDOWN) {
             stack.set(ModDataComponentTypes.PROOFING_STATE.get(),
                     new ProofingStateComponent(state.stepIndex() + 1, 0, state.shaped()));
             player.displayClientMessage(Component.literal("Punched down dough!"), true);
             return InteractionResult.SUCCESS;
         }
-
         return InteractionResult.PASS;
     }
 
-    @Override
-    public boolean isBarVisible(ItemStack stack) {
-        return stack.has(ModDataComponentTypes.PROOFING_STATE.get());
-    }
+    @Override public boolean isBarVisible(ItemStack stack) { return stack.has(ModDataComponentTypes.PROOFING_STATE.get()); }
 
     @Override
     public int getBarWidth(ItemStack stack) {
@@ -160,44 +155,25 @@ public class DoughItem extends Item {
     public int getBarWidth(ItemStack stack, @Nullable Level level) {
         ProofingStateComponent state = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
         ResourceLocation processId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
-        if (state == null || processId == null || level == null) {
-            return 0;
-        }
+        if (state == null || processId == null || level == null) return 0;
 
         Optional<DoughProcessRecipe> opt = level.getRecipeManager()
                 .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
                 .map(RecipeHolder::value)
                 .filter(r -> r.getDoughType().equals(processId))
                 .findFirst();
-
-        if (opt.isEmpty()) {
-            return 0;
-        }
+        if (opt.isEmpty()) return 0;
 
         List<ProcessingStep> steps = opt.get().getSteps();
         int idx = state.stepIndex();
-
-        if (idx < 0) {
-            return 0;
-        } else if (idx >= steps.size()) {
-            // fully done → full bar
-            return 13;
-        }
+        if (idx < 0) return 0;
+        if (idx >= steps.size()) return 13; // done
 
         ProcessingStep step = steps.get(idx);
         float progress = (float) state.ticksInStep() / (float) step.durationTicks();
         return (int) (13f * progress);
     }
 
-    // Force dough items to never stack above 1
-    @Override
-    public int getMaxStackSize(ItemStack stack) {
-        return 1;
-    }
-
-    // Light-blue proofing bar (RGB 0x55FFFF)
-    @Override
-    public int getBarColor(ItemStack stack) {
-        return 0x55FFFF;
-    }
+    @Override public int getMaxStackSize(ItemStack stack) { return 1; }
+    @Override public int getBarColor(ItemStack stack) { return 0x55FFFF; } // light blue
 }

@@ -12,25 +12,24 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 public class BreadItem extends Item {
-    public BreadItem(Properties properties) {
-        super(properties);
-    }
+    public BreadItem(Properties properties) { super(properties); }
 
-    // ── NEW helpers ───────────────────────────────────────────────────────────
     private static String shortWeightLabelFromGrams(float grams) {
         int mg = Math.max(0, Math.round(grams * 1000f));
-        if (mg < 1000) return mg + " mg";
-        return String.format(Locale.ROOT, "%.3f g", mg / 1000.0);
+        if (mg < 1000) return mg + "mg";
+        int g = Math.round(mg / 1000f);
+        return g + "g";
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    /** Format a per-ingredient weight stored in milligrams (compact). */
+    private static String shortWeightLabelFromMilligrams(int mg) {
+        if (mg < 1000) return mg + "mg";
+        int g = Math.round(mg / 1000f);
+        return g + "g";
+    }
 
     @Override
     public void appendHoverText(
@@ -47,7 +46,7 @@ public class BreadItem extends Item {
                         .withStyle(ChatFormatting.GREEN)
         );
 
-        // — Baker’s percentages header
+        // — Baker’s percentages
         tooltipComponents.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
         tooltipComponents.add(Component.literal("Baker's Percentages").withStyle(ChatFormatting.GREEN));
         tooltipComponents.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
@@ -56,41 +55,64 @@ public class BreadItem extends Item {
         tooltipComponents.add(Component.literal("Flours:").withStyle(ChatFormatting.GREEN));
         getFlourPercentages(stack).forEach((name, frac) -> {
             int pct = (int) Math.round(frac * 100);
-            tooltipComponents.add(Component.literal(String.format(" * %d%% %s", pct, name)).withStyle(ChatFormatting.GREEN));
+            tooltipComponents.add(Component.literal(String.format(Locale.ROOT, " * %d%% %s", pct, name)).withStyle(ChatFormatting.GREEN));
         });
 
-        // — Other ingredients
+        // — Other ingredients (percent targets)
         tooltipComponents.add(Component.literal("Other:").withStyle(ChatFormatting.GREEN));
         getOtherIngredientPercentages(stack).forEach((name, pctVal) -> {
             int pct = (int) Math.round(pctVal);
-            tooltipComponents.add(Component.literal(String.format(" * %d%% %s", pct, name)).withStyle(ChatFormatting.GREEN));
+            tooltipComponents.add(Component.literal(String.format(Locale.ROOT, " * %d%% %s", pct, name)).withStyle(ChatFormatting.GREEN));
         });
 
-        // — Footer: Hydration & Weight (mg aware)
+        // — Actual ingredients (mg-aware, from snapshot)
+        var recipe = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        if (recipe != null && !recipe.ingredients().isEmpty()) {
+            tooltipComponents.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
+            tooltipComponents.add(Component.literal("Ingredients (actual)").withStyle(ChatFormatting.GREEN));
+
+            int totalFlourMg = recipe.ingredients().stream()
+                    .filter(i -> i.category() == IngredientCategory.FLOUR)
+                    .mapToInt(IngredientInfo::milligrams)
+                    .sum();
+
+            for (IngredientInfo info : recipe.ingredients()) {
+                int mg = info.milligrams();
+                double pctOfFlour = (totalFlourMg > 0) ? (mg / (double) totalFlourMg) * 100.0 : 0.0;
+
+                tooltipComponents.add(
+                        Component.literal(
+                                String.format(Locale.ROOT, "  %s: %s (%.1f%%)",
+                                        info.itemId(),
+                                        shortWeightLabelFromMilligrams(mg),
+                                        pctOfFlour)
+                        ).withStyle(ChatFormatting.GRAY)
+                );
+            }
+        }
+
+        // — Footer: Hydration & Weight (mg-aware total)
         tooltipComponents.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
         tooltipComponents.add(
                 Component.literal("Hydration: " + (int) Math.round(getHydration(stack)) + "%")
                         .withStyle(ChatFormatting.GREEN)
         );
-
         var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
         String weightLabel = (wComp != null)
                 ? shortWeightLabelFromGrams(wComp.getWeight())
-                : "0 g";
+                : "0g";
         tooltipComponents.add(
                 Component.literal("Weight: " + weightLabel)
                         .withStyle(ChatFormatting.GREEN)
         );
     }
 
-
-    // === Name from enum type (works in creative menu too) ====================
+    // === Name from enum type =================================================
 
     @Override
     public Component getName(ItemStack stack) {
         BreadType bt = resolveBreadType(stack);
         if (bt != null) {
-            // Use the enum id so "multigrain_bread" → "Multigrain Bread", "baguette" → "Baguette"
             return Component.literal(titleCaseTokens(bt.getId()));
         }
         return super.getName(stack);
@@ -104,10 +126,8 @@ public class BreadItem extends Item {
     /** Prefer component; otherwise infer from CustomModelData; else null. */
     private BreadType resolveBreadType(ItemStack stack) {
         var comp = stack.get(ModDataComponentTypes.BREAD_TYPE.get());
-        if (comp != null) {
-            // Component stores the enum (your existing code calls comp.name()), so return directly
-            return comp;
-        }
+        if (comp != null) return comp;
+
         var cmd = stack.get(DataComponents.CUSTOM_MODEL_DATA);
         if (cmd != null) {
             int v = cmd.value();
@@ -124,41 +144,27 @@ public class BreadItem extends Item {
         var recipe = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
         if (recipe == null) return Collections.emptyMap();
 
-        int totalFlour = recipe.ingredients().stream()
+        int totalFlourMg = recipe.ingredients().stream()
                 .filter(i -> i.category() == IngredientCategory.FLOUR)
-                .mapToInt(IngredientInfo::weight)
+                .mapToInt(IngredientInfo::milligrams)
                 .sum();
-        if (totalFlour <= 0) return Collections.emptyMap();
+        if (totalFlourMg <= 0) return Collections.emptyMap();
 
-        Map<String, Integer> gramsByType = new LinkedHashMap<>();
+        Map<String, Integer> mgByType = new LinkedHashMap<>();
         for (IngredientInfo info : recipe.ingredients()) {
             if (info.category() != IngredientCategory.FLOUR) continue;
 
             FlourType ft = info.flourType();
-            String key = (ft != null) ? ft.type() : info.itemId();
-            gramsByType.merge(key, info.weight(), Integer::sum);
+            String key = (ft != null) ? ft.getId() : info.itemId();
+            mgByType.merge(key, info.milligrams(), Integer::sum);
         }
 
-        Map<String, Double> out = new LinkedHashMap<>();
-        for (var e : gramsByType.entrySet()) {
-            out.put(prettyFlourName(e.getKey()), e.getValue() / (double) totalFlour);
+        Map<String, Double> pctByType = new LinkedHashMap<>();
+        for (var e : mgByType.entrySet()) {
+            pctByType.put(titleCaseTokens(e.getKey()),
+                    (e.getValue() * 1.0) / totalFlourMg); // fraction 0..1
         }
-        return out;
-    }
-
-    private static String prettyFlourName(String id) {
-        String key = id.contains(":") ? id.substring(id.indexOf(':') + 1) : id;
-        String[] parts = key.split("_");
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < parts.length; i++) {
-            String p = parts[i];
-            if (!p.isEmpty()) {
-                sb.append(Character.toUpperCase(p.charAt(0)))
-                        .append(p.length() > 1 ? p.substring(1) : "");
-                if (i < parts.length - 1) sb.append(' ');
-            }
-        }
-        return titleCaseTokens(id);
+        return pctByType;
     }
 
     private Map<String, Double> getOtherIngredientPercentages(ItemStack stack) {
@@ -180,13 +186,6 @@ public class BreadItem extends Item {
             return pctComp.percentages().get(IngredientCategory.WATER);
         }
         return 0.0;
-    }
-
-    private int getTotalWeight(ItemStack stack) {
-        var wComp = stack.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
-        return (wComp != null)
-                ? Math.round(wComp.getWeight())
-                : 0;
     }
 
     private static String titleCaseTokens(String raw) {

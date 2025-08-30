@@ -8,6 +8,7 @@ import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
 import net.boulangermod.boulanger.recipe.ProcessingStep;
 import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.screen.DoughDividerMenu;
+import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.resources.ResourceLocation;
@@ -239,18 +240,42 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
 
 
 
-    private DoughRecipeComponent scaleRecipeForWeight(DoughRecipeComponent old, double newWeight) {
-        double scale = newWeight / old.totalWeight();
+    private DoughRecipeComponent scaleRecipeForWeight(DoughRecipeComponent old, double newWeightGrams) {
+        // Total mg from the precise per-ingredient list
+        int oldTotalMg = old.ingredients().stream()
+                .mapToInt(IngredientInfo::milligrams)
+                .sum();
+
+        // Target total in mg
+        int newTotalMg = (int) Math.round(newWeightGrams * 1000.0);
+
+        // Fallback if an older item somehow had 0 mg in the list
+        double scale = oldTotalMg > 0
+                ? (newTotalMg / (double) oldTotalMg)
+                : (newWeightGrams / Math.max(1, old.totalWeight())); // legacy grams-based fallback
+
         var scaled = old.ingredients().stream()
-                .map(i -> new IngredientInfo(i.itemId(), i.category(), (int) Math.round(i.weight() * scale)))
-                .collect(Collectors.toList());
+                .map(i -> {
+                    int mg = (int) Math.round(i.milligrams() * scale);
+                    IngredientInfo out = IngredientInfo.ofMg(i.itemId(), i.category(), mg);
+                    if (i.category() == IngredientCategory.FLOUR && i.flourType() != null) {
+                        out = out.withFlourType(i.flourType());
+                    }
+                    return out;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        // Keep component's top-level total as whole grams (rounded from mg)
+        int totalGramsRounded = Math.round(newTotalMg / 1000f);
+
         return new DoughRecipeComponent(
                 old.recipeId(),
                 old.targetPercentages(),
                 scaled,
-                (int) newWeight
+                totalGramsRounded
         );
     }
+
 
     @SuppressWarnings("unchecked")
     private static void copyDoughMetadataExceptWeight(ItemStack src, ItemStack dst) {
