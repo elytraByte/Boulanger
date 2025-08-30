@@ -2,6 +2,7 @@ package net.boulangermod.boulanger.util;
 
 import com.mojang.serialization.Codec;
 import net.boulangermod.boulanger.component.FoodAdditiveComponent;
+import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.item.FoodAdditiveType;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -66,7 +67,6 @@ public enum IngredientCategory {
         // 4) Fallback
         return CUSTOM;
     }
-
 
     // === CODEC and STREAM_CODEC as before ===
     public static final Codec<IngredientCategory> CODEC =

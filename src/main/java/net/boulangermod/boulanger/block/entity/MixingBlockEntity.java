@@ -100,13 +100,11 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
             var cat   = in.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get());
             LOGGER.debug("Input bowl: {} of category {}", fmtWeightG(grams), cat);
 
-
             addIngredientFromBowl(in);
 
             // best-effort log of latest totals for that category
             double catTotal = preciseTotalsG.getOrDefault(cat, 0.0);
             LOGGER.info("Added ingredient {} → category total now {}", cat, fmtWeightG(catTotal));
-
 
             itemHandler.setStackInSlot(INPUT_BOWL, ItemStack.EMPTY);
             spawnEmptyBowl();
@@ -141,170 +139,109 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     }
 
     private Optional<RatioRecipe> findMatchingRecipe() {
+        // 1) Collect bowls by category and by canonical id (FlourType RL for FLOUR; item RL for others)
+        Map<IngredientCategory, Integer> totalsMg = new EnumMap<>(IngredientCategory.class);
+        Map<IngredientCategory, Map<ResourceLocation, Integer>> perIdMg = new EnumMap<>(IngredientCategory.class);
+
+        for (IngredientStack st : ingredientList) {
+            int mg = Math.max(0, st.getMilligrams());
+            if (mg == 0) continue;
+
+            IngredientCategory cat = st.getCategory();
+            totalsMg.merge(cat, mg, Integer::sum);
+
+            ResourceLocation rid = canonicalIdForMatching(st); // FLOUR → flourType RL; others → actual item RL
+            perIdMg.computeIfAbsent(cat, k -> new HashMap<>()).merge(rid, mg, Integer::sum);
+        }
+
+        int flourMg = totalsMg.getOrDefault(IngredientCategory.FLOUR, 0);
+        if (flourMg <= 0) return Optional.empty();
+
+        // (Debug) flour ids gathered
+        Map<ResourceLocation, Integer> flourMap = perIdMg.get(IngredientCategory.FLOUR);
+        if (flourMap != null && !flourMap.isEmpty()) {
+            String dbg = flourMap.entrySet().stream()
+                    .map(e -> e.getKey() + "=" + (e.getValue() / 1000.0) + "g")
+                    .toList()
+                    .toString();
+            LOGGER.debug("FLOUR perId (matcher): {}", dbg);
+        }
+
+        // 2) Try ratio recipes
         var recipes = level.getRecipeManager().getAllRecipesFor(ModRecipeSerializers.RATIO_TYPE.get());
-
-        double totalFlour = calculateTotalFlour();
-        if (totalFlour <= 0) return Optional.empty();
-
         for (var holder : recipes) {
             RatioRecipe recipe = holder.value();
-            boolean matches = matchesIngredientComponents(recipe)
-                    && hasEnoughTotalWeight(recipe)
-                    && meetsItemRequirements(recipe);
+            double tolPctPoints = recipe.getTolerance() * 100.0; // e.g., 0.05 -> ±5.0 pp
 
-            if (matches) {
+            LOGGER.debug("Checking recipe {}", recipe.getId());
+
+            boolean ok = true;
+            for (IngredientComponent comp : recipe.getComponents()) {
+                IngredientCategory cat = comp.category();
+                double targetPct = comp.targetPercent(); // baker's %
+
+                // Got (mg): whole category if no whitelist; otherwise sum only allowed ids
+                List<ResourceLocation> allowedIds = comp.allowedItems();
+                int gotMgInt;
+                if (allowedIds == null || allowedIds.isEmpty()) {
+                    gotMgInt = totalsMg.getOrDefault(cat, 0);
+                } else {
+                    int sum = 0;
+                    Map<ResourceLocation, Integer> byId = perIdMg.get(cat);
+                    if (byId != null) {
+                        for (ResourceLocation a : allowedIds) sum += byId.getOrDefault(a, 0);
+                    }
+                    gotMgInt = sum;
+                }
+
+                double gotPct = flourMg == 0 ? 0.0 : (gotMgInt * 100.0) / flourMg; // baker's %
+                double deltaPct = Math.abs(gotPct - targetPct);
+
+                if (deltaPct > tolPctPoints + 1e-9) {
+                    // Debug: show both % and grams context (pre-format with String.format)
+                    double expectedMg = flourMg * (targetPct / 100.0);
+                    String msg = String.format(Locale.ROOT,
+                            "   ✗ %s: got %.3fg (%.3f%%), expected %.3f%% (%.3fg), tol ±%.3f pp",
+                            cat, gotMgInt / 1000.0, gotPct, targetPct, Math.round(expectedMg) / 1000.0, tolPctPoints);
+                    LOGGER.debug(msg);
+
+                    if (allowedIds != null && !allowedIds.isEmpty()) {
+                        Map<ResourceLocation, Integer> byId = perIdMg.getOrDefault(cat, Map.of());
+                        String haveDbg = byId.entrySet().stream()
+                                .map(e -> e.getKey() + "=" + (e.getValue() / 1000.0) + "g")
+                                .toList()
+                                .toString();
+                        String allowDbg = allowedIds.stream().map(Object::toString).toList().toString();
+                        LOGGER.debug("      allowed IDs: {}", allowDbg);
+                        LOGGER.debug("      have by-id : {}", haveDbg);
+                    }
+
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (ok) {
+                LOGGER.debug("   ✓ matched {}", recipe.getId());
                 return Optional.of(recipe);
             }
         }
+
         return Optional.empty();
     }
 
-    private boolean matchesIngredientComponents(RatioRecipe recipe) {
-        // 1) Sum up everything (exact grams from mg)
-        double totalWeight = ingredientList.stream()
-                .mapToDouble(st -> st.getMilligrams() / 1000.0)
-                .sum();
-
-        // Not even close to one batch?
-        if (totalWeight < recipe.getServingWeight() * (1 - recipe.getTolerance())) {
-            return false;
-        }
-
-        // 2) Compute the *single-serving* flour weight from serving weight & baker's %
-        double nonFlourPctSum = recipe.getComponents().stream()
-                .filter(c -> c.category() != IngredientCategory.FLOUR)
-                .mapToDouble(IngredientComponent::targetPercent)
-                .sum();
-
-        double singleFlourWeight = recipe.getServingWeight()
-                / (1.0 + nonFlourPctSum / 100.0);
-
-        // 3) “1 % of flour” in grams for one serving
-        double gramsPerPct = singleFlourWeight / 100.0;
-
-        // 4) How many whole batches do we actually have?
-        double rawBatches = totalWeight / recipe.getServingWeight();
-        int batchCount = (int) Math.floor(rawBatches + recipe.getTolerance());
-        if (batchCount < 1) return false;
-
-        // 5) For each component, check actual vs expected = singleTarget * batchCount
-        for (IngredientComponent comp : recipe.getComponents()) {
-            // one-serving target
-            double singleTarget = gramsPerPct * comp.targetPercent();
-            // scaled for N servings
-            double expected = singleTarget * batchCount;
-            // relative tolerance (scaled)
-            double relTolG = singleTarget * recipe.getTolerance() * batchCount;
-
-            // actual grams from precise mg, filtered by category AND allowed items(if any)
-            double actual = ingredientList.stream()
-                    .filter(st -> st.getCategory() == comp.category())
-                    .filter(st -> comp.allowedItems().isEmpty()
-                            || comp.allowedItems().contains(getMatchId(st, comp.category())))
-                    .mapToDouble(st -> st.getMilligrams() / 1000.0)
-                    .sum();
-
-            if (!withinTolerance(actual, expected, relTolG, batchCount)) {
-                LOGGER.debug("   ✗ {}: got {}g vs expected {}g (±{}g rel, ±{}g abs)",
-                        comp.category(),
-                        String.format("%.3f", actual),
-                        String.format("%.3f", expected),
-                        String.format("%.3f", relTolG),
-                        String.format("%.3f", ABS_EPS_G_PER_BATCH * batchCount));
-                return false;
-            }
-        }
-
-        // 6) Finally, ensure totalWeight ≈ batchCount × servingWeight
-        double totalTol = recipe.getServingWeight() * recipe.getTolerance() * batchCount;
-        if (!withinTolerance(totalWeight, recipe.getServingWeight() * batchCount, totalTol, batchCount)) {
-            LOGGER.debug("   ✗ Total dough {}g vs {}×{}g (±{}g rel, ±{}g abs)",
-                    String.format("%.3f", totalWeight),
-                    batchCount,
-                    recipe.getServingWeight(),
-                    String.format("%.3f", totalTol),
-                    String.format("%.3f", ABS_EPS_G_PER_BATCH * batchCount));
-            return false;
-        }
-
-        return true;
-    }
-
-    private static boolean withinTolerance(double actual, double expected, double relTolG, int batchCount) {
-        double diff = Math.abs(actual - expected);
-        double absTol = ABS_EPS_G_PER_BATCH * batchCount;
-        return diff <= relTolG || diff <= absTol;
-    }
-
-    private double calculateTotalFlour() {
-        // grams as double, from mg, precise
-        return ingredientList.stream()
-                .filter(st -> st.getCategory() == IngredientCategory.FLOUR)
-                .mapToDouble(st -> st.getMilligrams() / 1000.0)
-                .sum();
-    }
-
-    private boolean hasEnoughTotalWeight(RatioRecipe recipe) {
-        double totalGrams = ingredientList.stream()
-                .mapToDouble(st -> st.getMilligrams() / 1000.0)
-                .sum();
-
-        double minNeeded = recipe.getServingWeight() * (1.0 - recipe.getTolerance()); // lower bound only
-        boolean ok = totalGrams + 1e-9 >= minNeeded; // tiny epsilon
-
-        if (!ok) {
-            LOGGER.debug("   ✗ Total grams {}g is below minimum {}g for one batch (serving {}g, tol ±{}%)",
-                    String.format("%.3f", totalGrams),
-                    String.format("%.3f", minNeeded),
-                    recipe.getServingWeight(),
-                    recipe.getTolerance() * 100.0);
-        }
-        return ok;
-    }
-
-    private boolean meetsItemRequirements(RatioRecipe recipe) {
-        for (var req : recipe.getItemRequirements()) {
-            double got = ingredientList.stream()
-                    .filter(st -> resolveIngredientId(st).equals(req.getItemId()))
-                    .mapToDouble(st -> st.getMilligrams() / 1000.0)
-                    .sum();
-            if (got + 1e-9 < req.getAmount()) {
-                LOGGER.debug("   ✗ Item requirement {}: need {}g, got {}g",
-                        req.getItemId(), req.getAmount(), String.format("%.3f", got));
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private ResourceLocation getMatchId(IngredientStack st, IngredientCategory category) {
-        if (category == IngredientCategory.FLOUR) {
-            // Use FlourType#getId(), not an enum name, and namespace it
-            var ft = st.getFlourType();
-            return (ft != null)
-                    ? ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.getId())
-                    : BuiltInRegistries.ITEM.getKey(st.getActualItem());
-        } else {
-            return resolveIngredientId(st);
-        }
-    }
-
-    private ResourceLocation resolveIngredientId(IngredientStack st) {
+    /** FLOUR → use FlourType id (e.g. boulanger:all_purpose_flour); others → actual item id. */
+    private static ResourceLocation canonicalIdForMatching(IngredientStack st) {
         if (st.getCategory() == IngredientCategory.FLOUR) {
-            var ft = st.getFlourType();
+            FlourType ft = st.getFlourType();
             if (ft != null) {
-                return ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.getId());
+                String id = ft.getId(); // "all_purpose_flour" or "boulanger:all_purpose_flour"
+                return (id.indexOf(':') >= 0)
+                        ? ResourceLocation.parse(id)
+                        : ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, id);
             }
-            LOGGER.debug("⚠ Missing FlourType for flour ingredient stack: {}", st);
-            // fallback to invalid
-            return ResourceLocation.fromNamespaceAndPath("minecraft", "air");
+            return BuiltInRegistries.ITEM.getKey(st.getActualItem()); // rare fallback
         }
-
-        var itc = st.getBowlStack().get(ModDataComponentTypes.INGREDIENT_TYPE.get());
-        if (itc != null) {
-            return BuiltInRegistries.ITEM.getKey(itc.item());
-        }
-
         return BuiltInRegistries.ITEM.getKey(st.getActualItem());
     }
 
@@ -338,12 +275,10 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     }
 
     public void addIngredientFromBowl(ItemStack bowl) {
-        // Resolve category
         IngredientCategory cat = bowl.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
                 ? bowl.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
                 : IngredientCategory.getIngredientCategory(bowl);
 
-        // Weight (grams -> mg)
         WeightComponent wc = bowl.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
         if (wc == null) return;
         int mg = Math.max(0, Math.round(wc.grams() * 1000f));
@@ -351,34 +286,18 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
         double g = mg / 1000.0;
 
         if (cat == IngredientCategory.FLOUR) {
-            // FLOUR → keep FlourType, but set the IngredientStack's actual item to a flour item
             FlourType ft = bowl.get(ModDataComponentTypes.FLOUR_TYPE.get());
-
-            // Prefer a concrete registry item "boulanger:<flour_id>" if you have them…
-            Item flourItem = Items.AIR;
-            if (ft != null) {
-                var id = ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.getId());
-                flourItem = BuiltInRegistries.ITEM.get(id);
-            }
-            // …otherwise fall back to your single base flour item with model overrides
-            if (flourItem == Items.AIR) {
-                flourItem = ModItems.FLOUR_ITEM.get(); // <-- change if your base flour item has a different name
-            }
-
-            ingredientList.add(new IngredientStack(flourItem, IngredientCategory.FLOUR, /*flourType*/ ft, mg));
+            // Always use your single flour item; distinguish by FlourType component
+            Item flourItem = ModItems.FLOUR_ITEM.get();
+            ingredientList.add(new IngredientStack(flourItem, IngredientCategory.FLOUR, ft, mg));
             preciseTotalsG.merge(cat, g, Double::sum);
             syncToClient();
             return;
         }
 
-        // NON-FLOUR → resolve the exact ingredient item id from components
+        // Non-flour: resolve an exact item id from components (if present), else fall back to the item.
         ResourceLocation bowlIngId = ingredientIdFromBowl(bowl, cat);
-        Item ingItem = (bowlIngId != null) ? BuiltInRegistries.ITEM.get(bowlIngId) : Items.AIR;
-
-        if (ingItem == Items.AIR) {
-            // last resort, try whatever you used to carry in old worlds
-            ingItem = bowl.getItem(); // may still be BOWL if components are missing
-        }
+        Item ingItem = (bowlIngId != null) ? BuiltInRegistries.ITEM.get(bowlIngId) : bowl.getItem();
 
         ingredientList.add(new IngredientStack(ingItem, cat, /*flourType*/ null, mg));
         preciseTotalsG.merge(cat, g, Double::sum);
@@ -411,42 +330,80 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
                 ));
         dough.set(ModDataComponentTypes.BAKER_PERCENTAGES.get(), new BakerPctComponent(targetMap));
 
-        // 4) Canonicalize ingredients using DoughRecipeCanonicalier (merge + deterministic sort)
-        //    Build inputs for the canonicalizer and remember flourType per (category,itemId)
+        // 4) Canonicalize ingredients (merge + deterministic sort).
+        //    Build inputs and remember FlourType per (category|itemIdRL)
         List<DoughRecipeCanonicalier.Ingredient> canonInputs = new ArrayList<>();
         Map<String, FlourType> flourTypeByKey = new HashMap<>();
+        // (debug) track flour per-id so we can see the canonical flour RLs & grams
+        Map<ResourceLocation, Integer> debugFlourPerIdMg = new HashMap<>();
+
         int totalMgUncanonical = 0;
 
         for (IngredientStack st : ingredientList) {
-            String cat = st.getCategory().name(); // "FLOUR", "WATER", ...
-            ResourceLocation itemId = canonicalIngredientId(st); // <-- resolves flourType → concrete item id
-            int mg = Math.max(0, st.getMilligrams());
+            final IngredientCategory catEnum = st.getCategory();
+            final String cat = catEnum.name();
+            final int mg = Math.max(0, st.getMilligrams());
 
+            // —— Normalize to canonical item id (RL).
+            ResourceLocation itemId;
+            if (catEnum == IngredientCategory.FLOUR) {
+                FlourType ft = st.getFlourType();
+                if (ft != null) {
+                    // Accept either "boulanger:all_purpose_flour" or "all_purpose_flour"
+                    String idStr = ft.getId();
+                    itemId = (idStr.indexOf(':') >= 0)
+                            ? ResourceLocation.parse(idStr)
+                            : ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, idStr);
+                } else {
+                    // Should be rare; fall back to the base flour item id
+                    itemId = BuiltInRegistries.ITEM.getKey(st.getActualItem());
+                    LOGGER.warn("Flour stack missing FlourType; falling back to {}", itemId);
+                }
+            } else {
+                // Non-flour: use the actual item id we stored on the IngredientStack
+                itemId = BuiltInRegistries.ITEM.getKey(st.getActualItem());
+            }
+
+            LOGGER.debug("canon: {} {}mg -> {}", cat, mg, itemId);
+
+            // collect canonical inputs for the dough's saved recipe component
             canonInputs.add(new DoughRecipeCanonicalier.Ingredient(cat, itemId, mg));
             totalMgUncanonical += mg;
 
-            if (st.getCategory() == IngredientCategory.FLOUR && st.getFlourType() != null) {
-                // Key by canonical item id so each flour variant keeps its own FlourType attachment
-                flourTypeByKey.put(cat + "|" + itemId, st.getFlourType());
+            if (catEnum == IngredientCategory.FLOUR) {
+                FlourType ft = st.getFlourType();
+                if (ft != null) {
+                    flourTypeByKey.put(cat + "|" + itemId.toString(), ft);
+                }
+                // debug aggregation
+                debugFlourPerIdMg.merge(itemId, mg, Integer::sum);
             }
         }
-        // We don't care about canonicalized %; we only need canonicalized ingredients.
-        // Still, build minimal keys/vals from targetMap so the record is valid.
+
+        // Debug: confirm which flour ids & amounts we canon’d
+        if (!debugFlourPerIdMg.isEmpty()) {
+            String dbg = debugFlourPerIdMg.entrySet().stream()
+                    .map(e -> e.getKey() + "=" + (e.getValue() / 1000.0) + "g")
+                    .collect(Collectors.joining(", "));
+            LOGGER.debug("FLOUR perId (canonical): {}", dbg);
+        }
+
+        // Minimal keys/vals from targetMap (record shape correctness only)
         List<String> pctKeys = new ArrayList<>();
         List<Double> pctVals = new ArrayList<>();
         targetMap.forEach((k, v) -> { pctKeys.add(k.name()); pctVals.add(v); });
 
         int totalGramsRounded = Math.round(totalMgUncanonical / 1000f);
         DoughRecipeCanonicalier.DoughRecipe canonIn = new DoughRecipeCanonicalier.DoughRecipe(
-                ratio.getId(),                         // recipeId
-                totalGramsRounded,                     // totalWeight (grams; UI/back-compat)
-                pctKeys,                               // targetPercentagesKeys
-                pctVals,                               // targetPercentagesValues
-                canonInputs                            // ingredients
+                ratio.getId(),
+                totalGramsRounded,
+                pctKeys,
+                pctVals,
+                canonInputs
         );
         DoughRecipeCanonicalier.DoughRecipe canonOut = DoughRecipeCanonicalier.canonicalize(canonIn);
 
-        // Map back to your IngredientInfo, re-attaching flourType when present
+        // Map back to IngredientInfo, re-attaching FlourType when present
         List<IngredientInfo> infos = new ArrayList<>(canonOut.ingredients().size());
         int totalMg = 0;
         for (DoughRecipeCanonicalier.Ingredient ing : canonOut.ingredients()) {
@@ -455,14 +412,19 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
 
             IngredientInfo info = IngredientInfo.ofMg(itemIdStr, cat, ing.milligrams());
             if (cat == IngredientCategory.FLOUR) {
-                FlourType ft = flourTypeByKey.get(ing.category() + "|" + ing.itemId());
-                if (ft != null) info = info.withFlourType(ft);
+                String key = ing.category() + "|" + ing.itemId().toString();
+                FlourType ft = flourTypeByKey.get(key);
+                if (ft != null) {
+                    info = info.withFlourType(ft);
+                } else {
+                    LOGGER.warn("Missing FlourType reattachment for {}", key);
+                }
             }
             infos.add(info);
             totalMg += ing.milligrams();
         }
 
-        // 5) Write components (percentages remain exactly from targetMap; only ingredients are canonicalized)
+        // 5) Write components
         dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
                 new DoughRecipeComponent(ratio.getId(), targetMap, infos, totalGramsRounded));
         dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(),
@@ -507,33 +469,6 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
         preciseTotalsG.clear();
     }
 
-    // Map a stack to a canonical id; for FLOUR, use the flourType’s id if the item is generic.
-    private static ResourceLocation canonicalIngredientId(IngredientStack st) {
-        ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(st.getActualItem());
-        if (st.getCategory() == IngredientCategory.FLOUR) {
-            FlourType ft = st.getFlourType();
-            if (ft != null && ft.type() != null && !ft.type().isBlank()) {
-                // If the item is the generic flour, canonicalize to a concrete flour id like boulanger:bread_flour
-                if (GENERIC_FLOUR_ID.equals(id)) {
-                    return ResourceLocation.fromNamespaceAndPath("boulanger", ft.type());
-                }
-            }
-        }
-        return id;
-    }
-
-    private static ResourceLocation resolveFlourItemIdFromType(@Nullable FlourType ft,
-                                                               Item actualItem) {
-        // If we have a typed flour, prefer the concrete flour item id (e.g. boulanger:bread_flour)
-        if (ft != null && ft.type() != null && !ft.type().isBlank()) {
-            ResourceLocation typed = ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, ft.type()); // bread_flour, vital_wheat_gluten, …
-            if (BuiltInRegistries.ITEM.containsKey(typed)) {
-                return typed;
-            }
-        }
-        // Fallback to the actual item id on the stack (generic boulanger:flour or a concrete flour)
-        return BuiltInRegistries.ITEM.getKey(actualItem);
-    }
     private boolean isWeighedIngredient(ItemStack s) {
         return s.has(ModDataComponentTypes.INGREDIENT_CATEGORY.get())
                 && s.has(ModDataComponentTypes.INGREDIENT_GRAMS.get());

@@ -1,9 +1,7 @@
 package net.boulangermod.boulanger.component;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
 import net.boulangermod.boulanger.item.BreadType;
-import net.boulangermod.boulanger.util.StreamCodecsCompat;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 

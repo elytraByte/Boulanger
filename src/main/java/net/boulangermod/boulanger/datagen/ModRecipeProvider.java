@@ -461,7 +461,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 
         // ——— Banh Mi ———
         new RatioRecipeBuilder(
-                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "banh_mi"),
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "bánh_mì"),
                 new ItemStack(ModItems.DOUGH.get()),
                 0.05D // 5% tolerance
         )
@@ -520,6 +520,139 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .servingWeight(180.0)  // 180 g loaf
                 .save(pRecipeOutput);
 
+        // ——— Brioche (loaf) ———
+        new RatioRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brioche"),
+                new ItemStack(ModItems.DOUGH.get()),
+                0.05D // 5% tolerance
+        )
+                // 100% All-Purpose Flour
+                .addComponent(
+                        IngredientCategory.FLOUR, 100.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "all_purpose_flour"))
+                )
+                // Enrichments & liquids
+                .addComponent(
+                        IngredientCategory.EGGS, 57.69,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "fancy_egg"))
+                )
+                .addComponent(
+                        IngredientCategory.FAT, 43.65,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "butter"))
+                )
+                .addComponent( // whole milk
+                        IngredientCategory.DAIRY, 10.96,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_milk"))
+                )
+                .addComponent( // granulated sugar (accept any sugar for now)
+                        IngredientCategory.SUGAR, 9.62,
+                        List.of()
+                )
+                .addComponent(IngredientCategory.SALT, 1.15, List.of())
+                .addComponent(IngredientCategory.YEAST, 0.58, List.of())
+                .addComponent( // calcium propionate
+                        IngredientCategory.ADDITIVE, 0.31,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "calcium_propionate"))
+                )
+                .addComponent( // ascorbic acid
+                        IngredientCategory.ADDITIVE, 0.03,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "ascorbic_acid"))
+                )
+                .servingWeight(680)
+                .save(pRecipeOutput);
+
+
+// ——— White Pan Bread (NFDM → whole milk sub) ———
+        new RatioRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "white_pan_bread"),
+                new ItemStack(ModItems.DOUGH.get()),
+                0.05D // 5% tolerance
+        )
+                // Flour blend
+                .addComponent(
+                        IngredientCategory.FLOUR, 90.08,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "bread_flour"))
+                )
+                .addComponent(
+                        IngredientCategory.FLOUR, 9.92,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "vital_wheat_gluten"))
+                )
+                // Liquids
+                .addComponent(
+                        IngredientCategory.WATER, 60.52,
+                        List.of(ResourceLocation.fromNamespaceAndPath("minecraft", "water_bucket"))
+                )
+                .addComponent( // substitute for nonfat dry milk
+                        IngredientCategory.DAIRY, 4.56,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_milk"))
+                )
+                // Other ingredients
+                .addComponent(IngredientCategory.YEAST, 5.95, List.of())
+                .addComponent( // sugar (accept any sugar for now)
+                        IngredientCategory.SUGAR, 4.37, List.of()
+                )
+                .addComponent(
+                        IngredientCategory.FAT, 14.88,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "butter"))
+                )
+                // Functional additives
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.099,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "ascorbic_acid"))
+                )
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.1091,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "calcium_propionate"))
+                )
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.1091,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "diastatic_malt_powder"))
+                )
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.1984,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "l_cysteine"))
+                )
+                .servingWeight(680.0)
+                .save(pRecipeOutput);
+
+
+// ——— Brioche (buns; same dough, smaller portion) ———
+        new RatioRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brioche_roll"),
+                new ItemStack(ModItems.DOUGH.get()),
+                0.05D
+        )
+                .addComponent(
+                        IngredientCategory.FLOUR, 100.0,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "all_purpose_flour"))
+                )
+                .addComponent(
+                        IngredientCategory.EGGS, 57.69,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "fancy_egg"))
+                )
+                .addComponent(
+                        IngredientCategory.FAT, 43.65,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "butter"))
+                )
+                .addComponent(
+                        IngredientCategory.DAIRY, 10.96,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "whole_milk"))
+                )
+                .addComponent(IngredientCategory.SUGAR, 9.62, List.of())
+                .addComponent(IngredientCategory.SALT, 1.15, List.of())
+                .addComponent(IngredientCategory.YEAST, 0.58, List.of())
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.31,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "calcium_propionate"))
+                )
+                .addComponent(
+                        IngredientCategory.ADDITIVE, 0.03,
+                        List.of(ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "ascorbic_acid"))
+                )
+                .servingWeight(90.0) // ~burger bun size
+                .save(pRecipeOutput);
+
+
 
         new DoughProcessRecipeBuilder(
                 ResourceLocation.fromNamespaceAndPath("boulanger", "dough_process/baguette"),
@@ -552,8 +685,8 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
 
         // ——— Banh Mi dough‐process pipeline ———
         new DoughProcessRecipeBuilder(
-                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "dough_process/banh_mi"),
-                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "banh_mi")
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "dough_process/bánh_mì"),
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "bánh_mì")
         )
                 .addStep(StepType.PROOF, 1600)     // 1st bulk proof
                 .addStep(StepType.PUNCHDOWN)       // degas
@@ -567,5 +700,59 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .save(pRecipeOutput);
 
 
+        // ——— Brioche (loaf) ———
+        new DoughProcessRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "dough_process/brioche"),
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brioche")
+        )
+                .addStep(StepType.PROOF, 1600)
+                .addStep(StepType.PUNCHDOWN)
+                .addStep(StepType.PROOF, 1600)
+                .addStep(StepType.PUNCHDOWN)
+                .addStep(StepType.DIVIDE)
+                .setServingWeight(680)
+                .addStep(StepType.SHAPE)
+                .setPanType(ResourceLocation.fromNamespaceAndPath(MODID, PanType.LOAF.getId()))
+                .addStep(StepType.PROOF, 800)
+                .save(pRecipeOutput);
+
+
+// ——— White Pan Bread ———
+        new DoughProcessRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "dough_process/white_pan_bread"),
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "white_pan_bread")
+        )
+                .addStep(StepType.PROOF, 1600)
+                .addStep(StepType.PUNCHDOWN)
+                .addStep(StepType.PROOF, 1600)
+                .addStep(StepType.PUNCHDOWN)
+                .addStep(StepType.DIVIDE)
+                .setServingWeight(680.0)
+                .addStep(StepType.SHAPE)
+                .setPanType(ResourceLocation.fromNamespaceAndPath(MODID, PanType.LOAF.getId()))
+                .addStep(StepType.PROOF, 800)
+                .save(pRecipeOutput);
+
+
+// ——— Brioche (buns) ———
+        new DoughProcessRecipeBuilder(
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "dough_process/brioche_roll"),
+                ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "brioche_roll")
+        )
+                .addStep(StepType.PROOF, 1600)
+                .addStep(StepType.PUNCHDOWN)
+                .addStep(StepType.PROOF, 1600)
+                .addStep(StepType.PUNCHDOWN)
+                .addStep(StepType.DIVIDE)
+                .setServingWeight(90.0)
+                .addStep(StepType.SHAPE)
+                .setPanType(ResourceLocation.fromNamespaceAndPath(MODID, PanType.LOAF.getId())) // free-form (no pan type set)
+                .addStep(StepType.PROOF, 800)
+                .save(pRecipeOutput);
+
+
     }
+
+
+
 }

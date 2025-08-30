@@ -40,9 +40,6 @@ public final class BakerOffers {
         return fromRatio(level, ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "banh_mi"), PanType.BAGUETTE);
     }
 
-
-
-
     // -------- Core builder (uses live recipes + tolerance) --------
 
     private static ItemStack fromRatio(ServerLevel level, ResourceLocation ratioId, @Nullable PanType panOverride) {

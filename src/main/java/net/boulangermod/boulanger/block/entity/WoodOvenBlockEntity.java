@@ -1,4 +1,3 @@
-// src/main/java/net/boulangermod/boulanger/block/entity/WoodOvenBlockEntity.java
 package net.boulangermod.boulanger.block.entity;
 
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
@@ -18,8 +17,6 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -30,11 +27,8 @@ import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.Containers;
-import net.neoforged.neoforge.items.ItemStackHandler;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -67,7 +61,6 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
 
                 @Override
                 public void set(int index, int value) {
-                    // Not strictly needed by server->client sync, but keep it safe:
                     switch (index) {
                         case 0 -> burnTime = value;
                         case 1 -> maxBurnTime = value;
@@ -102,7 +95,6 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
         boolean canSmelt = canCook();
         ItemStack fuelStack = itemHandler.getStackInSlot(SLOT_FUEL);
 
-        // Start a new burn if empty, we can smelt, and valid fuel is present
         if (burnTime == 0 && canSmelt && fuelStack.getItem() == ModItems.SPLIT_PINE_LOGS.get()) {
             burnTime = (int) (160 * 1.5f); // 240 ticks
             maxBurnTime = burnTime;
@@ -120,16 +112,13 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
             cookTime = 0;
         }
 
-        // If lit state changed, update the blockstate so the model swaps
         boolean nowBurning = isBurning();
         if (wasBurning != nowBurning) {
             setChanged();
-            // import net.boulangermod.boulanger.block.WoodOvenBlock;
             level.setBlock(pos, state.setValue(WoodOvenBlock.LIT, nowBurning), Block.UPDATE_CLIENTS);
             level.sendBlockUpdated(pos, state, level.getBlockState(pos), Block.UPDATE_CLIENTS);
         }
     }
-
 
     private boolean tryBake() {
         ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
@@ -151,16 +140,8 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
                 result = bakeBreadFromPan(input);
                 itemHandler.setStackInSlot(SLOT_OUTPUT, result);
 
-                // build the returned empty pan
-                ItemStack panReturn = new ItemStack(ModItems.PAN.get());
-                var panType = input.get(ModDataComponentTypes.PAN_TYPE.get());
-                if (panType != null) {
-                    panReturn.set(ModDataComponentTypes.PAN_TYPE.get(), panType);
-                    panReturn.set(DataComponents.CUSTOM_MODEL_DATA,
-                            new CustomModelData(panType.getModelIndex()));
-                }
-
-                // instead of dropping, put it into slot 3
+                // ✅ Robust: clone the pan and strip dough components → preserves exact PAN_TYPE/model
+                ItemStack panReturn = buildEmptyPanReturn(input);
                 itemHandler.setStackInSlot(SLOT_PAN_RETURN, panReturn);
 
                 // consume input
@@ -180,6 +161,40 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
         }
 
         return false;
+    }
+
+    /**
+     * Build an empty pan return by cloning the input pan (to preserve PAN_TYPE and model)
+     * and removing all dough/proofing/bread-related components.
+     */
+    @SuppressWarnings("unchecked")
+    private ItemStack buildEmptyPanReturn(ItemStack panDough) {
+        // Start from the exact item so PAN_TYPE & any other cosmetic data are preserved
+        ItemStack panReturn = panDough.copy();
+        panReturn.setCount(1);
+
+        // Strip dough-related components
+        for (DataComponentType<?> component : List.of(
+                ModDataComponentTypes.DOUGH_RECIPE.get(),
+                ModDataComponentTypes.INGREDIENT_GRAMS.get(),
+                ModDataComponentTypes.BAKER_PERCENTAGES.get(),
+                ModDataComponentTypes.PROOFING_STATE.get(),
+                ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(),
+                ModDataComponentTypes.BREAD_TYPE.get() // in case it was ever set on the pan
+        )) {
+            panReturn.remove((DataComponentType<Object>) component);
+        }
+
+        // Ensure PAN_TYPE remains and model reflects it; if missing, drop to default base model
+        var panType = panDough.get(ModDataComponentTypes.PAN_TYPE.get());
+        if (panType != null) {
+            panReturn.set(ModDataComponentTypes.PAN_TYPE.get(), panType);
+            panReturn.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(panType.getModelIndex()));
+        } else {
+            panReturn.remove(DataComponents.CUSTOM_MODEL_DATA);
+        }
+
+        return panReturn;
     }
 
     private boolean canCook() {
@@ -210,6 +225,7 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
                 .findFirst();
     }
 
+    @SuppressWarnings("unchecked")
     private ItemStack bakeBreadFromPan(ItemStack panDough) {
         ItemStack bread = new ItemStack(ModItems.BREAD.get());
 
@@ -223,6 +239,7 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
             }
         }
 
+        // Optional: carry which pan it was baked in (for tooltip/scoring)
         if (panDough.has(ModDataComponentTypes.PAN_TYPE.get())) {
             bread.set(ModDataComponentTypes.PAN_TYPE.get(), panDough.get(ModDataComponentTypes.PAN_TYPE.get()));
         }
@@ -251,7 +268,6 @@ public class WoodOvenBlockEntity extends AbstractProcessingBlockEntity implement
         if (doughRecipe != null) {
             bread.set(ModDataComponentTypes.DOUGH_RECIPE.get(), doughRecipe);
 
-            // Convert recipeName to BreadType
             ResourceLocation recipeId = doughRecipe.recipeId();
             BreadType breadType = BreadType.byId(recipeId.getPath()).orElse(BreadType.BAGUETTE);
             bread.set(ModDataComponentTypes.BREAD_TYPE.get(), breadType);

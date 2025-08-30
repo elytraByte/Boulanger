@@ -11,40 +11,37 @@ import java.util.Objects;
 
 public record PanTypeComponent(String id) {
 
-    // ── Factories ─────────────────────────────────────────────────────────────
-    /** Create from enum (preferred). */
+    // Canonicalize on construction so equals() is stable
+    public PanTypeComponent {
+        Objects.requireNonNull(id, "id");
+        PanType t = PanType.fromId(id);         // accept namespaced or bare
+        if (t == null) throw new IllegalArgumentException("Unknown PanType id: " + id);
+        id = t.getId();                         // <<< normalize to canonical enum id (e.g., "baguette")
+    }
+
+    // Preferred factory
     public static PanTypeComponent of(PanType type) {
         Objects.requireNonNull(type, "PanType");
-        return new PanTypeComponent(type.getId());
+        return new PanTypeComponent(type.getId()); // goes through canonicalization above
     }
 
-    /** Create from id string; validates/normalizes via PanType.fromId(id). */
+    // Accept arbitrary string and normalize
     public static PanTypeComponent ofId(String id) {
-        Objects.requireNonNull(id, "id");
-        PanType t = PanType.fromId(id);
-        if (t == null) throw new IllegalArgumentException("Unknown PanType id: " + id);
-        return new PanTypeComponent(t.getId()); // normalize to canonical id
+        return new PanTypeComponent(id);           // goes through canonicalization above
     }
 
-    /** Convenience to get the enum back. */
-    public PanType toPanType() {
-        return PanType.fromId(id);
-    }
+    public PanType toPanType() { return PanType.fromId(id); }
+    public int getModelIndex() { return toPanType().getModelIndex(); }
 
-    public int getModelIndex() {
-        return toPanType().getModelIndex();
-    }
-
-    // ── Codecs ────────────────────────────────────────────────────────────────
     public static final Codec<PanTypeComponent> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     Codec.STRING.fieldOf("id").forGetter(PanTypeComponent::id)
-            ).apply(instance, PanTypeComponent::new)
+            ).apply(instance, PanTypeComponent::new)     // canonicalizes via compact ctor
     );
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PanTypeComponent> STREAM_CODEC =
             StreamCodec.composite(
                     StreamCodecsCompat.STRING, PanTypeComponent::id,
-                    PanTypeComponent::new
+                    PanTypeComponent::new                           // canonicalizes via compact ctor
             );
 }
