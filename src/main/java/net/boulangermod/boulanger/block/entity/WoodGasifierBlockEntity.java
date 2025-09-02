@@ -445,7 +445,7 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
         if (target == null) return; // no handler on that side
 
         // Offer up to N mB this tick
-        final int MAX_PUSH_MB = 200;
+        final int MAX_PUSH_MB = 1000;
         int offer = Math.min(MAX_PUSH_MB, available);
         if (offer <= 0) return;
 

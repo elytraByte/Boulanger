@@ -32,14 +32,14 @@ public class WoodGasEngineBlockEntity extends AbstractProcessingBlockEntity {
     /* ── tuning ─────────────────────────────────────────────────── */
     private static final int TANK_CAP_MB        = 10_000;
     private static final int DRAIN_MB_PER_TICK  = 25;    // gas consumed when running
-    private static final int FE_PER_TICK        = 5;     // generation rate
+    private static final int FE_PER_TICK        = 50;     // generation rate
     private static final int START_THRESHOLD_MB = 100;   // start at/above
     private static final int STOP_THRESHOLD_MB  = 50;    // stop at/below
-    private static final int PULL_PER_TICK_MB   = 250;   // pull from neighbors per tick
+    private static final int PULL_PER_TICK_MB   = 500;   // pull from neighbors per tick
 
-    private static final int FE_CAPACITY        = 1_000;
-    private static final int FE_MAX_EXTRACT     = 1_000; // allow cables to pull generously
-    private static final int PER_SIDE_LIMIT     = 1_000; // max FE to try per neighbor per tick
+    private static final int FE_CAPACITY        = 1000;
+    private static final int FE_MAX_EXTRACT     = 1000; // allow cables to pull generously
+    private static final int PER_SIDE_LIMIT     = 1000; // max FE to try per neighbor per tick
 
     // simple visual cycle for GUI
     private static final int BURN_TOTAL_TICKS   = 200;

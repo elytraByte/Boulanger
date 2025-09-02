@@ -42,7 +42,7 @@ public class ModFluids {
                             FluidType.Properties.create()
                                     .descriptionId("fluid." + Boulanger.MODID + ".wood_gas") // ← gives nice name
                                     .density(1000)
-                                    .viscosity(250)
+                                    .viscosity(1)
                                     .rarity(Rarity.UNCOMMON)
                                     .canDrown(false).canSwim(false).canExtinguish(false)
                                     .sound(SoundActions.BUCKET_FILL, SoundEvents.BUCKET_FILL)

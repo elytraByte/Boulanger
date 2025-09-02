@@ -21,7 +21,7 @@ public class EnergyCableBlockEntity extends BlockEntity {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     // Tunables
-    private static final int CAP            = 10_000; // internal buffer size
+    private static final int CAP            = 100; // internal buffer size
     private static final int TICK_TRANSFER  = 500;    // total IO per *cable* per tick (used to size budgets)
     private static final int PUSH_STEP      = 50;     // per-sink chunk
     private static final int EQ_MARGIN      = 10;     // don't equalize if diff <= this (prevents jitter)
