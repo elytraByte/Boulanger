@@ -2,8 +2,6 @@ package net.boulangermod.boulanger.network;
 
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.entity.MixingBlockEntity;
-import net.boulangermod.boulanger.network.MeasureItemData;
-import net.boulangermod.boulanger.network.StartMixingPacket;
 import net.boulangermod.boulanger.screen.MilligramScaleMenu;
 import net.boulangermod.boulanger.screen.ScaleBlockMenu;
 import net.minecraft.client.Minecraft;

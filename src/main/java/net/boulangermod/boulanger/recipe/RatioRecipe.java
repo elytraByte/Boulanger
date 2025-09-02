@@ -65,7 +65,7 @@ public class RatioRecipe implements Recipe<MixingContainer> {
     /** We match in MixingBlockEntity; this stays unimplemented. */
     @Override
     public boolean matches(MixingContainer inv, Level level) {
-        throw new UnsupportedOperationException("Use MixingBlockEntity.findMatchingRecipe()");
+        throw new UnsupportedOperationException("Use MixerState.findMatchingRecipe()");
     }
 
     @Override
