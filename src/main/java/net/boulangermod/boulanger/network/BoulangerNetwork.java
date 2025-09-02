@@ -56,6 +56,17 @@ public class BoulangerNetwork {
                     }
                 })
         );
+
+        registrar.playToServer(
+                ClearMixerPacket.TYPE,
+                ClearMixerPacket.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    var be = context.player().level().getBlockEntity(payload.pos());
+                    if (be instanceof net.boulangermod.boulanger.block.entity.MixingBlockEntity mixer) {
+                        mixer.clearAndEject(context.player()); // see method below
+                    }
+                })
+        );
     }
 
     public static <T extends CustomPacketPayload> void sendToServer(T payload) {

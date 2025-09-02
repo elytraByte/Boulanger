@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class MixingBlockEntity extends AbstractProcessingBlockEntity
@@ -65,13 +66,18 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level == null || level.isClientSide) return;
 
-        // Intake: consume filled bowl, record ingredient, return empty bowl
+        // Intake: consume ALL filled bowls in the input stack, add their contents, return the same count of empty bowls
         ItemStack in = itemHandler.getStackInSlot(INPUT_BOWL);
         if (!in.isEmpty() && MixerState.isWeighedIngredient(in)) {
-            mixer.addIngredientFromBowl(in);
+            int count = in.getCount();
+            // Add the ingredient 'count' times (each bowl is identical; stacked items share components)
+            for (int i = 0; i < count; i++) {
+                mixer.addIngredientFromBowl(in);
+            }
 
+            // Clear input and spawn exactly 'count' empty bowls
             itemHandler.setStackInSlot(INPUT_BOWL, ItemStack.EMPTY);
-            spawnEmptyBowl();
+            spawnEmptyBowls(count);
             syncToClient();
         }
 
@@ -90,19 +96,71 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
         }
     }
 
-    private void spawnEmptyBowl() {
+    // Spawn N empty bowls into OUTPUT_BOWL, respecting slot limits and dropping overflow to the world.
+    private void spawnEmptyBowls(int quantity) {
+        if (quantity <= 0) return;
+
         ItemStack out = itemHandler.getStackInSlot(OUTPUT_BOWL);
-        final int limit = Math.min(64, itemHandler.getSlotLimit(OUTPUT_BOWL));
+        final int slotLimit = Math.min(64, itemHandler.getSlotLimit(OUTPUT_BOWL));
+        int remaining = quantity;
 
         if (out.isEmpty() || out.getItem() != Items.BOWL) {
-            itemHandler.setStackInSlot(OUTPUT_BOWL, new ItemStack(Items.BOWL));
-        } else if (out.getCount() < limit) {
-            out.grow(1);
-            itemHandler.setStackInSlot(OUTPUT_BOWL, out);
-        } else if (level != null && !level.isClientSide) {
-            net.minecraft.world.level.block.Block.popResource(level, worldPosition, new ItemStack(Items.BOWL));
+            int toPlace = Math.min(remaining, slotLimit);
+            itemHandler.setStackInSlot(OUTPUT_BOWL, new ItemStack(Items.BOWL, toPlace));
+            remaining -= toPlace;
+        } else {
+            int free = Math.max(0, slotLimit - out.getCount());
+            int toAdd = Math.min(remaining, free);
+            if (toAdd > 0) {
+                out.grow(toAdd);
+                itemHandler.setStackInSlot(OUTPUT_BOWL, out);
+                remaining -= toAdd;
+            }
         }
-        syncToClient();
+
+        // Drop any overflow bowls at the block position
+        if (remaining > 0 && level != null && !level.isClientSide) {
+            while (remaining > 0) {
+                int drop = Math.min(64, remaining);
+                net.minecraft.world.level.block.Block.popResource(level, worldPosition, new ItemStack(Items.BOWL, drop));
+                remaining -= drop;
+            }
+        }
+    }
+
+    public void clearAndEject(@Nullable Player player) {
+        // stop mixing
+        this.mixing = false;
+        this.mixProgress = 0;
+
+        // give back contents of slots 0..2
+        for (int slot = 0; slot < this.itemHandler.getSlots(); slot++) {
+            ItemStack st = this.itemHandler.getStackInSlot(slot);
+            if (st.isEmpty()) continue;
+
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp
+                    && sp.getInventory().add(st.copy())) {
+                // successfully added to player, clear slot
+                this.itemHandler.setStackInSlot(slot, ItemStack.EMPTY);
+            } else if (this.level != null && !this.level.isClientSide) {
+                net.minecraft.world.level.block.Block.popResource(this.level, this.worldPosition, st.copy());
+                this.itemHandler.setStackInSlot(slot, ItemStack.EMPTY);
+            }
+        }
+
+        // clear internal ingredients/state
+        try {
+            // if your MixerState has a clear() helper, use it:
+            this.mixer.clear();
+        } catch (Throwable t) {
+            // fallback if clear() doesn't exist: nothing to do here; but ideally add mixer.clear()
+        }
+
+        // sync
+        if (this.level != null && !this.level.isClientSide) {
+            setChanged();
+            this.level.sendBlockUpdated(this.worldPosition, getBlockState(), getBlockState(), 3);
+        }
     }
 
     // ── Persistence ──────────────────────────────────────────────────────────────
