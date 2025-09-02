@@ -7,6 +7,7 @@ import net.boulangermod.boulanger.component.PanTypeComponent;
 import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.entity.ModEntities;
 import net.boulangermod.boulanger.util.IngredientCategory;
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -111,9 +112,12 @@ public class ModItems {
     public static final DeferredItem<Item> BREAD =
             ITEMS.register("bread", () -> new BreadItem(new Item.Properties()));
 
-    public static final DeferredItem<Item> WHEAT_BUSHEL = ITEMS.registerSimpleItem("wheat_bushel");
+    public static final DeferredItem<Item> WHEAT_BUSHEL = ITEMS.register("wheat_bushel",
+            () -> new WheatBushelItem(new Item.Properties()));
+
     public static final DeferredItem<Item> WHEAT_SEED = ITEMS.register("wheat_seeds",
-            () -> new WheatSeedItem(ModBlocks.WHEAT_BUSHEL.get(), new Item.Properties()));
+            () -> new WheatSeedItem(ModBlocks.WHEAT_BUSHEL_BLOCK.get(), new Item.Properties()));
+
 
     public static final DeferredItem<Item> IRON_WEDGE = ITEMS.register("iron_wedge",
             () -> new IronWedgeItem(ModBlocks.IRON_WEDGE.get(), new Item.Properties()));

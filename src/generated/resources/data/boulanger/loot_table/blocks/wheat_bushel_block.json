@@ -10,7 +10,7 @@
       "bonus_rolls": 0.0,
       "conditions": [
         {
-          "block": "boulanger:hard_red_spring_wheat_crop",
+          "block": "boulanger:wheat_bushel_block",
           "condition": "minecraft:block_state_property",
           "properties": {
             "age": "7"
@@ -43,7 +43,7 @@
       "bonus_rolls": 0.0,
       "conditions": [
         {
-          "block": "boulanger:hard_red_spring_wheat_crop",
+          "block": "boulanger:wheat_bushel_block",
           "condition": "minecraft:block_state_property",
           "properties": {
             "age": "7"
@@ -53,11 +53,16 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "boulanger:hard_red_spring_wheat"
+          "functions": [
+            {
+              "function": "boulanger:copy_wheat_variety"
+            }
+          ],
+          "name": "boulanger:wheat_bushel"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "boulanger:blocks/hard_red_spring_wheat_crop"
+  "random_sequence": "boulanger:blocks/wheat_bushel_block"
 }

@@ -1,12 +1,13 @@
 package net.boulangermod.boulanger.block.entity;
 
-import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
+import net.boulangermod.boulanger.component.FlourType;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.item.FlourItemType;
 import net.boulangermod.boulanger.item.ModItems;
+import net.boulangermod.boulanger.item.WheatBushelItem;
+import net.boulangermod.boulanger.item.WheatVariety;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -22,15 +23,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
 
 public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         implements AbstractProcessingBlock.Tickable, MenuProvider {
-
-    private static final Logger LOGGER = LogUtils.getLogger();
 
     /* ───────────── slots ───────────── */
     private static final int SLOT_IN0 = 0;
@@ -39,27 +36,48 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
     private static final int SLOT_OUT = 3;
 
     /* ───────────── tuning ───────────── */
-    private static final int MAX_MILL_TIME    = 200;  // ticks per operation
-    private static final int FE_COST_PER_TICK = 5;    // FE/t while milling
+    private static final int MAX_MILL_TIME    = 200;  // ticks per op (UI ref)
+    private static final int FE_COST_PER_TICK = 10;
 
     // Internal battery
     private static final int FE_CAPACITY    = FE_COST_PER_TICK * 500;
     private static final int FE_MAX_RECEIVE = FE_COST_PER_TICK * 40;
-    private static final int STARVE_GRACE_TICKS = 2;
 
-    private static final int PROGRESS_PARTICLE_PERIOD = 20; // ticks between small puffs
-
-    // ── NEW: manual turning (number of clicks per craft) ───────────────────────
-    private static final int HAND_TURNS_PER_OP = 12;
+    // Manual turning config
+    private static final int HAND_TURNS_PER_OP = 12; // 12 hits -> 1 craft
     private static final int MANUAL_TURN_TICKS = Math.max(1, MAX_MILL_TIME / HAND_TURNS_PER_OP);
+
+    // Shared hit model
+    private static final int HITS_PER_CRAFT = 12;
+
+    // RF cost per virtual hit
+    private static final int RF_PER_HIT = 10;
+
+    // Powered speed: multiplier vs manual (1.0 = same speed; 1.25 ≈ 25% faster)
+    private static final double POWER_SPEED_MULT = 1.25;
+    private static final int POWER_TURN_TICKS =
+            Math.max(1, (int)Math.round(MANUAL_TURN_TICKS / POWER_SPEED_MULT));
+
+    // SFX
+    private static final int POWER_LOOP_SOUND_PERIOD_TICKS = 6;
+
+    // Manual timeout (~1 minute)
+    private static final int MANUAL_TIMEOUT_TICKS = 20 * 60;
 
     // UI lamp state
     private boolean lampOn = false;
 
-    // Milling state
+    // Milling state (UI progress bar uses millProgress/MAX_MILL_TIME)
     private int  millProgress = 0;
     private boolean milling   = false;
-    private int starvedTicks  = 0;
+    private int hitProgress   = 0;        // 0..HITS_PER_CRAFT-1
+
+    // Track RF vs manual and manual idle time
+    private boolean rfMilling = false;
+    private long lastManualTurnGameTime = 0L;
+
+    // RF cadence: perform one virtual hand-hit every POWER_TURN_TICKS
+    private int poweredHitCooldown = 0;
 
     public StoneMillBlockEntity(BlockPos pos, BlockState state) {
         super(
@@ -84,14 +102,61 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         return s;
     }
 
-    private boolean isWheat(ItemStack s) { return !s.isEmpty() && s.is(Items.WHEAT); }
+    @Nullable
+    private FlourItemType flourTypeForInput(ItemStack in) {
+        if (in == null || in.isEmpty()) return null;
 
-    private int countInputs() {
+        // Vanilla wheat -> whole wheat flour
+        if (in.is(Items.WHEAT)) {
+            return FlourItemType.WHOLE_WHEAT_FLOUR;
+        }
+
+        // Wheat Bushels -> look at variety (component or class hint)
+        WheatVariety variety = in.get(ModDataComponentTypes.WHEAT_VARIETY.get());
+        if (variety != null || in.getItem() instanceof WheatBushelItem) {
+            if (variety == WheatVariety.DURUM) {
+                // Durum -> semolina
+                return FlourItemType.SEMOLINA_FLOUR;
+            }
+            // All other varieties -> whole wheat
+            return FlourItemType.WHOLE_WHEAT_FLOUR;
+        }
+
+        return null; // not a millable grain
+    }
+
+    private boolean isMillableGrain(ItemStack s) { return flourTypeForInput(s) != null; }
+
+    /** Count how many inputs match a given flour output type. */
+    private int countInputsForType(FlourItemType type) {
         int c = 0;
-        if (isWheat(itemHandler.getStackInSlot(SLOT_IN0))) c++;
-        if (isWheat(itemHandler.getStackInSlot(SLOT_IN1))) c++;
-        if (isWheat(itemHandler.getStackInSlot(SLOT_IN2))) c++;
+        if (type == flourTypeForInput(itemHandler.getStackInSlot(SLOT_IN0))) c++;
+        if (type == flourTypeForInput(itemHandler.getStackInSlot(SLOT_IN1))) c++;
+        if (type == flourTypeForInput(itemHandler.getStackInSlot(SLOT_IN2))) c++;
         return c;
+    }
+
+    /** Decide which flour type to craft this tick. Prefer the OUT slot's type, else first valid input. */
+    @Nullable
+    private FlourItemType chooseOutputType() {
+        // If OUT slot has flour, stick with that type so we stack correctly
+        ItemStack out = itemHandler.getStackInSlot(SLOT_OUT);
+        if (!out.isEmpty()) {
+            FlourType outFt = out.get(ModDataComponentTypes.FLOUR_TYPE.get());
+            if (outFt != null) {
+                for (FlourItemType it : FlourItemType.values()) {
+                    if (it.toFlourType().type().equals(outFt.type())) {
+                        return it;
+                    }
+                }
+            }
+        }
+        // Otherwise pick the first millable input’s mapped type
+        FlourItemType t;
+        if ((t = flourTypeForInput(itemHandler.getStackInSlot(SLOT_IN0))) != null) return t;
+        if ((t = flourTypeForInput(itemHandler.getStackInSlot(SLOT_IN1))) != null) return t;
+        if ((t = flourTypeForInput(itemHandler.getStackInSlot(SLOT_IN2))) != null) return t;
+        return null;
     }
 
     private int outputSpaceFor(ItemStack target) {
@@ -103,38 +168,122 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
 
     /** How many items we can craft *right now* (0..3) */
     private int craftableNow() {
-        ItemStack target = buildFlourStack(FlourItemType.WHOLE_WHEAT_FLOUR);
-        int inputs = countInputs();
+        FlourItemType chosen = chooseOutputType();
+        if (chosen == null) return 0;
+
+        ItemStack target = buildFlourStack(chosen);
+        int inputs = countInputsForType(chosen);
         if (inputs <= 0) return 0;
-        int space  = outputSpaceFor(target);
+
+        int outCount = itemHandler.getStackInSlot(SLOT_OUT).getCount();
+        int space = outputSpaceFor(target);
+        space = Math.min(space, 64 - (itemHandler.getStackInSlot(SLOT_OUT).isEmpty() ? 0 : outCount));
         return Math.min(inputs, Math.max(0, space));
     }
 
     private boolean canMill() { return craftableNow() > 0; }
 
+    /** One hit (manual or powered): small particle; on 12th hit, craft + burst. */
+    private void doSingleHit(Level level, BlockPos pos, BlockState state) {
+        spawnMillParticles(level, pos, state, 1);
+
+        hitProgress++;
+        millProgress = Math.min(MAX_MILL_TIME, millProgress + MANUAL_TURN_TICKS);
+
+        if (hitProgress >= HITS_PER_CRAFT) {
+            hitProgress = 0;
+
+            if (canMill()) {
+                craftResultAndEffects(level, pos, state); // includes final sound + burst
+            }
+            resetMilling();            // clear progress after craft
+            if (canMill()) milling = true; // keep armed if more work remains
+        }
+    }
+
+    /** Powered work: perform one virtual hand-hit every POWER_TURN_TICKS; loop sound while working. */
+    private void poweredWorkTick(Level level, BlockPos pos, BlockState state) {
+        if (craftableNow() <= 0) return;
+
+        poweredHitCooldown++;
+
+        // Only attempt a hit when we've waited long enough to match desired powered cadence
+        if (poweredHitCooldown < POWER_TURN_TICKS) {
+            // gentle loop sound so it feels alive
+            if (level.getGameTime() % POWER_LOOP_SOUND_PERIOD_TICKS == 0) {
+                float vol   = 0.25f + level.random.nextFloat() * 0.05f;
+                float pitch = 0.95f + level.random.nextFloat() * 0.10f;
+                level.playSound(null, pos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, vol, pitch);
+            }
+            return;
+        }
+
+        // Ready to perform one hit: need enough energy for this hit
+        if (getEnergyStored() < RF_PER_HIT) {
+            // RF starved: immediately reset progress and stop RF milling
+            resetMilling();
+            return;
+        }
+
+        // Drain RF_PER_HIT in FE_COST_PER_TICK chunks
+        int need = RF_PER_HIT;
+        int chunks = (need + FE_COST_PER_TICK - 1) / FE_COST_PER_TICK;
+        for (int c = 0; c < chunks; c++) {
+            if (!tryConsumePowerForTick()) {
+                resetMilling();
+                return;
+            }
+        }
+
+        // Do one virtual hand-hit (1 particle); craft on the 12th
+        doSingleHit(level, pos, state);
+        poweredHitCooldown = 0;
+
+        // Looping gentle grind sound while actively working (after the hit too)
+        if (level.getGameTime() % POWER_LOOP_SOUND_PERIOD_TICKS == 0) {
+            float vol   = 0.35f + level.random.nextFloat() * 0.05f;
+            float pitch = 0.95f + level.random.nextFloat() * 0.10f;
+            level.playSound(null, pos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, vol, pitch);
+        }
+    }
+
     private void craftResultAndEffects(Level level, BlockPos pos, BlockState state) {
-        int craftable = craftableNow();
+        FlourItemType chosen = chooseOutputType();
+        if (chosen == null) return;
+
+        ItemStack proto = buildFlourStack(chosen);
+        ItemStack out   = itemHandler.getStackInSlot(SLOT_OUT);
+
+        int hardCap = Math.min(proto.getMaxStackSize(), 64);
+
+        int space;
+        if (out.isEmpty()) {
+            space = hardCap;
+        } else if (!ItemStack.isSameItemSameComponents(out, proto)) {
+            return;
+        } else {
+            space = hardCap - out.getCount();
+            if (space <= 0) return;
+        }
+
+        int craftable = Math.min(craftableNow(), space);
         if (craftable <= 0) return;
 
         int produced = 0;
-        int[] ins = {SLOT_IN0, SLOT_IN1, SLOT_IN2};
-        for (int idx : ins) {
+        for (int idx : new int[]{SLOT_IN0, SLOT_IN1, SLOT_IN2}) {
             if (produced >= craftable) break;
             ItemStack in = itemHandler.getStackInSlot(idx);
-            if (isWheat(in)) {
+            if (chosen == flourTypeForInput(in)) {
                 in.shrink(1);
                 produced++;
             }
         }
         if (produced <= 0) return;
 
-        ItemStack result1 = buildFlourStack(FlourItemType.WHOLE_WHEAT_FLOUR);
-        ItemStack out     = itemHandler.getStackInSlot(SLOT_OUT);
-
         if (out.isEmpty()) {
-            result1.setCount(produced);
-            itemHandler.setStackInSlot(SLOT_OUT, result1);
-        } else if (ItemStack.isSameItemSameComponents(out, result1)) {
+            proto.setCount(produced);
+            itemHandler.setStackInSlot(SLOT_OUT, proto);
+        } else {
             out.grow(produced);
         }
 
@@ -142,9 +291,6 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         float pitch = 0.9f + level.random.nextFloat() * 0.2f;
         level.playSound(null, pos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, vol, pitch);
         spawnMillParticles(level, pos, state, 8);
-
-        dbg("Crafted {}x WHOLE_WHEAT_FLOUR (out now {}), inputs consumed across up to 3 slots",
-                produced, itemHandler.getStackInSlot(SLOT_OUT).getCount());
     }
 
     private void spawnMillParticles(Level level, BlockPos pos, BlockState state, int count) {
@@ -156,13 +302,11 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
     }
 
     public void resetMilling() {
-        if (millProgress != 0 || milling) {
-            dbg("Reset milling (progress was {}, milling={}, starvedTicks={})",
-                    millProgress, milling, starvedTicks);
-        }
         millProgress = 0;
+        hitProgress = 0;
+        poweredHitCooldown = 0;
         milling = false;
-        starvedTicks = 0;
+        rfMilling = false;
         setChanged();
     }
 
@@ -170,46 +314,28 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
     public boolean isMilling()         { return milling; }
     public static int getMaxMixTime()  { return MAX_MILL_TIME; }
 
-    /* ───────────── NEW: manual turning API ───────────── */
-    /**
-     * Advance the mill by a hand turn. Returns true if we actually progressed
-     * (i.e., had inputs + output space), false otherwise.
-     */
+    /* ───────────── manual turning API ───────────── */
     public boolean manualTurnByPlayer(@Nullable Player player) {
         Level level = getLevel();
         if (level == null) return false;
 
         if (!canMill()) {
-            // light “thunk” feedback when turning with no work to do
             level.playSound(null, worldPosition, SoundEvents.STONE_BUTTON_CLICK_OFF,
                     SoundSource.BLOCKS, 0.25f, 0.8f + level.random.nextFloat() * 0.2f);
             return false;
         }
 
-        // Show progress on UI while hand-cranking too
         milling = true;
-        starvedTicks = 0;
+        // DO NOT disable RF here; allow RF to resume immediately if power exists
+        lastManualTurnGameTime = level.getGameTime();
 
-        int before = millProgress;
-        millProgress = Math.min(MAX_MILL_TIME, millProgress + MANUAL_TURN_TICKS);
-
-        // light sound + dust for each turn
         level.playSound(null, worldPosition, SoundEvents.GRINDSTONE_USE,
                 SoundSource.BLOCKS, 0.45f, 1.0f + level.random.nextFloat() * 0.1f);
-        spawnMillParticles(level, worldPosition, getBlockState(), 2);
 
-        boolean finished = (millProgress >= MAX_MILL_TIME);
-        if (finished) {
-            if (canMill()) craftResultAndEffects(level, worldPosition, getBlockState());
-            resetMilling();
-        }
+        doSingleHit(level, worldPosition, getBlockState());
 
         setChanged();
         level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-
-        dbg("Manual turn by {}, progress {}→{}, finished={}",
-                (player != null ? player.getGameProfile().getName() : "unknown"),
-                before, millProgress, finished);
         return true;
     }
 
@@ -219,7 +345,10 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         super.saveAdditional(tag, registries);
         tag.putInt("MillProgress", millProgress);
         tag.putBoolean("Milling", milling);
-        tag.putInt("StarvedTicks", starvedTicks);
+        tag.putInt("HitProgress", hitProgress);
+        tag.putBoolean("RFMilling", rfMilling);
+        tag.putLong("LastManualTurn", lastManualTurnGameTime);
+        tag.putInt("PoweredHitCooldown", poweredHitCooldown);
     }
 
     @Override
@@ -227,9 +356,10 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         super.loadAdditional(tag, registries);
         millProgress = tag.getInt("MillProgress");
         milling      = tag.getBoolean("Milling");
-        starvedTicks = tag.getInt("StarvedTicks");
-        dbg("Loaded state: progress={}, milling={}, energy={}/{}",
-                millProgress, milling, getEnergyStored(), getEnergyCapacity());
+        hitProgress  = tag.getInt("HitProgress");
+        rfMilling    = tag.getBoolean("RFMilling");
+        lastManualTurnGameTime = tag.getLong("LastManualTurn");
+        poweredHitCooldown = tag.getInt("PoweredHitCooldown");
     }
 
     /* ───────────── UI / menu ───────────── */
@@ -241,7 +371,7 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         return new net.boulangermod.boulanger.screen.StoneMillBlockMenu(id, inv, this);
     }
 
-    /* ───────────── ticking (RF path) ───────────── */
+    /* ───────────── ticking (RF + manual timeout) ───────────── */
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide()) return;
@@ -251,46 +381,37 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
         serverEnergyTick();
 
         boolean newLamp = getEnergyStored() > 0;
-        if (newLamp != lampOn) {
-            lampOn = newLamp;
-            dirty = true;
-            dbg("Lamp {} (energy={}/{})", lampOn ? "ON" : "OFF", getEnergyStored(), getEnergyCapacity());
+        if (newLamp != lampOn) { lampOn = newLamp; dirty = true; }
+
+        boolean poweredAvailable = getEnergyStored() >= RF_PER_HIT;
+        boolean haveWork = canMill();
+
+        // ✅ Re-arm/maintain RF milling whenever we have power + items,
+        // even if the player recently hand-turned (fixes the “stops until you reinsert items” bug)
+        if (poweredAvailable && haveWork) {
+            if (!milling) { milling = true; dirty = true; }
+            if (!rfMilling) { rfMilling = true; dirty = true; }
         }
 
-        if (!milling) {
-            if (canMill() && hasPowerForTick()) {
-                milling = true;
-                starvedTicks = 0;
+        if (milling && rfMilling) {
+            if (poweredAvailable) {
+                int before = millProgress;
+                poweredWorkTick(level, pos, state);
+                if (!canMill()) { resetMilling(); dirty = true; }
+                else if (millProgress != before) dirty = true;
+            } else {
+                // RF starved: immediately reset progress to zero and stop RF milling
+                resetMilling();
                 dirty = true;
-                dbg("Started milling (energy={}/{}, craftableNow={})",
-                        getEnergyStored(), getEnergyCapacity(), craftableNow());
             }
         }
 
-        if (milling) {
-            if (tryConsumePowerForTick()) {
-                millProgress++;
-
-                if (millProgress > 0 && (millProgress % PROGRESS_PARTICLE_PERIOD) == 0) {
-                    spawnMillParticles(level, pos, state, 3);
-                }
-
-                starvedTicks = 0;
-                if (millProgress >= MAX_MILL_TIME) {
-                    if (canMill()) craftResultAndEffects(level, pos, state);
-                    resetMilling();
-                    dirty = true;
-                }
-            } else {
-                starvedTicks++;
-                if (starvedTicks > STARVE_GRACE_TICKS) {
-                    milling = false;
-                    dirty = true;
-                    dbg("Paused milling after {} starved ticks (energy={})",
-                            STARVE_GRACE_TICKS, getEnergyStored());
-                } else {
-                    dbg("Starved tick {}/{} (energy={})", starvedTicks, STARVE_GRACE_TICKS, getEnergyStored());
-                }
+        // Manual timeout: only applies when not RF-driven
+        if (milling && !rfMilling) {
+            long idle = level.getGameTime() - lastManualTurnGameTime;
+            if (idle >= MANUAL_TIMEOUT_TICKS) {
+                resetMilling();
+                dirty = true;
             }
         }
 
@@ -298,10 +419,5 @@ public class StoneMillBlockEntity extends AbstractPoweredBlockEntity
             setChanged();
             level.sendBlockUpdated(pos, state, state, 3);
         }
-    }
-
-    /* ───────────── logging helper ───────────── */
-    private void dbg(String fmt, Object... args) {
-        if (LOGGER.isDebugEnabled()) LOGGER.debug("[StoneMill] " + fmt, args);
     }
 }

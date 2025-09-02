@@ -139,7 +139,7 @@ public class ModBlocks {
             )
     );
 
-    public static final DeferredBlock<Block> WHEAT_BUSHEL = registerBlock("wheat_bushel",
+    public static final DeferredBlock<Block> WHEAT_BUSHEL_BLOCK = registerBlock("wheat_bushel_block",
             () -> new BoulangerWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
 
     public static final DeferredBlock<Block> WILD_WHEAT = registerBlock("wild_wheat",

@@ -33,6 +33,9 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     /**
      * Override the vanilla helper so we can inject our CopyWheatVarietyFunction
      * and only run the seed pool when the crop is mature.
+     *
+     * NOTE: This now also applies CopyWheatVarietyFunction to the grown crop (bushel),
+     * so the bushel inherits the planted variety as well.
      */
     @Override
     protected LootTable.Builder createCropDrops(Block cropBlock,
@@ -51,11 +54,13 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                                         .apply(CopyWheatVarietyFunction.builder())
                                 )
                         )
-                        // Wheat item pool: only if mature
+                        // Wheat bushel pool: only if mature, and copy the variety
                         .withPool(LootPool.lootPool()
                                 .setRolls(ConstantValue.exactly(1f))
                                 .when(dropGrownCropCondition)
-                                .add(LootItem.lootTableItem(grownCropItem))
+                                .add(LootItem.lootTableItem(grownCropItem)
+                                        .apply(CopyWheatVarietyFunction.builder())
+                                )
                         )
         );
     }
@@ -87,6 +92,18 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
 
     @Override
     protected void generate() {
+        // Your custom wheat crop: use the actual crop block (not the bushel item)
+        Block crop = ModBlocks.WHEAT_BUSHEL_BLOCK.get();
+        this.add(crop, createCropDrops(
+                crop,
+                ModItems.WHEAT_BUSHEL.get(),
+                ModItems.WHEAT_SEED.get(),
+                LootItemBlockStatePropertyCondition.hasBlockStateProperties(crop)
+                        .setProperties(StatePropertiesPredicate.Builder.properties()
+                                .hasProperty(BoulangerWheatCrop.AGE, 7)
+                        )
+        ));
+
         // all your simple drops
         dropSelf(ModBlocks.WOOD_GASIFIER.get());
         dropSelf(ModBlocks.SUGAR_REFINERY.get());
@@ -113,12 +130,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.STRIPPED_PINE_LOG.get());
         dropSelf(ModBlocks.STRIPPED_PINE_WOOD.get());
         dropSelf(ModBlocks.PINE_LOG.get());
-        dropSelf(ModBlocks.IRON_WEDGE.get());
         dropSelf(ModBlocks.PINE_PLANKS.get());
         dropSelf(ModBlocks.PINE_WOOD.get());
-        dropSelf(ModBlocks.STRIPPED_PINE_WOOD.get());
-        dropSelf(ModBlocks.STRIPPED_PINE_LOG.get());
-        dropSelf(ModBlocks.PINE_LOG.get());
         dropSelf(ModBlocks.PINE_SAPLING.get());
         this.add(ModBlocks.PINE_LEAVES.get(),
                 block -> createLeavesDrops(
@@ -142,18 +155,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.FEED_THROUGH_BLOCK.get());
         dropSelf(ModBlocks.WOODGAS_VALVE.get());
 
-        // your custom wheat crop:
-        Block crop = ModBlocks.WHEAT_BUSHEL.get();
-        this.add(crop, createCropDrops(
-                crop,
-                ModItems.WHEAT_BUSHEL.get(),
-                ModItems.WHEAT_SEED.get(),
-                LootItemBlockStatePropertyCondition.hasBlockStateProperties(crop)
-                        .setProperties(StatePropertiesPredicate.Builder.properties()
-                                .hasProperty(BoulangerWheatCrop.AGE, 7)
-                        )
-        ));
-
         this.add(ModBlocks.KAOLINITE_CLAY.get(),
                 LootTable.lootTable()
                         .withPool(LootPool.lootPool()
@@ -164,10 +165,18 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
                         )
         );
 
-
         // wild wheat:
         Block wild = ModBlocks.WILD_WHEAT.get();
         this.add(wild, createWildWheatDrops(wild, ModItems.WHEAT_SEED.get()));
+
+        // Iron wedge block → drop iron wedge item
+        this.add(ModBlocks.IRON_WEDGE.get(),
+                LootTable.lootTable()
+                        .withPool(LootPool.lootPool()
+                                .setRolls(ConstantValue.exactly(1f))
+                                .add(LootItem.lootTableItem(ModItems.IRON_WEDGE.get()))
+                        )
+        );
     }
 
     @Override

@@ -268,11 +268,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
         );
 
         makeCrop(
-                (CropBlock) ModBlocks.WHEAT_BUSHEL.get(),
+                (CropBlock) ModBlocks.WHEAT_BUSHEL_BLOCK.get(),
                 "boulanger_wheat_stage",
                 "boulanger_wheat_stage"
         );
-        simpleBlockItem(ModBlocks.WHEAT_BUSHEL.get(),
+        simpleBlockItem(ModBlocks.WHEAT_BUSHEL_BLOCK.get(),
                 models().getExistingFile(modLoc("block/boulanger_wheat_stage0"))
         );
 
