@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowEntity;
 import net.boulangermod.boulanger.entity.HenEntity;
 import net.boulangermod.boulanger.entity.ModEntities;
-import net.minecraft.world.entity.SpawnPlacementType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.animal.Animal;
@@ -32,7 +31,7 @@ public class ModEventSubscriber {
         AttributeSupplier hefferAttrs = HolsteinFriesianCowEntity
                 .createAttributes()
                 .build();
-        event.put(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), hefferAttrs);
+        event.put(ModEntities.HOLSTEIN_FRIESIAN.get(), hefferAttrs);
     }
 
     @SubscribeEvent
@@ -49,7 +48,7 @@ public class ModEventSubscriber {
 
         // Holstein Friesian Cows: similarly
         event.register(
-                ModEntities.HOLSTEIN_FRIESAIN_COW.get(),
+                ModEntities.HOLSTEIN_FRIESIAN.get(),
                 SpawnPlacementTypes.ON_GROUND,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 Animal::checkAnimalSpawnRules,

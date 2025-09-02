@@ -23,7 +23,7 @@ public class ModEntitySpawns {
 
         // Holstein Friesian Cows
         event.register(
-                ModEntities.HOLSTEIN_FRIESAIN_COW.get(),
+                ModEntities.HOLSTEIN_FRIESIAN.get(),
                 SpawnPlacementTypes.ON_GROUND,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 Animal::checkAnimalSpawnRules,

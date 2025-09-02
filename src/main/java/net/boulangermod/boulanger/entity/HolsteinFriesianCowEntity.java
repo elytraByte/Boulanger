@@ -60,7 +60,7 @@ public class HolsteinFriesianCowEntity extends Cow {
     @Nullable
     @Override
     public HolsteinFriesianCowEntity getBreedOffspring(ServerLevel level, AgeableMob otherParent) {
-        return ModEntities.HOLSTEIN_FRIESAIN_COW.get().create(level);
+        return ModEntities.HOLSTEIN_FRIESIAN.get().create(level);
     }
 
     @Override

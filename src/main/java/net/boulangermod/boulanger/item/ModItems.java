@@ -111,9 +111,9 @@ public class ModItems {
     public static final DeferredItem<Item> BREAD =
             ITEMS.register("bread", () -> new BreadItem(new Item.Properties()));
 
-    public static final DeferredItem<Item> HARD_RED_SPRING_WHEAT = ITEMS.registerSimpleItem("hard_red_spring_wheat");
+    public static final DeferredItem<Item> WHEAT_BUSHEL = ITEMS.registerSimpleItem("wheat_bushel");
     public static final DeferredItem<Item> WHEAT_SEED = ITEMS.register("wheat_seeds",
-            () -> new WheatSeedItem(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(), new Item.Properties()));
+            () -> new WheatSeedItem(ModBlocks.WHEAT_BUSHEL.get(), new Item.Properties()));
 
     public static final DeferredItem<Item> IRON_WEDGE = ITEMS.register("iron_wedge",
             () -> new IronWedgeItem(ModBlocks.IRON_WEDGE.get(), new Item.Properties()));
@@ -146,9 +146,9 @@ public class ModItems {
             ITEMS.register("l_cysteine",
                     () -> new BakeryAdditiveItem(new Item.Properties().stacksTo(16), BakeryAdditiveType.L_CYSTEINE));
 
-    public static final DeferredItem<SpawnEggItem> HOLSTEIN_FRIESIAN_COW_SPAWN_EGG = ITEMS.register("holstein_friesain_cow_spawn_egg",
+    public static final DeferredItem<SpawnEggItem> HOLSTEIN_FRIESIAN_COW_SPAWN_EGG = ITEMS.register("holstein_friesian_cow_spawn_egg",
             () -> new SpawnEggItem(
-                    ModEntities.HOLSTEIN_FRIESAIN_COW.get(),
+                    ModEntities.HOLSTEIN_FRIESIAN.get(),
                     0xC0C0C0,
                     0x8B4513,
                     new Item.Properties()

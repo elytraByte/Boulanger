@@ -15,22 +15,28 @@ public enum BreadType {
     FRENCH_CROISSANT   (3,  "french_croissant"),
     CROISSANT          (4,  "croissant"),
     WHOLE_WHEAT_BREAD  (5,  "whole_wheat_bread"),
-    BÁNH_MÌ            (6,  "bánh_mì"),
+    BANH_MI            (6,  "banh_mi"),
     BRIOCHE            (7,  "brioche"),
     POTATO_BREAD       (8,  "potato_bread"),
     PAIN_DE_MI         (9,  "pain_de_mi"),
     WHITE_PAN_BREAD    (10, "white_pan_bread"),
     WHITE_BREAD        (11, "white_bread"),
     MULTIGRAIN_BREAD   (12, "multigrain_bread"),
-    HAWAIIAN_ROLL      (13, "hawaiian_roll"),
 
     // new additions
     BRIOCHE_ROLL       (14, "brioche_roll"),
     MARBLE_RYE         (15, "marble_rye"),
+    HAWAIIAN_ROLL      (13, "hawaiian_roll"),
     RYE_ROLL           (16, "rye_roll"),
     WHEAT_ROLL         (17, "wheat_roll"),
     SWEET_YEAST_ROLL   (18, "sweet_yeast_roll"),
-    YEAST_ROLL         (19, "yeast_roll");
+    YEAST_ROLL         (19, "yeast_roll"),
+    TEXAS_SWEET_ROLL   (20, "texas_roadhouse_roll"),
+    SOURDOUGH          (21, "sourdough"),
+    PRETZEL            (22, "pretzel"),
+    BOULE              (23, "boule");
+
+
 
     private final int modelIndex;
     private final String id;

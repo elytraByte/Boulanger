@@ -126,7 +126,7 @@ public class ModItemModelProvider extends ItemModelProvider {
 
         basicItem(ModItems.WHEAT_BERRIES.get());
         basicItem(ModItems.WHEAT_SEED.get());
-        basicItem(ModItems.HARD_RED_SPRING_WHEAT.get());
+        basicItem(ModItems.WHEAT_BUSHEL.get());
         basicItem(ModItems.DOUGH.get());
         basicItem(ModItems.KAOLINITE_CLAY_BALL.get());
         basicItem(ModItems.PORCELAIN_MIX.get());
@@ -170,6 +170,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         withExistingParent(ModBlocks.PINE_SLAB.getId().getPath(),   modLoc("block/pine_slab"));
         withExistingParent(ModBlocks.PINE_FENCE_GATE.getId().getPath(), modLoc("block/pine_fence_gate"));
 
+
+
         // ─── Machine-style block items (isometric GUI view, scaled down) ─────
         machineItem("wood_oven",      "block/wood_oven_off",   0.62F);
         machineItem("mixing_block",   "block/mixing_block",    0.62F);
@@ -189,6 +191,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.DIASTATIC_MALT_POWDER.get());
         basicItem(ModItems.NONDIASTATIC_MALT_POWDER.get());
         basicItem(ModItems.L_CYSTEINE.get());
+        buttonItem(ModBlocks.PINE_BUTTON, ModBlocks.PINE_PLANKS);
 
     }
 
@@ -225,6 +228,16 @@ public class ModItemModelProvider extends ItemModelProvider {
         return withExistingParent(item.getId().getPath(), ResourceLocation.parse("item/generated"))
                 .texture("layer0", ResourceLocation.fromNamespaceAndPath(Boulanger.MODID,
                         "block/" + item.getId().getPath()));
+    }
+
+    public void buttonItem(DeferredBlock<? extends Block> block,
+                           DeferredBlock<? extends Block> baseBlock) {
+        withExistingParent(block.getId().getPath(), mcLoc("block/button_inventory"))
+                .texture("texture",
+                        ResourceLocation.fromNamespaceAndPath(
+                                Boulanger.MODID, "block/" + baseBlock.getId().getPath()
+                        )
+                );
     }
 
     public void fenceItem(DeferredBlock<Block> block, DeferredBlock<Block> baseBlock) {

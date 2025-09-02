@@ -16,39 +16,41 @@ public class ProofingBoxMenu extends AbstractMachineMenu {
     private final ProofingBoxBlockEntity blockEntity;
     private final ContainerLevelAccess access;
 
+    private static final int TE_FIRST = 0;
+    private static final int TE_COUNT = 5;
+    private static final int TE_LAST_EXCL = TE_FIRST + TE_COUNT; // 5
+
+    private static final int PLAYER_INV_FIRST = TE_LAST_EXCL;     // 5
+    private static final int PLAYER_INV_COUNT = 27;
+    private static final int PLAYER_INV_LAST_EXCL = PLAYER_INV_FIRST + PLAYER_INV_COUNT; // 32
+
+    private static final int HOTBAR_FIRST = PLAYER_INV_LAST_EXCL; // 32
+    private static final int HOTBAR_COUNT = 9;
+    private static final int HOTBAR_LAST_EXCL = HOTBAR_FIRST + HOTBAR_COUNT; // 41
+
+
     public ProofingBoxMenu(int id, Inventory playerInv, ProofingBoxBlockEntity blockEntity) {
         super(ModMenuTypes.PROOFING_BOX_MENU.get(), id, playerInv, blockEntity);
         this.blockEntity = blockEntity;
         this.access = ContainerLevelAccess.create(blockEntity.getLevel(), blockEntity.getBlockPos());
 
-        // --- Add TE slots: 27 input (top), 27 output (middle)
         int slot = 0;
-        // Input: 3 rows × 9 cols
-        for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 9; ++col) {
-                this.addSlot(new SlotItemHandler(blockEntity.getItemHandler(), slot++, 8 + col * 18, 18 + row * 18));
-            }
-        }
-        // Output: 3 rows × 9 cols (shifted down)
-        for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 9; ++col) {
-                int index = 27 + col + row * 9;
-                this.addSlot(new SlotItemHandler(blockEntity.getItemHandler(), index, 8 + col * 18, 88 + row * 18));
-            }
+// Proofer (hopper) row: 5 slots centered
+        for (int i = 0; i < 5; ++i) {
+            this.addSlot(new SlotItemHandler(blockEntity.getItemHandler(), slot++,
+                    44 + i * 18, 20));
         }
 
-        // --- Add player inventory (3 rows)
+// Player inventory 3×9 (top-left 8,51)
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
-                this.addSlot(new Slot(playerInv, col + row * 9 + 9, 8 + col * 18, 154 + row * 18));
-
+                this.addSlot(new Slot(playerInv, col + row * 9 + 9,
+                        8 + col * 18, 51 + row * 18));
             }
         }
-
-        // --- Hotbar (1 row)
+// Hotbar (top-left 8,109)
         for (int col = 0; col < 9; ++col) {
-            this.addSlot(new Slot(playerInv, col, 8 + col * 18, 154 + 58));
-
+            this.addSlot(new Slot(playerInv, col, 8 + col * 18, 109));
         }
     }
 
@@ -63,39 +65,49 @@ public class ProofingBoxMenu extends AbstractMachineMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        final int TE_SLOT_COUNT = blockEntity.getItemHandler().getSlots();
-        final int PLAYER_SLOT_COUNT = 36; // 27 main + 9 hotbar
-        final int TE_FIRST_SLOT_INDEX = PLAYER_SLOT_COUNT;
-        final int TE_LAST_SLOT_INDEX = TE_FIRST_SLOT_INDEX + TE_SLOT_COUNT;
+        Slot source = this.slots.get(index);
+        if (source == null || !source.hasItem()) return ItemStack.EMPTY;
 
-        Slot sourceSlot = this.slots.get(index);
-        if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;
+        ItemStack stack = source.getItem();
+        ItemStack original = stack.copy();
 
-        ItemStack sourceStack = sourceSlot.getItem();
-        ItemStack copy = sourceStack.copy();
+        boolean fromTE = index >= TE_FIRST && index < TE_LAST_EXCL;
+        boolean fromPlayer = index >= PLAYER_INV_FIRST && index < HOTBAR_LAST_EXCL;
 
-        if (index < PLAYER_SLOT_COUNT) {
-            // From player inventory to TE
-            if (!moveItemStackTo(sourceStack, TE_FIRST_SLOT_INDEX, TE_LAST_SLOT_INDEX, false)) {
-                return ItemStack.EMPTY;
+        if (fromPlayer) {
+            // Player → TE (try all 9 proofing slots)
+            if (!this.moveItemStackTo(stack, TE_FIRST, TE_LAST_EXCL, false)) {
+                // swap between inv/hotbar if TE is full
+                if (index >= PLAYER_INV_FIRST && index < PLAYER_INV_LAST_EXCL) {
+                    if (!this.moveItemStackTo(stack, HOTBAR_FIRST, HOTBAR_LAST_EXCL, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (index >= HOTBAR_FIRST && index < HOTBAR_LAST_EXCL) {
+                    if (!this.moveItemStackTo(stack, PLAYER_INV_FIRST, PLAYER_INV_LAST_EXCL, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else {
+                    return ItemStack.EMPTY;
+                }
             }
-        } else if (index < TE_LAST_SLOT_INDEX) {
-            // From TE to player inventory
-            if (!moveItemStackTo(sourceStack, 0, PLAYER_SLOT_COUNT, false)) {
+        } else if (fromTE) {
+            // TE → Player (main inv first, then hotbar)
+            if (!this.moveItemStackTo(stack, PLAYER_INV_FIRST, PLAYER_INV_LAST_EXCL, false)
+                    && !this.moveItemStackTo(stack, HOTBAR_FIRST, HOTBAR_LAST_EXCL, false)) {
                 return ItemStack.EMPTY;
             }
         } else {
-            System.err.println("Invalid slotIndex: " + index);
             return ItemStack.EMPTY;
         }
 
-        if (sourceStack.isEmpty()) {
-            sourceSlot.set(ItemStack.EMPTY);
+        if (stack.isEmpty()) {
+            source.set(ItemStack.EMPTY);
         } else {
-            sourceSlot.setChanged();
+            source.setChanged();
         }
+        source.onTake(player, stack);
 
-        sourceSlot.onTake(player, sourceStack);
-        return copy;
+        if (stack.getCount() == original.getCount()) return ItemStack.EMPTY;
+        return original;
     }
 }

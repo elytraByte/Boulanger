@@ -96,7 +96,7 @@ public class ModBiomeModifiers {
         // Holstein Friesian Cows in all Overworld biomes
         ctx.register(ADD_COWS, new BiomeModifiers.AddSpawnsBiomeModifier(
                 biomes.getOrThrow(Tags.Biomes.IS_OVERWORLD),
-                List.of(new SpawnerData(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), 8, 1, 3))
+                List.of(new SpawnerData(ModEntities.HOLSTEIN_FRIESIAN.get(), 8, 1, 3))
         ));
     }
 }

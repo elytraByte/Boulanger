@@ -11,7 +11,7 @@ import net.minecraft.world.entity.player.Inventory;
 public class ProofingBoxScreen extends AbstractContainerScreen<ProofingBoxMenu> {
 
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "textures/gui/proofer.png");
+            ResourceLocation.fromNamespaceAndPath("minecraft", "textures/gui/container/hopper.png");
 
     public ProofingBoxScreen(ProofingBoxMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -22,7 +22,6 @@ public class ProofingBoxScreen extends AbstractContainerScreen<ProofingBoxMenu> 
     @Override
     protected void init() {
         super.init();
-        this.titleLabelX = 8;
         this.titleLabelY = 6;
         this.inventoryLabelX = 8;
         this.inventoryLabelY = 134; // Aligned just above player inventory

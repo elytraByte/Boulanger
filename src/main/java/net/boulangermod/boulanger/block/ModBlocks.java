@@ -16,7 +16,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
-import net.boulangermod.boulanger.block.crops.HardRedSpringWheatCrop;
+import net.boulangermod.boulanger.block.crops.BoulangerWheatCrop;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.worldgen.tree.ModTreeGrowers;
 
@@ -139,8 +139,8 @@ public class ModBlocks {
             )
     );
 
-    public static final DeferredBlock<Block> HARD_RED_SPRING_WHEAT_CROP = registerBlock("hard_red_spring_wheat_crop",
-            () -> new HardRedSpringWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
+    public static final DeferredBlock<Block> WHEAT_BUSHEL = registerBlock("wheat_bushel",
+            () -> new BoulangerWheatCrop(BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT)));
 
     public static final DeferredBlock<Block> WILD_WHEAT = registerBlock("wild_wheat",
             () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS).offsetType(BlockBehaviour.OffsetType.XZ)));

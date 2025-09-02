@@ -3,7 +3,7 @@ package net.boulangermod.boulanger.util;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.boulangermod.boulanger.block.crops.HardRedSpringWheatCrop;
+import net.boulangermod.boulanger.block.crops.BoulangerWheatCrop;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.item.WheatVariety;
 import net.minecraft.core.component.DataComponentPatch;
@@ -30,8 +30,8 @@ public class CopyWheatVarietyFunction extends LootItemConditionalFunction {
     @Override
     protected ItemStack run(ItemStack stack, LootContext ctx) {
         BlockState state = ctx.getParamOrNull(LootContextParams.BLOCK_STATE);
-        if (state != null && state.hasProperty(HardRedSpringWheatCrop.VARIETY)) {
-            WheatVariety var = state.getValue(HardRedSpringWheatCrop.VARIETY);
+        if (state != null && state.hasProperty(BoulangerWheatCrop.VARIETY)) {
+            WheatVariety var = state.getValue(BoulangerWheatCrop.VARIETY);
             stack.applyComponentsAndValidate(
                     DataComponentPatch.builder()
                             .set(ModDataComponentTypes.WHEAT_VARIETY.get(), var)

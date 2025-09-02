@@ -29,8 +29,7 @@ public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity implem
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final int SLOT_COUNT = 54;
-    private static final int PROOF_TIME_TICKS = 20 * 60 * 5; // 5 minutes in ticks (6000 ticks)
+    private static final int SLOT_COUNT = 5;
 
     public ProofingBoxBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.PROOFING_BOX.get(), pos, state, SLOT_COUNT);
@@ -54,7 +53,8 @@ public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity implem
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level == null || level.isClientSide) return;
 
-        for (int i = 0; i <= 26; i++) { // INPUT SLOTS ONLY
+        final int slots = this.itemHandler.getSlots(); // now 5
+        for (int i = 0; i < slots; i++) {
             ItemStack stack = this.itemHandler.getStackInSlot(i);
             if (stack.isEmpty()) continue;
 
@@ -66,7 +66,6 @@ public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity implem
                     .map(RecipeHolder::value)
                     .filter(r -> r.getDoughType().equals(doughType))
                     .findFirst();
-
             if (opt.isEmpty()) continue;
 
             DoughProcessRecipe recipe = opt.get();
@@ -79,82 +78,33 @@ public class ProofingBoxBlockEntity extends AbstractProcessingBlockEntity implem
             );
 
             int index = proof.stepIndex();
-            if (index >= steps.size()) continue;
+            if (index >= steps.size()) continue; // already finished
 
-            ProcessingStep currentStep = steps.get(index);
+            ProcessingStep current = steps.get(index);
+            // only tick PROOF / FINAL_PROOF
+            if (current.type() != StepType.PROOF && current.type() != StepType.FINAL_PROOF) continue;
 
-            // Must be a PROOF or FINAL_PROOF step
-            if (currentStep.type() != StepType.PROOF && currentStep.type() != StepType.FINAL_PROOF) continue;
-
-            // If FINAL_PROOF, require shaped && PAN_TYPE
-            if (currentStep.type() == StepType.FINAL_PROOF) {
+            // FINAL_PROOF requires shaped + pan
+            if (current.type() == StepType.FINAL_PROOF) {
                 if (!proof.shaped() || !stack.has(ModDataComponentTypes.PAN_TYPE.get())) continue;
             }
 
             int ticked = proof.ticksInStep() + 1;
-            if (ticked >= currentStep.durationTicks()) {
-                // Advance the proofing step
-                ItemStack updatedStack = stack.copy();
-                updatedStack.set(ModDataComponentTypes.PROOFING_STATE.get(),
+            if (ticked >= current.durationTicks()) {
+                // advance to next step, IN PLACE
+                ItemStack updated = stack.copy();
+                updated.set(ModDataComponentTypes.PROOFING_STATE.get(),
                         new ProofingStateComponent(index + 1, 0, proof.shaped()));
-
-                // Try to move to output slot
-                boolean moved = false;
-                for (int j = 27; j < 54; j++) {
-                    if (this.itemHandler.getStackInSlot(j).isEmpty()) {
-                        this.itemHandler.setStackInSlot(j, updatedStack);
-                        this.itemHandler.setStackInSlot(i, ItemStack.EMPTY);
-                        LOGGER.debug("→ Dough at slot {} completed {} step and moved to output slot {}", i, currentStep.type(), j);
-                        moved = true;
-                        break;
-                    }
-                }
-
-                if (!moved) {
-                    // If no output slot available, update in-place
-                    stack.set(ModDataComponentTypes.PROOFING_STATE.get(),
-                            new ProofingStateComponent(index + 1, 0, proof.shaped()));
-                }
-
+                this.itemHandler.setStackInSlot(i, updated);
+                LOGGER.debug("Slot {} advanced {} -> step {}", i, current.type(), index + 1);
             } else {
-                // Still ticking in current step
-                stack.set(ModDataComponentTypes.PROOFING_STATE.get(),
+                // continue ticking this step, IN PLACE
+                ItemStack updated = stack.copy();
+                updated.set(ModDataComponentTypes.PROOFING_STATE.get(),
                         new ProofingStateComponent(index, ticked, proof.shaped()));
+                this.itemHandler.setStackInSlot(i, updated);
             }
         }
-    }
-
-
-
-
-
-    public static boolean tryPunchDown(ItemStack stack, Level level) {
-        if (!stack.has(ModDataComponentTypes.PROOFING_STATE.get()) ||
-                !stack.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get())) return false;
-
-        ProofingStateComponent state = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
-        ResourceLocation recipeId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
-
-        Optional<DoughProcessRecipe> opt = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
-                .map(RecipeHolder::value)
-                .filter(r -> r.getDoughType().equals(recipeId))
-                .findFirst();
-
-        if (opt.isEmpty()) return false;
-        DoughProcessRecipe recipe = opt.get();
-        List<ProcessingStep> steps = recipe.getSteps();
-
-        if (state.stepIndex() >= steps.size()) return false;
-
-        ProcessingStep step = steps.get(state.stepIndex());
-        if (step.type() == StepType.PUNCHDOWN) {
-            stack.set(ModDataComponentTypes.PROOFING_STATE.get(),
-                    new ProofingStateComponent(state.stepIndex() + 1, 0, state.shaped()));
-            return true;
-        }
-
-        return false;
     }
 
 }

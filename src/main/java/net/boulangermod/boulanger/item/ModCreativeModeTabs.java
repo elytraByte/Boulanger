@@ -3,7 +3,6 @@ package net.boulangermod.boulanger.item;
 import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.WeightComponent;
-import net.boulangermod.boulanger.fluid.ModFluids;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -12,7 +11,6 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
@@ -31,7 +29,7 @@ public class ModCreativeModeTabs {
     public static final Supplier<CreativeModeTab> BOULANGER_MAIN =
             CREATIVE_MODE_TABS.register("boulanger_main", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.boulanger.boulanger_tab.main")) //translate !
-                    .icon(() -> new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get()))
+                    .icon(() -> new ItemStack(ModItems.WHEAT_BUSHEL.get()))
                     .displayItems((pParameters, pOutput) ->
 
                     {
@@ -145,7 +143,7 @@ public class ModCreativeModeTabs {
                             pOutput.accept(variantStack);
                         }
 
-                        pOutput.accept(new ItemStack(ModItems.HARD_RED_SPRING_WHEAT.get(), 1));
+                        pOutput.accept(new ItemStack(ModItems.WHEAT_BUSHEL.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.WHEAT_BERRIES.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.DOUGH.get(), 1));
                         pOutput.accept(new ItemStack(ModItems.BROWN_SUGAR.get(), 1));

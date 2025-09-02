@@ -1,7 +1,7 @@
 package net.boulangermod.boulanger.datagen;
 
 import net.boulangermod.boulanger.block.ModBlocks;
-import net.boulangermod.boulanger.block.crops.HardRedSpringWheatCrop;
+import net.boulangermod.boulanger.block.crops.BoulangerWheatCrop;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.item.WheatVariety;
@@ -143,14 +143,14 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.WOODGAS_VALVE.get());
 
         // your custom wheat crop:
-        Block crop = ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get();
+        Block crop = ModBlocks.WHEAT_BUSHEL.get();
         this.add(crop, createCropDrops(
                 crop,
-                ModItems.HARD_RED_SPRING_WHEAT.get(),
+                ModItems.WHEAT_BUSHEL.get(),
                 ModItems.WHEAT_SEED.get(),
                 LootItemBlockStatePropertyCondition.hasBlockStateProperties(crop)
                         .setProperties(StatePropertiesPredicate.Builder.properties()
-                                .hasProperty(HardRedSpringWheatCrop.AGE, 7)
+                                .hasProperty(BoulangerWheatCrop.AGE, 7)
                         )
         ));
 

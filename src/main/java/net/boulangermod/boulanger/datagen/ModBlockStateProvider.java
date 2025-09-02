@@ -126,17 +126,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
             itemModels().withExistingParent(n, modLoc("block/" + n + "_up"));
         }
 
-        // ─── BUTTON ───────────────────────────────────────────────────────────
-        {
-            ButtonBlock btn = (ButtonBlock) ModBlocks.PINE_BUTTON.get();
-            ResourceLocation tex = blockTexture(ModBlocks.PINE_PLANKS.get());
-
-            buttonBlock(btn, tex);
-            simpleBlockItem(
-                    ModBlocks.PINE_BUTTON.get(),
-                    models().buttonInventory(ModBlocks.PINE_BUTTON.getId().getPath(), tex)
-            );
-        }
+        buttonBlock(((ButtonBlock) ModBlocks.PINE_BUTTON.get()), blockTexture(ModBlocks.PINE_PLANKS.get()));
 
         // ─── TRAPDOOR ─────────────────────────────────────────────────────────
         trapdoorBlockWithRenderType(
@@ -278,11 +268,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
         );
 
         makeCrop(
-                (CropBlock) ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(),
+                (CropBlock) ModBlocks.WHEAT_BUSHEL.get(),
                 "boulanger_wheat_stage",
                 "boulanger_wheat_stage"
         );
-        simpleBlockItem(ModBlocks.HARD_RED_SPRING_WHEAT_CROP.get(),
+        simpleBlockItem(ModBlocks.WHEAT_BUSHEL.get(),
                 models().getExistingFile(modLoc("block/boulanger_wheat_stage0"))
         );
 
@@ -348,6 +338,8 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 BuiltInRegistries.BLOCK.getKey(ModBlocks.WOOD_GASIFIER.get()).getPath(),
                 modLoc("block/wood_gasifier_base")
         );
+
+
 
         // ─── BATTERY ──────────────────────────────────────────────────────────
         {
@@ -464,39 +456,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
         simpleBlockItem(ModBlocks.WOODGAS_FLARE.get(), flare);
     }
-
-//    // Core-only, flare-style. If this doesn't render, the problem isn't multipart.
-//    private void woodgasValveCoreOnly() {
-//        ModelFile core = models()
-//                .withExistingParent("woodgas_valve_rt", modLoc("block/woodgas_valve"))
-//                .renderType("cutout");
-//
-//        getVariantBuilder(ModBlocks.WOODGAS_VALVE.get())
-//                .forAllStates(state -> {
-//                    // IMPORTANT: use the exact property your block exposes
-//                    // If your valve is HorizontalDirectionalBlock, this is HORIZONTAL_FACING.
-//                    // If it's DirectionalBlock (6-way), this is FACING.
-//                    Direction f = state.getValue(WoodGasValveBlock.FACING); // <-- adjust if yours is HORIZONTAL_FACING
-//
-//                    int x = 0, y = 0;
-//                    switch (f) {
-//                        case DOWN -> x = 90;
-//                        case UP   -> x = -90;
-//                        case NORTH-> y = 180;
-//                        case SOUTH-> y = 0;
-//                        case WEST -> y = 90;
-//                        case EAST -> y = 270;
-//                    }
-//
-//                    return ConfiguredModel.builder()
-//                            .modelFile(core)
-//                            .rotationX(x)
-//                            .rotationY(y)
-//                            .uvLock(true)
-//                            .build();
-//                });
-//    }
-
 
     // WOODGAS VALVE (core = on/off by OPEN; arms always; cutout)
     private void woodgasValveStates() {
@@ -741,4 +700,9 @@ public class ModBlockStateProvider extends BlockStateProvider {
     private void blockWithItem(DeferredBlock<? extends Block> block) {
         simpleBlockWithItem(block.get(), cubeAll(block.get()));
     }
+
+    // inside your BlockStateProvider subclass
+
+
+
 }

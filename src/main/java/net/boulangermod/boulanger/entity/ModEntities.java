@@ -20,11 +20,11 @@ public class ModEntities {
                             .build("hen"));
 
 
-    public static final Supplier<EntityType<HolsteinFriesianCowEntity>> HOLSTEIN_FRIESAIN_COW =
-            ENTITY_TYPES.register("holstein_friesain_cow", () ->
+    public static final Supplier<EntityType<HolsteinFriesianCowEntity>> HOLSTEIN_FRIESIAN =
+            ENTITY_TYPES.register("holstein_friesian_cow", () ->
                     EntityType.Builder.of(HolsteinFriesianCowEntity::new, MobCategory.CREATURE)
                             .sized(0.9f, 1.4f) // same size as cow
-                            .build("holstein_friesain_cow"));
+                            .build("holstein_friesian_cow"));
 
 
 

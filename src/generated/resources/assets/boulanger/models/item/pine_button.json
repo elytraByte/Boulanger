@@ -1,3 +1,6 @@
 {
-  "parent": "boulanger:block/pine_button"
+  "parent": "minecraft:block/button_inventory",
+  "textures": {
+    "texture": "boulanger:block/pine_planks"
+  }
 }

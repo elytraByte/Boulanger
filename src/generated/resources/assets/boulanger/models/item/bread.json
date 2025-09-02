@@ -74,12 +74,6 @@
       }
     },
     {
-      "model": "boulanger:item/bread/hawaiian_roll",
-      "predicate": {
-        "minecraft:custom_model_data": 13.0
-      }
-    },
-    {
       "model": "boulanger:item/bread/brioche_roll",
       "predicate": {
         "minecraft:custom_model_data": 14.0
@@ -89,6 +83,12 @@
       "model": "boulanger:item/bread/marble_rye",
       "predicate": {
         "minecraft:custom_model_data": 15.0
+      }
+    },
+    {
+      "model": "boulanger:item/bread/hawaiian_roll",
+      "predicate": {
+        "minecraft:custom_model_data": 13.0
       }
     },
     {
@@ -113,6 +113,30 @@
       "model": "boulanger:item/bread/yeast_roll",
       "predicate": {
         "minecraft:custom_model_data": 19.0
+      }
+    },
+    {
+      "model": "boulanger:item/bread/texas_roadhouse_roll",
+      "predicate": {
+        "minecraft:custom_model_data": 20.0
+      }
+    },
+    {
+      "model": "boulanger:item/bread/sourdough",
+      "predicate": {
+        "minecraft:custom_model_data": 21.0
+      }
+    },
+    {
+      "model": "boulanger:item/bread/pretzel",
+      "predicate": {
+        "minecraft:custom_model_data": 22.0
+      }
+    },
+    {
+      "model": "boulanger:item/bread/boule",
+      "predicate": {
+        "minecraft:custom_model_data": 23.0
       }
     }
   ],

@@ -6,7 +6,6 @@ import net.boulangermod.boulanger.client.renderer.SugarRefineryRenderer;
 import net.boulangermod.boulanger.client.renderer.WoodGasFeedThroughRenderer;
 import net.boulangermod.boulanger.command.DevTestCommands;
 import net.boulangermod.boulanger.command.RecipeWeightsCommand;
-import net.boulangermod.boulanger.datagen.ModFluidTagProvider;
 import net.boulangermod.boulanger.entity.HolsteinFriesianCowRenderer;
 import net.boulangermod.boulanger.entity.HenRenderer;
 import net.boulangermod.boulanger.entity.ModEntities;
@@ -111,7 +110,7 @@ public class Boulanger {
         @SubscribeEvent
         public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
             event.registerEntityRenderer(ModEntities.HEN.get(), HenRenderer::new);
-            event.registerEntityRenderer(ModEntities.HOLSTEIN_FRIESAIN_COW.get(), HolsteinFriesianCowRenderer::new);
+            event.registerEntityRenderer(ModEntities.HOLSTEIN_FRIESIAN.get(), HolsteinFriesianCowRenderer::new);
             event.registerBlockEntityRenderer(
                     ModBlockEntities.SUGAR_REFINERY_BE.get(),
                     SugarRefineryRenderer::new

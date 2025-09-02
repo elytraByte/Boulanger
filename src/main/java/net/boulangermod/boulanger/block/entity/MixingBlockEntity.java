@@ -91,32 +91,31 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide) return;
+        if (level == null || level.isClientSide) return;
 
-        // Handle weighed‐ingredient bowl input
+        // --- Intake: consume a filled bowl from INPUT_BOWL, record ingredient, return empty bowl ---
         ItemStack in = itemHandler.getStackInSlot(INPUT_BOWL);
         if (!in.isEmpty() && isWeighedIngredient(in)) {
             var grams = in.get(ModDataComponentTypes.INGREDIENT_GRAMS.get()).grams();
             var cat   = in.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get());
-            LOGGER.debug("Input bowl: {} of category {}", fmtWeightG(grams), cat);
+            LOGGER.debug("Input bowl: {} g of category {}", grams, cat);
 
             addIngredientFromBowl(in);
 
-            // best-effort log of latest totals for that category
-            double catTotal = preciseTotalsG.getOrDefault(cat, 0.0);
-            LOGGER.info("Added ingredient {} → category total now {}", cat, fmtWeightG(catTotal));
-
+            // clear input, spawn an empty bowl to OUTPUT_BOWL (or drop if full)
             itemHandler.setStackInSlot(INPUT_BOWL, ItemStack.EMPTY);
             spawnEmptyBowl();
+            syncToClient();
         }
 
-        // Mixing progress
+        // --- Mixing progress ---
         if (mixing) {
             mixProgress++;
             if (mixProgress >= MAX_MIX_TIME) {
                 generateDough();
                 mixing = false;
                 mixProgress = 0;
+                syncToClient();
             }
         }
     }

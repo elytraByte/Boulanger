@@ -19,14 +19,14 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.neoforged.neoforge.common.extensions.IDataComponentHolderExtension;
 import org.jetbrains.annotations.Nullable;
 
-public class HardRedSpringWheatCrop extends CropBlock {
+public class BoulangerWheatCrop extends CropBlock {
 
     public static final int MAX_AGE = 7;
     // Use the AGE property from CropBlock (do not redefine it)
     public static final EnumProperty<WheatVariety> VARIETY =
             EnumProperty.create("variety", WheatVariety.class);
 
-    public HardRedSpringWheatCrop(Properties props) {
+    public BoulangerWheatCrop(Properties props) {
         super(props);
         // Set the default state with age 0 and the default variety.
         this.registerDefaultState(this.stateDefinition.any()
