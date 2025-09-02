@@ -23,6 +23,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
@@ -83,46 +84,55 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
 
         if (dough.isEmpty() || pan.isEmpty() || !output.isEmpty()) return false;
 
-        var ds      = ModDataComponentTypes.PROOFING_STATE.get();
-        var pt      = ModDataComponentTypes.DOUGH_PROCESS_TYPE.get();
-        var panComp = ModDataComponentTypes.PAN_TYPE.get();
+        var ds      = net.boulangermod.boulanger.component.ModDataComponentTypes.PROOFING_STATE.get();
+        var pt      = net.boulangermod.boulanger.component.ModDataComponentTypes.DOUGH_PROCESS_TYPE.get();
+        var panComp = net.boulangermod.boulanger.component.ModDataComponentTypes.PAN_TYPE.get();
 
         // Dough must have process + proofing; pan MUST declare its type (strict)
         if (!dough.has(ds) || !dough.has(pt) || !pan.has(panComp)) return false;
 
         // Resolve process recipe
         var recipeOpt = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
-                .map(RecipeHolder::value)
+                .getAllRecipesFor(net.boulangermod.boulanger.recipe.ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
                 .filter(r -> r.getDoughType().equals(dough.get(pt)))
                 .findFirst();
         if (recipeOpt.isEmpty()) return false;
-        DoughProcessRecipe recipe = recipeOpt.get();
+        net.boulangermod.boulanger.recipe.DoughProcessRecipe recipe = recipeOpt.get();
 
         // Current step
         int idx = dough.get(ds).stepIndex();
         var steps = recipe.getSteps();
         if (idx < 0 || idx >= steps.size()) return false;
 
-        boolean atShape  = steps.get(idx).type() == StepType.SHAPE;
-        boolean atDivide = steps.get(idx).type() == StepType.DIVIDE;
+        boolean atShape  = steps.get(idx).type() == net.boulangermod.boulanger.recipe.StepType.SHAPE;
+        boolean atDivide = steps.get(idx).type() == net.boulangermod.boulanger.recipe.StepType.DIVIDE;
 
-        // Permit shaping from DIVIDE if the dough is already ~one serving (matches divider tolerance)
+        // Permit shaping from DIVIDE if the dough is already ~one serving (matches divider tolerance),
+        // but now the serving size comes from the RatioRecipe (loaf size preferred for pan shaping).
         int shapeIdx = -1;
         if (!atShape) {
             if (!atDivide) return false;
 
-            double serving = recipe.getServingWeightGrams();
-            var wc = dough.get(ModDataComponentTypes.INGREDIENT_GRAMS);
-            double grams = (wc != null ? wc.grams() : 0.0);
             final double TOLERANCE_GRAMS = 2.0;
+            var wc = dough.get(net.boulangermod.boulanger.component.ModDataComponentTypes.INGREDIENT_GRAMS);
+            double grams = (wc != null ? wc.grams() : 0.0);
+
+            // Find the base RatioRecipe via DoughRecipeComponent
+            var base = findRatioRecipeFor(dough);
+            double serving = (base != null ? base.getLoafSizeG() : 0.0);
+            if (serving <= 0 && base != null) {
+                // fallback to roll size if loaf size isn't defined
+                serving = base.getRollSizeG();
+            }
 
             if (!(serving > 0 && Math.abs(grams - serving) <= TOLERANCE_GRAMS)) {
                 return false; // needs dividing first
             }
+
             // Find next SHAPE step after DIVIDE
             for (int i = idx + 1; i < steps.size(); i++) {
-                if (steps.get(i).type() == StepType.SHAPE) { shapeIdx = i; break; }
+                if (steps.get(i).type() == net.boulangermod.boulanger.recipe.StepType.SHAPE) { shapeIdx = i; break; }
             }
             if (shapeIdx < 0) return false; // malformed process
         }
@@ -142,16 +152,16 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
         copyKnownDoughComponents(dough, shapedPan);
 
         // Stamp the (normalized) PAN_TYPE from the recipe
-        shapedPan.set(panComp, new PanTypeComponent(reqNorm));
+        shapedPan.set(panComp, new net.boulangermod.boulanger.component.PanTypeComponent(reqNorm));
 
         // Advance past SHAPE and mark shaped=true
         int nextIdxAfterShape = atShape ? (idx + 1) : (shapeIdx + 1);
-        shapedPan.set(ds, new ProofingStateComponent(nextIdxAfterShape, 0, true));
+        shapedPan.set(ds, new net.boulangermod.boulanger.component.ProofingStateComponent(nextIdxAfterShape, 0, true));
 
         // Flip the pan’s model to “full”
-        var panType = PanType.byId(ResourceLocation.tryParse(reqNorm)); // reqNorm is namespaced (e.g. boulanger:baguette)
-        shapedPan.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(panType.getFullModelIndex()));
-
+        var panType = net.boulangermod.boulanger.item.PanType.byId(net.minecraft.resources.ResourceLocation.tryParse(reqNorm));
+        shapedPan.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA,
+                new CustomModelData(panType.getFullModelIndex()));
 
         // Consume inputs and output shaped pan
         dough.shrink(1);
@@ -163,5 +173,22 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
         setChanged();
         return true;
     }
+
+
+    // Helper: find the RatioRecipe that produced this dough (via DoughRecipeComponent.recipeId)
+    @Nullable
+    private net.boulangermod.boulanger.recipe.RatioRecipe findRatioRecipeFor(ItemStack dough) {
+        if (level == null) return null;
+        var dr = dough.get(net.boulangermod.boulanger.component.ModDataComponentTypes.DOUGH_RECIPE.get());
+        if (dr == null) return null;
+
+        return level.getRecipeManager()
+                .byKey(dr.recipeId())
+                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
+                .filter(net.boulangermod.boulanger.recipe.RatioRecipe.class::isInstance)
+                .map(net.boulangermod.boulanger.recipe.RatioRecipe.class::cast)
+                .orElse(null);
+    }
+
 
 }

@@ -13,7 +13,9 @@ import java.util.List;
 
 public final class BaguetteRecipes {
     private BaguetteRecipes() {}
+
     public static void register(RecipeOutput out) {
+        // Ratio: keep composition + expose BOTH serving sizes
         new RatioRecipeBuilder(
                 DatagenIds.id("baguette"),
                 new ItemStack(ModItems.DOUGH.get()),
@@ -27,10 +29,11 @@ public final class BaguetteRecipes {
                         List.of(DatagenIds.mc("water_bucket")))
                 .addComponent(IngredientCategory.SALT, 3.0, List.of())
                 .addComponent(IngredientCategory.YEAST, 4.0, List.of())
-                .servingWeight(454)
+                .rollSizeG(180)   // demi/roll-sized baguette
+                .loafSizeG(454)   // full-size baguette
                 .save(out);
 
-
+        // Single dough-process (method is identical regardless of size)
         new DoughProcessRecipeBuilder(
                 DatagenIds.id("dough_process/baguette"),
                 DatagenIds.id("baguette")
@@ -39,8 +42,7 @@ public final class BaguetteRecipes {
                 .addStep(StepType.PUNCHDOWN)
                 .addStep(StepType.PROOF, 1600)
                 .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.DIVIDE)
-                .setServingWeight(454.0)
+                .addStep(StepType.DIVIDE) // no fixed serving weight here
                 .addStep(StepType.SHAPE)
                 .setPanType(DatagenIds.pan(PanType.BAGUETTE))
                 .save(out);

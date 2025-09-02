@@ -34,10 +34,11 @@
     }
   ],
   "id": "boulanger:baguette",
+  "loaf_size_g": 454,
   "result": {
     "count": 1,
     "id": "boulanger:generic_dough"
   },
-  "serving_weight": 454.0,
+  "roll_size_g": 180,
   "tolerance": 0.05
 }

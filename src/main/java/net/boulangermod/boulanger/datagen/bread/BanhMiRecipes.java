@@ -13,6 +13,7 @@ import java.util.List;
 
 public final class BanhMiRecipes {
     private BanhMiRecipes() {}
+
     public static void register(RecipeOutput out) {
         new RatioRecipeBuilder(
                 DatagenIds.id("banh_mi"),
@@ -42,9 +43,8 @@ public final class BanhMiRecipes {
                         List.of(DatagenIds.id("diastatic_malt_powder")))
                 .addComponent(IngredientCategory.ADDITIVE, 0.005,
                         List.of(DatagenIds.id("l_cysteine")))
-                .servingWeight(180.0)
+                .loafSizeG(180) // only a loaf size; no roll size
                 .save(out);
-
 
         new DoughProcessRecipeBuilder(
                 DatagenIds.id("dough_process/banh_mi"),
@@ -54,8 +54,7 @@ public final class BanhMiRecipes {
                 .addStep(StepType.PUNCHDOWN)
                 .addStep(StepType.PROOF, 1600)
                 .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.DIVIDE)
-                .setServingWeight(180.0)
+                .addStep(StepType.DIVIDE) // serving weight omitted (optional)
                 .addStep(StepType.SHAPE)
                 .setPanType(DatagenIds.pan(PanType.BAGUETTE))
                 .addStep(StepType.PROOF, 1600)

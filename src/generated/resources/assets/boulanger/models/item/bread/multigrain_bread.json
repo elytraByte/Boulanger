@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "boulanger:item/bread/multigrain_bread"
-  }
-}

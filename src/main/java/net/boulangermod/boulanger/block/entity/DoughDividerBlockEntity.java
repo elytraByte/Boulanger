@@ -3,14 +3,13 @@ package net.boulangermod.boulanger.block.entity;
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
 import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.item.ModItems;
-import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
-import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
-import net.boulangermod.boulanger.recipe.ProcessingStep;
-import net.boulangermod.boulanger.recipe.StepType;
+import net.boulangermod.boulanger.recipe.*;
 import net.boulangermod.boulanger.screen.DoughDividerMenu;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentType;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -33,8 +32,54 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
     // grams of wiggle room
     private static final double TOLERANCE_GRAMS = 2.0;
 
+    /** If true → ROLL mode; false → LOAF mode. */
+    private boolean rollMode = false;
+    private boolean modeSelected = false;
+
     public DoughDividerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.DOUGH_DIVIDER.get(), pos, state, 2);
+    }
+
+    // ---------- New: mode API ----------
+
+    public boolean isRollMode() {
+        return rollMode;
+    }
+
+    public void setRollMode(boolean roll) {
+        // player explicitly chose a mode
+        this.modeSelected = true;
+
+        if (this.rollMode == roll) {
+            // still changed: we want clients to update from neutral → pressed
+            setChanged();
+            syncToClient();
+            return;
+        }
+
+        this.rollMode = roll;
+        setChanged();
+        syncToClient();
+    }
+
+    private void syncToClient() {
+        if (level == null) return;
+        var state = getBlockState();
+        level.sendBlockUpdated(this.worldPosition, state, state, net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
+    }
+
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider regs) {
+        super.saveAdditional(tag, regs);
+        tag.putBoolean("RollMode", this.rollMode);
+        tag.putBoolean("ModeSelected", this.modeSelected);
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider regs) {
+        super.loadAdditional(tag, regs);
+        this.rollMode = tag.getBoolean("RollMode");
+        this.modeSelected = tag.getBoolean("ModeSelected"); // old worlds: defaults to false
     }
 
     @Override
@@ -82,6 +127,11 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
         if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) return false;
 
+        // NEW: Require an explicit mode selection before doing anything
+        if (!this.modeSelected) {
+            return false;
+        }
+
         // a) recipe must exist
         DoughProcessRecipe recipe = findRecipeFor(input);
         if (recipe == null) return false;
@@ -96,11 +146,14 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
         if (wc == null || wc.grams() <= 0) return false;
 
-        double total   = wc.grams();
-        double serving = recipe.getServingWeightGrams();
-        if (serving <= 0) {
-            return false;
-        }
+        double total = wc.grams();
+
+        // base RatioRecipe and serving by mode
+        RatioRecipe base = findRatioRecipeFor(input);
+        if (base == null) return false;
+
+        double serving = getTargetServingWeight(base); // mode-based
+        if (serving <= 0) return false;
 
         boolean minimalOk = Math.abs(total - serving) <= TOLERANCE_GRAMS;
         boolean multiOk   = total >= (2 * serving - TOLERANCE_GRAMS);
@@ -117,10 +170,11 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         if (recipe == null) {
             return;
         }
-        double serving = recipe.getServingWeightGrams();
-        if (serving <= 0) {
-            return;
-        }
+        RatioRecipe base = findRatioRecipeFor(input);
+        if (base == null) { return; }
+
+        double serving = getTargetServingWeight(base); // <-- mode-based from RatioRecipe
+        if (serving <= 0) { return; }
 
         // 2) Read total grams from the weight component
         WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
@@ -133,6 +187,7 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
             if (diff <= TOLERANCE_GRAMS) {
                 advanceSinglePortion(input);
             } else {
+                // within divide step but not close enough to target; do nothing
             }
             return;
         }
@@ -236,9 +291,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         return new ProofingStateComponent(next, /*ticks=*/0, /*shaped=*/shaped);
     }
 
-
-
-
     private DoughRecipeComponent scaleRecipeForWeight(DoughRecipeComponent old, double newWeightGrams) {
         // Total mg from the precise per-ingredient list
         int oldTotalMg = old.ingredients().stream()
@@ -274,7 +326,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
                 totalGramsRounded
         );
     }
-
 
     @SuppressWarnings("unchecked")
     private static void copyDoughMetadataExceptWeight(ItemStack src, ItemStack dst) {
@@ -339,4 +390,24 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
 
         setChanged();
     }
+
+    private double getTargetServingWeight(RatioRecipe recipe) {
+        if (!this.modeSelected) return 0.0; // neutral → requires player choice
+        return this.rollMode ? recipe.getRollSizeG() : recipe.getLoafSizeG();
+    }
+
+    /** Find the base RatioRecipe that produced this dough (via DoughRecipeComponent.recipeId). */
+    private RatioRecipe findRatioRecipeFor(ItemStack stack) {
+        if (level == null) return null;
+        DoughRecipeComponent dr = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        if (dr == null) return null;
+
+        return level.getRecipeManager()
+                .byKey(dr.recipeId())
+                .map(RecipeHolder::value)
+                .filter(RatioRecipe.class::isInstance)
+                .map(RatioRecipe.class::cast)
+                .orElse(null);
+    }
+
 }

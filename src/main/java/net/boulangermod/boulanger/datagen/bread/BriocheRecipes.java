@@ -34,9 +34,9 @@ public final class BriocheRecipes {
                         List.of(DatagenIds.id("calcium_propionate")))
                 .addComponent(IngredientCategory.ADDITIVE, 0.03,
                         List.of(DatagenIds.id("ascorbic_acid")))
-                .servingWeight(680)
+                .rollSizeG(65)    // brioche roll
+                .loafSizeG(680)   // brioche loaf
                 .save(out);
-
 
         new DoughProcessRecipeBuilder(
                 DatagenIds.id("dough_process/brioche"),
@@ -46,8 +46,7 @@ public final class BriocheRecipes {
                 .addStep(StepType.PUNCHDOWN)
                 .addStep(StepType.PROOF, 1600)
                 .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.DIVIDE)
-                .setServingWeight(680)
+                .addStep(StepType.DIVIDE) // serving weight omitted (optional)
                 .addStep(StepType.SHAPE)
                 .setPanType(DatagenIds.pan(PanType.LOAF))
                 .addStep(StepType.PROOF, 800)

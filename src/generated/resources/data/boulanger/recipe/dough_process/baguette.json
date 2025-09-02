@@ -3,7 +3,6 @@
   "dough_type": "boulanger:baguette",
   "id": "boulanger:dough_process/baguette",
   "pan_type": "boulanger:baguette",
-  "serving_weight_grams": 454.0,
   "steps": [
     {
       "type": "PROOF",

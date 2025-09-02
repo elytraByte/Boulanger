@@ -33,9 +33,9 @@ public final class WholeWheatBreadRecipes {
                         List.of(DatagenIds.id("fancy_egg")))
                 .addComponent(IngredientCategory.WATER, 72.0,
                         List.of(DatagenIds.mc("water_bucket")))
-                .servingWeight(680.0)
+                .rollSizeG(65)     // whole-wheat roll
+                .loafSizeG(680)    // whole-wheat loaf
                 .save(out);
-
 
         new DoughProcessRecipeBuilder(
                 DatagenIds.id("dough_process/whole_wheat_bread"),
@@ -45,11 +45,10 @@ public final class WholeWheatBreadRecipes {
                 .addStep(StepType.PUNCHDOWN)
                 .addStep(StepType.PROOF, 1600)
                 .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.DIVIDE)
+                .addStep(StepType.DIVIDE) // serving weight omitted (optional)
                 .addStep(StepType.SHAPE)
-                .addStep(StepType.PROOF, 1600)
-                .setServingWeight(680.0)
                 .setPanType(DatagenIds.pan(PanType.LOAF))
+                .addStep(StepType.PROOF, 1600)
                 .save(out);
     }
 }

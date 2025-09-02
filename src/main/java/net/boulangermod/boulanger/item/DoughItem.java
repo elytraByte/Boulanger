@@ -8,9 +8,10 @@ import net.boulangermod.boulanger.recipe.StepType;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen; // ← Shift detection
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -225,17 +226,19 @@ public class DoughItem extends Item {
         return InteractionResult.PASS;
     }
 
-    // === Progress bar (unchanged) ==========================================
-    @Override public boolean isBarVisible(ItemStack stack) {
-        return stack.has(ModDataComponentTypes.PROOFING_STATE.get());
-    }
-
     @Override
     public int getBarWidth(ItemStack stack) {
         Level level = Minecraft.getInstance().level;
         if (level == null) return 0;
         return getBarWidth(stack, level);
     }
+
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        Level level = Minecraft.getInstance().level;
+        return isProofStep(stack, level);
+    }
+
 
     // Internal helper — no @Override
     public int getBarWidth(ItemStack stack, @Nullable Level level) {
@@ -260,8 +263,62 @@ public class DoughItem extends Item {
         return (int) (13f * progress);
     }
 
-    @Override public int getMaxStackSize(ItemStack stack) { return 1; }
-    @Override public int getBarColor(ItemStack stack) { return 0x55FFFF; } // light blue
+    @Override
+    public int getBarColor(ItemStack stack) {
+        Level level = Minecraft.getInstance().level;
+        if (level == null) return 0;
+        float p = currentProofProgress(stack, level); // 0..1 or -1 if N/A
+        if (p < 0f) return 0; // not shown anyway
+        return Mth.hsvToRgb(p / 3.0f, 1.0f, 1.0f);
+    }
+
+    private boolean isProofStep(ItemStack stack, @Nullable Level level) {
+        if (level == null) return false;
+
+        ProofingStateComponent state = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
+        ResourceLocation processId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+        if (state == null || processId == null) return false;
+
+        var opt = level.getRecipeManager()
+                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .map(RecipeHolder::value)
+                .filter(r -> r.getDoughType().equals(processId))
+                .findFirst();
+        if (opt.isEmpty()) return false;
+
+        List<ProcessingStep> steps = opt.get().getSteps();
+        int idx = state.stepIndex();
+        if (idx < 0 || idx >= steps.size()) return false;
+
+        return steps.get(idx).type() == StepType.PROOF;
+    }
+
+    private float currentProofProgress(ItemStack stack, @Nullable Level level) {
+        if (level == null) return -1f;
+
+        ProofingStateComponent state = stack.get(ModDataComponentTypes.PROOFING_STATE.get());
+        ResourceLocation processId = stack.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+        if (state == null || processId == null) return -1f;
+
+        var opt = level.getRecipeManager()
+                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .map(RecipeHolder::value)
+                .filter(r -> r.getDoughType().equals(processId))
+                .findFirst();
+        if (opt.isEmpty()) return -1f;
+
+        List<ProcessingStep> steps = opt.get().getSteps();
+        int idx = state.stepIndex();
+        if (idx < 0 || idx >= steps.size()) return -1f;
+
+        ProcessingStep step = steps.get(idx);
+        if (step.type() != StepType.PROOF) return -1f;
+
+        float dur = Math.max(1, step.durationTicks());
+        float prog = Math.min(1f, Math.max(0f, (float) state.ticksInStep() / dur));
+        return prog;
+    }
+
 
     // === Data helpers for baker’s % and hydration ==========================
 
@@ -329,17 +386,6 @@ public class DoughItem extends Item {
             case 3 -> n + "rd";
             default -> n + "th";
         };
-    }
-
-    /** Returns e.g. "1st Proof", "2nd Proof", "1st Punchdown" for steps[ idx ]. */
-    private static String stepLabel(java.util.List<ProcessingStep> steps, int idx) {
-        if (steps == null || idx < 0 || idx >= steps.size()) return "";
-        StepType type = steps.get(idx).type();
-        int occurrence = 0;
-        for (int i = 0; i <= idx; i++) {
-            if (steps.get(i).type() == type) occurrence++;
-        }
-        return ordinal(occurrence) + " " + toTitleWord(type.name());
     }
 
 }

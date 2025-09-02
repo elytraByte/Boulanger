@@ -22,11 +22,9 @@ public enum BreadType {
     WHITE_PAN_BREAD    (10, "white_pan_bread"),
     WHITE_BREAD        (11, "white_bread"),
     MULTIGRAIN_BREAD   (12, "multigrain_bread"),
-
-    // new additions
+    HAWAIIAN_ROLL      (13, "hawaiian_roll"),
     BRIOCHE_ROLL       (14, "brioche_roll"),
     MARBLE_RYE         (15, "marble_rye"),
-    HAWAIIAN_ROLL      (13, "hawaiian_roll"),
     RYE_ROLL           (16, "rye_roll"),
     WHEAT_ROLL         (17, "wheat_roll"),
     SWEET_YEAST_ROLL   (18, "sweet_yeast_roll"),

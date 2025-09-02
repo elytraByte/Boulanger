@@ -262,16 +262,12 @@ public final class DoughFactory {
         return new BuildResult(out, finalSumMg, targetGramsRounded);
     }
 
-    /** Prefer process serving weight; fall back to Ratio; default 454. */
+    /** Prefer RatioRecipe size; default 454g if none defined. */
     private static double safeServingWeight(@Nullable DoughProcessRecipe proc, RatioRecipe rr) {
-        if (proc != null) {
-            double sw = proc.getServingWeightGrams();
-            if (sw > 0) return sw;
-        }
-        double sw = getServingWeight(rr);
-        if (sw > 0) return sw;
-        return 454.0;
+        double sw = getServingWeight(rr); // e.g., prefer loaf, fallback to roll inside this helper
+        return (sw > 0) ? sw : 454.0;
     }
+
 
     // ─────────────────────────────────────────────────────────────────────
     // Proofing state — ABSOLUTE step (1..N)

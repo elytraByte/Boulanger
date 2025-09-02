@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger.datagen.builder;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
@@ -13,12 +14,23 @@ import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
+/**
+ * Datagen builder for {@link RatioRecipe}.
+ *
+ * Writes optional {@code roll_size_g} / {@code loaf_size_g}.
+ * The old {@link #servingWeight(double)} is kept for source compatibility
+ * and now maps to {@code loaf_size_g}.
+ */
 public class RatioRecipeBuilder {
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -27,11 +39,18 @@ public class RatioRecipeBuilder {
     private final double tolerance;
     private final List<IngredientComponent> components = new ArrayList<>();
     private final List<IngredientRequirement> itemRequirements = new ArrayList<>();
-    private double servingWeight = 454.0; // default: 1 lb
+
+    // New optional unit sizes (omitted from JSON when null)
+    private @Nullable Integer rollSizeG = null;
+    private @Nullable Integer loafSizeG = null;
+
+    // Back-compat only: if used and loafSizeG not set, we map it to loaf_size_g.
+    @Deprecated
+    private @Nullable Double legacyServingWeightG = null;
 
     public RatioRecipeBuilder(ResourceLocation id, ItemStack result, double tolerance) {
-        this.id = id;
-        this.result = result;
+        this.id = Objects.requireNonNull(id);
+        this.result = Objects.requireNonNull(result);
         this.tolerance = tolerance;
     }
 
@@ -49,52 +68,73 @@ public class RatioRecipeBuilder {
         return this;
     }
 
+    /** Prefer {@link #loafSizeG(int)} or {@link #rollSizeG(int)}. */
+    @Deprecated
     public RatioRecipeBuilder servingWeight(double grams) {
-        this.servingWeight = grams;
+        this.legacyServingWeightG = grams;
+        return this;
+    }
+
+    /** Sets the per-serving size for a roll-shaped unit (grams). */
+    public RatioRecipeBuilder rollSizeG(int grams) {
+        this.rollSizeG = grams;
+        return this;
+    }
+
+    /** Sets the per-serving size for a loaf-shaped unit (grams). */
+    public RatioRecipeBuilder loafSizeG(int grams) {
+        this.loafSizeG = grams;
         return this;
     }
 
     public void save(RecipeOutput out) {
         JsonObject json = new JsonObject();
-        json.addProperty("type", "boulanger:ratio");
+
+        // required fields
         json.addProperty("id", id.toString());
+        json.addProperty("tolerance", this.tolerance);
 
-        JsonObject res = new JsonObject();
-        res.addProperty("id", BuiltInRegistries.ITEM.getKey(result.getItem()).toString());
-        res.addProperty("count", result.getCount());
-        json.add("result", res);
+        // components (encode via the IngredientComponent CODEC so keys match the runtime)
+        JsonElement compsEl = IngredientComponent.CODEC
+                .listOf()
+                .encodeStart(JsonOps.INSTANCE, this.components)
+                .getOrThrow();
+        json.add("components", compsEl);
 
-        JsonArray compArr = new JsonArray();
-        for (var c : components) {
-            JsonObject obj = new JsonObject();
-            obj.addProperty("category", c.category().name());
-            obj.addProperty("target_percent", c.targetPercent());
-            JsonArray allow = new JsonArray();
-            c.allowedItems().forEach(rl -> allow.add(rl.toString()));
-            obj.add("allowed_items", allow);
-            compArr.add(obj);
+        // result (simple item/count form)
+        JsonObject resultObj = new JsonObject();
+        Item item = result.getItem();
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
+        resultObj.addProperty("item", itemId.toString());
+        if (this.result.getCount() != 1) {
+            resultObj.addProperty("count", this.result.getCount());
         }
-        json.add("components", compArr);
+        json.add("result", resultObj);
 
-        json.addProperty("tolerance", tolerance);
-        json.addProperty("serving_weight", servingWeight);
-
-        if (!itemRequirements.isEmpty()) {
-            JsonArray reqArr = new JsonArray();
-            for (IngredientRequirement req : itemRequirements) {
-                JsonObject o = new JsonObject();
-                o.addProperty("itemId", req.getItemId().toString());
-                o.addProperty("amount", req.getAmount());
-                reqArr.add(o);
-            }
-            json.add("requirements", reqArr);
+        // new optional sizes
+        Integer loafToWrite = this.loafSizeG;
+        if (loafToWrite == null && legacyServingWeightG != null) {
+            loafToWrite = (int) Math.round(legacyServingWeightG);
         }
+        if (this.rollSizeG != null) {
+            json.addProperty("roll_size_g", this.rollSizeG);
+        }
+        if (loafToWrite != null) {
+            json.addProperty("loaf_size_g", loafToWrite);
+        }
+
+        // result — let vanilla encode it so field names match the runtime (“id”, “count”, …)
+        JsonElement resultEl = ItemStack.CODEC
+                .encodeStart(JsonOps.INSTANCE, this.result)
+                .getOrThrow();
+        json.add("result", resultEl);
+
 
         LOGGER.debug("Generated recipe JSON for {}: {}", id, json);
 
         Codec<RatioRecipe> codec = Serializer.CODEC.codec();
-        DataResult<RatioRecipe> parsed = codec.parse(JsonOps.INSTANCE, json);
-        RatioRecipe recipe = parsed.getOrThrow();
+        RatioRecipe recipe = codec.parse(JsonOps.INSTANCE, json)
+                .getOrThrow();
 
         out.accept(id, recipe, null);
     }

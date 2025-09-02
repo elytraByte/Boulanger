@@ -67,6 +67,11 @@ public class BoulangerNetwork {
                     }
                 })
         );
+
+        registrar.playToServer(SetDividerModePacket.TYPE,
+                SetDividerModePacket.STREAM_CODEC,
+                SetDividerModePacket::handle);
+
     }
 
     public static <T extends CustomPacketPayload> void sendToServer(T payload) {

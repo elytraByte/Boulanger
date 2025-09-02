@@ -15,9 +15,11 @@ import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static net.boulangermod.boulanger.recipe.ModRecipeSerializers.*;
 
@@ -28,23 +30,31 @@ public class RatioRecipe implements Recipe<MixingContainer> {
     private final List<IngredientComponent> components;
     private final double tolerance;
     private final ItemStack result;
-    private final double servingWeight;
+
+    // New optional size hints (grams). These are NOT required for crafting; they are UI/Divider hints.
+    private final @Nullable Integer rollSizeG;
+    private final @Nullable Integer loafSizeG;
 
     public RatioRecipe(ResourceLocation id,
                        List<IngredientComponent> components,
                        double tolerance,
                        ItemStack result,
-                       double servingWeight) {
+                       @Nullable Integer rollSizeG,
+                       @Nullable Integer loafSizeG) {
         this.id = Objects.requireNonNull(id);
         this.components = List.copyOf(Objects.requireNonNull(components));
         this.tolerance = tolerance;
         this.result = Objects.requireNonNull(result);
-        this.servingWeight = servingWeight;
+        this.rollSizeG = rollSizeG;
+        this.loafSizeG = loafSizeG;
 
         // ---------- Advanced Logging ----------
         LOG.info("🔧 Loaded RatioRecipe: {}", id);
-        LOG.info("   → Result: {} ({}g)", result.getItem(), servingWeight);
+        LOG.info("   → Result: {}", result.getItem());
         LOG.info("   → Tolerance: {} ({}%)", tolerance, tolerance * 100.0);
+
+        if (rollSizeG != null) LOG.info("   → Roll size hint: {} g", rollSizeG);
+        if (loafSizeG != null) LOG.info("   → Loaf size hint: {} g", loafSizeG);
 
         if (tolerance > 1.0) {
             LOG.warn("⚠ Recipe {} has an unusually high tolerance (>100%): {}!", id, tolerance);
@@ -105,8 +115,14 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         return tolerance;
     }
 
-    public double getServingWeight() {
-        return servingWeight;
+    /** Optional roll size hint (grams) for divider UI; may be null. */
+    public @Nullable Integer getRollSizeG() {
+        return rollSizeG;
+    }
+
+    /** Optional loaf size hint (grams) for divider UI; may be null. */
+    public @Nullable Integer getLoafSizeG() {
+        return loafSizeG;
     }
 
     @Override
@@ -128,6 +144,24 @@ public class RatioRecipe implements Recipe<MixingContainer> {
     // SERIALIZER
     // -------------------------------------------------------------
     public static final class Serializer implements RecipeSerializer<RatioRecipe> {
+
+        /**
+         * JSON format (new):
+         * {
+         *   "type": "boulanger:ratio",
+         *   "id": "boulanger:some_recipe",
+         *   "components": [ ... ],
+         *   "tolerance": 0.05,
+         *   "result": { "item": "boulanger:dough" },
+         *   "roll_size_g": 65,            // optional
+         *   "loaf_size_g": 680            // optional
+         * }
+         *
+         * Legacy read support:
+         * - "serving_weight" (double grams) OR "serving_weight_g" (int grams) will be mapped to loaf_size_g
+         *   if "loaf_size_g" is absent.
+         * We never WRITE legacy fields back out.
+         */
         public static final MapCodec<RatioRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
                 ResourceLocation.CODEC
                         .fieldOf("id")
@@ -142,36 +176,78 @@ public class RatioRecipe implements Recipe<MixingContainer> {
                         .fieldOf("tolerance")
                         .forGetter(RatioRecipe::getTolerance),
 
-
                 ItemStack.CODEC
                         .fieldOf("result")
                         .forGetter(r -> r.result),
 
-                Codec.DOUBLE
-                        .fieldOf("serving_weight")
-                        .forGetter(RatioRecipe::getServingWeight)
+                // New optional hints
+                Codec.INT.optionalFieldOf("roll_size_g")
+                        .forGetter(r -> Optional.ofNullable(r.getRollSizeG())),
+                Codec.INT.optionalFieldOf("loaf_size_g")
+                        .forGetter(r -> Optional.ofNullable(r.getLoafSizeG())),
 
-        ).apply(inst, RatioRecipe::new));
+                // Legacy (read-only)
+                Codec.DOUBLE.optionalFieldOf("serving_weight")
+                        .forGetter(r -> Optional.empty()),
+                Codec.INT.optionalFieldOf("serving_weight_g")
+                        .forGetter(r -> Optional.empty())
+
+        ).apply(inst, (id, components, tolerance, result,
+                       rollOpt, loafOpt, legacyServingOpt, legacyServingGOpt) -> {
+
+            Integer loaf = loafOpt.orElseGet(() -> {
+                if (legacyServingGOpt.isPresent()) return legacyServingGOpt.get();
+                if (legacyServingOpt.isPresent()) return (int) Math.round(legacyServingOpt.get());
+                return null;
+            });
+            Integer roll = rollOpt.orElse(null);
+
+            return new RatioRecipe(id, components, tolerance, result, roll, loaf);
+        }));
 
         @Override
         public MapCodec<RatioRecipe> codec() {
             return CODEC;
         }
 
+        /**
+         * Network sync: optional ints for roll & loaf. Older fields (serving weight) removed.
+         */
         public static final StreamCodec<RegistryFriendlyByteBuf, RatioRecipe> STREAM_CODEC =
-                StreamCodec.composite(
-                        ResourceLocation.STREAM_CODEC,           RatioRecipe::getId,
-                        StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC), RatioRecipe::getComponents,
-                        StreamCodecsCompat.DOUBLE,               RatioRecipe::getTolerance,
-                        ItemStack.STREAM_CODEC,                  r -> r.result,
-                        StreamCodecsCompat.DOUBLE,               RatioRecipe::getServingWeight,
-                        RatioRecipe::new
+                StreamCodec.of(
+                        (buf, r) -> {
+                            // write
+                            ResourceLocation.STREAM_CODEC.encode(buf, r.getId());
+                            StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC).encode(buf, r.getComponents());
+                            StreamCodecsCompat.DOUBLE.encode(buf, r.getTolerance());
+                            ItemStack.STREAM_CODEC.encode(buf, r.result);
+
+                            // roll (optional)
+                            buf.writeBoolean(r.getRollSizeG() != null);
+                            if (r.getRollSizeG() != null) buf.writeVarInt(r.getRollSizeG());
+
+                            // loaf (optional)
+                            buf.writeBoolean(r.getLoafSizeG() != null);
+                            if (r.getLoafSizeG() != null) buf.writeVarInt(r.getLoafSizeG());
+                        },
+                        buf -> {
+                            // read
+                            ResourceLocation id = ResourceLocation.STREAM_CODEC.decode(buf);
+                            List<IngredientComponent> comps =
+                                    StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC).decode(buf);
+                            double tol = StreamCodecsCompat.DOUBLE.decode(buf);
+                            ItemStack result = ItemStack.STREAM_CODEC.decode(buf);
+
+                            Integer roll = buf.readBoolean() ? buf.readVarInt() : null;
+                            Integer loaf = buf.readBoolean() ? buf.readVarInt() : null;
+
+                            return new RatioRecipe(id, comps, tol, result, roll, loaf);
+                        }
                 );
 
         @Override
         public StreamCodec<RegistryFriendlyByteBuf, RatioRecipe> streamCodec() {
             return STREAM_CODEC;
         }
-
     }
 }
