@@ -25,7 +25,12 @@ final class DatagenIds {
     static ResourceLocation mc(String path) {
         return ResourceLocation.fromNamespaceAndPath("minecraft", path);
     }
+    // DatagenIds.java
     static ResourceLocation pan(PanType pan) {
-        return ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, pan.getId());
+        // PanType#getId returns a fully qualified ID like "boulanger:baguette"
+        ResourceLocation rl = ResourceLocation.tryParse(pan.getId());
+        if (rl == null) throw new IllegalArgumentException("Bad PanType id: " + pan.getId());
+        return rl; // -> "boulanger:baguette"
     }
+
 }

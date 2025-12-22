@@ -1,109 +1,101 @@
 package net.boulangermod.boulanger.util;
 
 import net.minecraft.resources.ResourceLocation;
-
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
- * Canonicalize DoughRecipe for deterministic serialization / equality:
- *  - sort ingredients by (category priority, then itemId)
- *  - sort targetPercentages (keys & values stay aligned) by category priority
- *  - round percentages to fixed precision
+ * Deterministic representation of a dough recipe.
+ * Sorts categories by {@link IngredientCategory} order (fallback: lexicographic),
+ * sorts ingredients by (category, itemId), and rounds baker % values.
  *
- *  Call this BEFORE writing your recipe into the DOUGH_RECIPE data component.
+ * Use this whenever you write/read the recipe component so equality checks and
+ * serialization are stable across runs.
  */
 public final class DoughRecipeCanonicalier {
-
     private DoughRecipeCanonicalier() {}
 
-    /** Adjust if you want a different stable order. Unknowns fall to the end. */
-    private static final List<String> CATEGORY_ORDER = List.of(
-            "FLOUR", "WATER", "DAIRY", "EGGS", "FAT", "SUGAR", "SALT", "YEAST", "ADDITIVE"
-    );
-    private static final Map<String, Integer> CAT_PRI = IntStream.range(0, CATEGORY_ORDER.size())
-            .boxed()
-            .collect(Collectors.toUnmodifiableMap(CATEGORY_ORDER::get, i -> i));
+    // round baker % values to 0.001%
+    private static final double PCT_SCALE = 1000.0;
 
-    /** Round % values to N decimals to avoid float wobble in NBT/JSON. */
-    private static final int PCT_DECIMALS = 3;
-    private static final double PCT_SCALE = Math.pow(10, PCT_DECIMALS);
+    /** A single weighed ingredient. */
+    public record Ingredient(String category, ResourceLocation itemId, int milligrams) {}
 
-    private static int categoryOrder(String cat) {
-        return CAT_PRI.getOrDefault(cat, Integer.MAX_VALUE / 2);
+    /** Canonical dough recipe payload. */
+    public record DoughRecipe(
+            ResourceLocation recipeId,
+            int totalWeightGrams,
+            List<String> targetPercentKeys,     // e.g. ["FLOUR","WATER","SALT","YEAST"]
+            List<Double> targetPercentValues,   // same length as keys
+            List<Ingredient> ingredients        // sorted (category then itemId)
+    ) {}
+
+    /** Build from pieces and canonicalize. */
+    public static DoughRecipe canonicalizeFromPieces(ResourceLocation recipeId,
+                                                     int totalWeightGrams,
+                                                     Map<String, Double> targetPercentages,
+                                                     List<Ingredient> ingredients) {
+        List<String> keys = new ArrayList<>(targetPercentages.keySet());
+        List<Double> vals = new ArrayList<>(keys.size());
+        for (String k : keys) vals.add(targetPercentages.getOrDefault(k, 0.0));
+        return canonicalize(new DoughRecipe(recipeId, totalWeightGrams, keys, vals, ingredients));
     }
 
+    /** Canonicalize an existing recipe object. */
+    public static DoughRecipe canonicalize(DoughRecipe in) {
+        Comparator<String> catOrder = categoryComparator();
+
+        // 1) sort % keys/values together
+        List<Integer> idx = new ArrayList<>();
+        for (int i = 0; i < in.targetPercentKeys.size(); i++) idx.add(i);
+        idx.sort((a, b) -> catOrder.compare(in.targetPercentKeys.get(a), in.targetPercentKeys.get(b)));
+
+        List<String> keys = new ArrayList<>(in.targetPercentKeys.size());
+        List<Double> vals = new ArrayList<>(in.targetPercentValues.size());
+        for (int i : idx) {
+            keys.add(in.targetPercentKeys.get(i));
+            vals.add(roundPct(in.targetPercentValues.get(i)));
+        }
+
+        // 2) sort ingredients by (category, itemId, milligrams)
+        List<Ingredient> ings = new ArrayList<>(in.ingredients);
+        ings.sort((a, b) -> {
+            int c = catOrder.compare(a.category(), b.category());
+            if (c != 0) return c;
+            int ns = a.itemId().getNamespace().compareTo(b.itemId().getNamespace());
+            if (ns != 0) return ns;
+            int path = a.itemId().getPath().compareTo(b.itemId().getPath());
+            if (path != 0) return path;
+            return Integer.compare(a.milligrams(), b.milligrams());
+        });
+
+        return new DoughRecipe(in.recipeId, in.totalWeightGrams, keys, vals, ings);
+    }
+
+    /** Rounds a percent value to 0.001% */
     private static double roundPct(double v) {
         return Math.round(v * PCT_SCALE) / PCT_SCALE;
     }
 
-    /** Your ingredient entry – adjust to your actual type if different. */
-    public record Ingredient(String category, ResourceLocation itemId, int milligrams) {}
-
-    /** Your dough recipe – adjust to your actual type if different. */
-    public record DoughRecipe(
-            ResourceLocation recipeId,
-            int totalWeight,                                // grams
-            List<String> targetPercentagesKeys,             // e.g., ["FLOUR","WATER","SALT","YEAST"]
-            List<Double> targetPercentagesValues,           // aligned  [100.0,   70.0,   3.0,   4.0]
-            List<Ingredient> ingredients
-    ){}
-
-    /** Return a new, canonicalized recipe without mutating the input. */
-    public static DoughRecipe canonicalize(DoughRecipe in) {
-        if (in == null) return null;
-
-        // 1) Coalesce duplicate ingredients (same category + itemId) and keep mg as ints.
-        Map<String, Map<ResourceLocation, Integer>> merged = new HashMap<>();
-        for (Ingredient ing : in.ingredients()) {
-            merged.computeIfAbsent(ing.category(), k -> new HashMap<>())
-                    .merge(ing.itemId(), Math.max(0, ing.milligrams()), Integer::sum);
+    /** Order categories by enum ordinal first, then lexicographically for unknowns. */
+    private static Comparator<String> categoryComparator() {
+        Map<String, Integer> pri = new HashMap<>();
+        int i = 0;
+        for (IngredientCategory c : IngredientCategory.values()) {
+            pri.put(c.name(), i++);
         }
-        // Rebuild list, sorted by (category priority → itemId)
-        List<Ingredient> ingredients = merged.entrySet().stream()
-                .flatMap(e -> e.getValue().entrySet().stream()
-                        .map(entry -> new Ingredient(e.getKey(), entry.getKey(), entry.getValue())))
-                .sorted(Comparator
-                        .comparingInt((Ingredient i) -> categoryOrder(i.category()))
-                        .thenComparing(i -> i.itemId().toString()))
-                .toList();
-
-        // 2) Sort keys & keep values aligned; round values
-        List<String> keys = new ArrayList<>(in.targetPercentagesKeys());
-        List<Double> vals = new ArrayList<>(in.targetPercentagesValues());
-
-        int n = Math.min(keys.size(), vals.size());
-        List<Map.Entry<String, Double>> kv = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            kv.add(new AbstractMap.SimpleEntry<>(keys.get(i), roundPct(vals.get(i))));
-        }
-        kv.sort(Comparator
-                .comparingInt((Map.Entry<String, Double> e) -> categoryOrder(e.getKey()))
-                .thenComparing(Map.Entry::getKey));
-
-        List<String> sortedKeys  = kv.stream().map(Map.Entry::getKey).toList();
-        List<Double> sortedVals  = kv.stream().map(Map.Entry::getValue).toList();
-
-        // 3) Return a clean, stable object
-        return new DoughRecipe(
-                in.recipeId(),
-                in.totalWeight(),
-                sortedKeys,
-                sortedVals,
-                ingredients
-        );
+        return Comparator
+                .comparingInt((String s) -> pri.getOrDefault(s, Integer.MAX_VALUE))
+                .thenComparing(Comparator.naturalOrder());
     }
 
     /**
-     * Helper you can call on an ItemStack after you’ve populated its recipe component.
-     * Adjust the getter/setter to your actual component type.
+     * Helper to canonicalize a recipe already on an ItemStack.
+     * Replace the get/set calls with your actual data component if needed.
      */
-    public static void canonicalizeOnStack(net.minecraft.world.item.ItemStack stack,
-                                           net.minecraft.core.component.DataComponentType<DoughRecipe> recipeType) {
-        DoughRecipe recipe = stack.get(recipeType);
-        if (recipe != null) {
-            stack.set(recipeType, canonicalize(recipe));
-        }
+    public static void canonicalizeOnStack(
+            net.minecraft.world.item.ItemStack stack,
+            net.minecraft.core.component.DataComponentType<DoughRecipe> recipeType) {
+        DoughRecipe r = stack.get(recipeType);
+        if (r != null) stack.set(recipeType, canonicalize(r));
     }
 }

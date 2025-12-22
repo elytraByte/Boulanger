@@ -11,6 +11,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
+
 import java.util.List;
 import java.util.Locale;
 
@@ -21,7 +22,7 @@ public class FilledBowlItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack,
-                                TooltipContext context,
+                                Item.TooltipContext context,
                                 List<Component> tooltip,
                                 TooltipFlag tooltipFlag) {
         super.appendHoverText(stack, context, tooltip, tooltipFlag);

@@ -4,7 +4,7 @@ import net.boulangermod.boulanger.datagen.builder.DoughProcessRecipeBuilder;
 import net.boulangermod.boulanger.datagen.builder.RatioRecipeBuilder;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.item.PanType;
-import net.boulangermod.boulanger.recipe.StepType;
+import net.boulangermod.boulanger.item.PortionKind;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.world.item.ItemStack;
@@ -15,7 +15,10 @@ public final class BaguetteRecipes {
     private BaguetteRecipes() {}
 
     public static void register(RecipeOutput out) {
-        // Ratio: keep composition + expose BOTH serving sizes
+
+        var baseId    = DatagenIds.id("baguette");
+        var processId = DatagenIds.id("baguette_process");
+        // --- Ratio recipe: composition + two serving sizes ---
         new RatioRecipeBuilder(
                 DatagenIds.id("baguette"),
                 new ItemStack(ModItems.DOUGH.get()),
@@ -33,18 +36,20 @@ public final class BaguetteRecipes {
                 .loafSizeG(454)   // full-size baguette
                 .save(out);
 
-        // Single dough-process (method is identical regardless of size)
-        new DoughProcessRecipeBuilder(
-                DatagenIds.id("dough_process/baguette"),
-                DatagenIds.id("baguette")
-        )
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.DIVIDE) // no fixed serving weight here
-                .addStep(StepType.SHAPE)
-                .setPanType(DatagenIds.pan(PanType.BAGUETTE))
+// Dough-process recipe: steps + per-portion pan rules (both use BAGUETTE pan)
+        new DoughProcessRecipeBuilder(DatagenIds.id("dough_process/baguette"))
+                .proof(2.5)
+                .punchdown()
+                .proof(2.5)
+                .punchdown()
+                .divide()
+                .shape()
+                .proof(3.0)
+
+                // Use BAGUETTE pan for both sizes
+                .serve(PortionKind.LOAF, 454, PanType.BAGUETTE, 3)  // 3 full baguettes / pan
+                .serve(PortionKind.ROLL, 180, PanType.BAGUETTE, 6)  // 6 demi baguettes / pan
+
                 .save(out);
     }
 }

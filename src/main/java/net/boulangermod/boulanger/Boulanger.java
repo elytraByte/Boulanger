@@ -15,6 +15,7 @@ import net.boulangermod.boulanger.item.ModCreativeModeTabs;
 import net.boulangermod.boulanger.multiblock.MultiblockRegistry;
 import net.boulangermod.boulanger.multiblock.SimpleMultiblock;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
+import net.boulangermod.boulanger.recipe.ModRecipeTypes;
 import net.boulangermod.boulanger.screen.*;
 import net.boulangermod.boulanger.util.MyModLootFunctions;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
@@ -60,6 +61,8 @@ public class Boulanger {
         ModBlockEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModDataComponentTypes.register(modEventBus);
+        ModRecipeTypes.TYPES.register(modEventBus);
+        //ModRecipeSerializers.SERIALIZERS.register(modEventBus);
         ModRecipeSerializers.register(modEventBus);
         MyModLootFunctions.register(modEventBus);
         ModEntities.register(modEventBus);

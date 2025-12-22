@@ -4,7 +4,7 @@ import net.boulangermod.boulanger.datagen.builder.DoughProcessRecipeBuilder;
 import net.boulangermod.boulanger.datagen.builder.RatioRecipeBuilder;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.item.PanType;
-import net.boulangermod.boulanger.recipe.StepType;
+import net.boulangermod.boulanger.item.PortionKind;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.world.item.ItemStack;
@@ -13,6 +13,7 @@ import java.util.List;
 
 public final class WhitePanBreadRecipes {
     private WhitePanBreadRecipes() {}
+
     public static void register(RecipeOutput out) {
         new RatioRecipeBuilder(
                 DatagenIds.id("white_pan_bread"),
@@ -39,21 +40,23 @@ public final class WhitePanBreadRecipes {
                         List.of(DatagenIds.id("diastatic_malt_powder")))
                 .addComponent(IngredientCategory.ADDITIVE, 0.2,
                         List.of(DatagenIds.id("l_cysteine")))
-                .loafSizeG(680) // only loaf size
+                .rollSizeG(65)   // roll size 65 g
+                .loafSizeG(680)  // loaf size 680 g
                 .save(out);
 
         new DoughProcessRecipeBuilder(
-                DatagenIds.id("dough_process/white_pan_bread"),
-                DatagenIds.id("white_pan_bread")
+                DatagenIds.id("dough_process/white_pan_bread")
         )
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.DIVIDE)
-                .addStep(StepType.SHAPE)
-                .setPanType(DatagenIds.pan(PanType.LOAF))
-                .addStep(StepType.PROOF, 800)
+                .proof(4)
+                .punchdown()
+                .proof(4)
+                .punchdown()
+                .divide()
+                .shape()
+                .proof(5)
+                // Pan enforcement per portion
+                .serve(PortionKind.ROLL, 65, PanType.BAGUETTE, 12) // rolls use baguette pan (12 per pan)
+                .serve(PortionKind.LOAF, 680, PanType.LOAF, 1)     // loaf uses loaf pan (1 per pan)
                 .save(out);
     }
 }

@@ -11,6 +11,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -30,19 +32,34 @@ public class WoodOvenBlock extends SimpleProcessingBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
+        // Model front is FACING.getOpposite(). To make the visible front face the player,
+        // set FACING to the player's current looking direction.
+        Direction playerDir = context.getHorizontalDirection();
         return this.defaultBlockState()
+                .setValue(FACING, playerDir)
                 .setValue(LIT, false);
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder); // adds FACING from AbstractProcessingBlock
+        super.createBlockStateDefinition(builder); // adds FACING from parent
         builder.add(LIT);
     }
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
+    }
+
+    // Keep structure rotation/mirroring consistent (maps FACING properly in rotations)
+    @Override
+    public BlockState rotate(BlockState state, Rotation rot) {
+        return state.setValue(FACING, rot.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override
@@ -52,25 +69,21 @@ public class WoodOvenBlock extends SimpleProcessingBlock {
         // Model is authored flipped: visible "front" is the opposite of FACING
         Direction front = state.getValue(FACING).getOpposite();
 
-        // Unit vectors
         int outX = front.getStepX();
         int outZ = front.getStepZ();
-        // Perpendicular along the face (right-left across the front)
         double sideX = -outZ;   // rotate (outX,outZ) 90° CCW
         double sideZ =  outX;
 
-        // Spawn region tunables (relative to the block)
-        final double OUT_BASE   = 0.50;  // distance from center to face
-        final double OUT_JITTER = 0.08;  // outward noise
-        final double HALF_WIDTH = 0.30;  // ± across the face
-        final double Y_MIN      = 0.06;  // above bottom
-        final double Y_MAX      = 0.26;  // lower fourth
+        final double OUT_BASE   = 0.50;
+        final double OUT_JITTER = 0.08;
+        final double HALF_WIDTH = 0.30;
+        final double Y_MIN      = 0.06;
+        final double Y_MAX      = 0.26;
 
         int count = 2 + rand.nextInt(3); // 2..4 per tick
-
         for (int i = 0; i < count; i++) {
-            double sideOffset = (rand.nextDouble() * 2.0 - 1.0) * HALF_WIDTH;     // [-HALF_WIDTH, +HALF_WIDTH]
-            double outOffset  = OUT_BASE + rand.nextDouble() * OUT_JITTER;        // 0.50..0.58
+            double sideOffset = (rand.nextDouble() * 2.0 - 1.0) * HALF_WIDTH;
+            double outOffset  = OUT_BASE + rand.nextDouble() * OUT_JITTER;
             double y          = pos.getY() + Y_MIN + rand.nextDouble() * (Y_MAX - Y_MIN);
 
             double x = pos.getX() + 0.5 + outX * outOffset + sideX * sideOffset;

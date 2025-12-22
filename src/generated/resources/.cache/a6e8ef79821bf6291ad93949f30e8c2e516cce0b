@@ -1,12 +1,13 @@
-// 1.21	2025-08-25T07:50:56.4675018	Item Models: boulanger
+// 1.21	2025-09-03T00:39:37.1218983	Item Models: boulanger
 0fd8bac366b8c961addde9bb6be8947495b5a712 assets/boulanger/models/item/all_purpose_flour_fifty_pound_bag.json
 230a844dffb38da8e6048b5cf21dc17610edf80c assets/boulanger/models/item/ascorbic_acid.json
 ca3b8a4bb20695f0ab8fe1c33bf6b76965e8e46f assets/boulanger/models/item/black_porcelain_brick.json
 a052ebd29b01c9177e9921caa2a7d599628126f4 assets/boulanger/models/item/blue_porcelain_brick.json
 1d1a4098c856fcb6a7d107e6fb5f57f95fd64a54 assets/boulanger/models/item/bone_ash.json
-d6851c9e251bff9a2126f643c76062f979b9ab10 assets/boulanger/models/item/bread.json
+9beca06bc75818b75214013efe8e8204a7116cea assets/boulanger/models/item/bread.json
 643f28748e1534ac17b02dfe06d2ffc275316e53 assets/boulanger/models/item/bread/baguette.json
 c33b2fbd57709b1bf1f463065ad188c695232474 assets/boulanger/models/item/bread/banh_mi.json
+66168ffa36e3c34f0e565286a848317e9c92beec assets/boulanger/models/item/bread/boule.json
 ad94bd3d4d20af86df9f89385f57a420d2ed658b assets/boulanger/models/item/bread/brioche.json
 9916cd854e3bd74ce60566894e42a72334627fa7 assets/boulanger/models/item/bread/brioche_roll.json
 510e1127a0c8d277ed8450ec883b5469238a05fa assets/boulanger/models/item/bread/croissant.json
@@ -17,8 +18,11 @@ c6c3ed8183e62ef4873ebe44d8652e6ac7b83f95 assets/boulanger/models/item/bread/mini
 3a6b2708bda0a2d46da04c47c57159894019c7b1 assets/boulanger/models/item/bread/multigrain_bread.json
 4cc786339352840adedf9acd81612fb509574426 assets/boulanger/models/item/bread/pain_de_mi.json
 b7ef190c7b07cf69f57df239cb64acf52ab89b98 assets/boulanger/models/item/bread/potato_bread.json
+34ac009a30587b73f3fc33b269501977b5f5bbf2 assets/boulanger/models/item/bread/pretzel.json
 17c22fd2f6c00003d770f5567d5efb812bb98541 assets/boulanger/models/item/bread/rye_roll.json
+ff175a8417b2b4e9f7076f4a4cc40ff75bfa9242 assets/boulanger/models/item/bread/sourdough.json
 46479c8a8417ccb285da33b496fc97665e4309a9 assets/boulanger/models/item/bread/sweet_yeast_roll.json
+7079318adb803aff7a24216d087f5b5a2dbfbd75 assets/boulanger/models/item/bread/texas_roadhouse_roll.json
 238f182f6fc78afa490877baf0a6364b1f1b22ee assets/boulanger/models/item/bread/wheat_roll.json
 2193fe07d77346181e109062be0fdc5482331159 assets/boulanger/models/item/bread/white_bread.json
 bb265a2c7417d12729fac31fc2b0cdb0b4bdfc76 assets/boulanger/models/item/bread/white_pan_bread.json
@@ -72,10 +76,9 @@ d2665c6c7e14686a4b5df6e63d39b68ea9a37228 assets/boulanger/models/item/fresh_yeas
 7c0b9b65deca43dbff64881d9eaafcfe7f40ca6f assets/boulanger/models/item/generic_dough.json
 1bd8e01cfc7a7b04ffd2d06c0a948c2cc55427d6 assets/boulanger/models/item/gilded_pcb.json
 650158ebfc9e4ef74a85b907860fb0cbf20d11f6 assets/boulanger/models/item/glass_dust.json
-8cdc63b297e4a0faa8400d0c14e0c4e2c4afba0f assets/boulanger/models/item/hard_red_spring_wheat.json
 f65a1521a5aa0d8037d096bb7b8dc654fc3db873 assets/boulanger/models/item/hen_spawn_egg.json
 6c9e73b5dd0ac4be551b0a14984c98790c788e5c assets/boulanger/models/item/high_gluten_flour_fifty_pound_bag.json
-c06e30592056a30c29178cf2017a82acb66b70cb assets/boulanger/models/item/holstein_friesain_cow_spawn_egg.json
+3cdba95b93b09dac3b8be2ed9327fdde09b21a2d assets/boulanger/models/item/holstein_friesian_cow_spawn_egg.json
 5b91c688860b054fdb77ea6660fd0ad9756a49ac assets/boulanger/models/item/iron_frame.json
 ab2426e464ace9013e2279f9263ae985d8a48c90 assets/boulanger/models/item/iron_wedge.json
 aef85b2c1fe39d08ccd8f7563cf45ee9da69b275 assets/boulanger/models/item/kaolinite_clay_ball.json
@@ -86,8 +89,13 @@ aef85b2c1fe39d08ccd8f7563cf45ee9da69b275 assets/boulanger/models/item/kaolinite_
 c4e6b0938c630282e9115876849202fabd0341a7 assets/boulanger/models/item/mixing_block.json
 86c91439ad89ffc2cda3d5665a9bac81f7202e51 assets/boulanger/models/item/molasses.json
 bfe80dbc5bf0817091a0df5153293437e58dadc0 assets/boulanger/models/item/nondiastatic_malt_powder.json
-c175dc60e3108bc97329ad815dd024037de50c5d assets/boulanger/models/item/pan.json
+2fcb6feff1deb42aed863e35995298e12d9cae17 assets/boulanger/models/item/pan.json
+a263f1b106b1e2e4975b43290f679ba13f99b48d assets/boulanger/models/item/pan_baguette_empty.json
+6b79cdbf619b6afe9da4993b04a1ea2c97bff929 assets/boulanger/models/item/pan_baguette_full.json
+8e2dde21bbce885036f9f2c53db71fb692bdb410 assets/boulanger/models/item/pan_loaf_empty.json
+bb2c73ae588099d976aa15baae4037440ff3e348 assets/boulanger/models/item/pan_loaf_full.json
 0f52263aa5ad2db88094847e086c45b1a5511fb5 assets/boulanger/models/item/pcb.json
+fb02ea2d477b0a156f23ad4eceb58f48b73ba389 assets/boulanger/models/item/pine_button.json
 c25dd0fc9387c01554b1fb34ee1a2ded0febf530 assets/boulanger/models/item/pine_fence.json
 343a1479c23dba83f054bd277206630f5ea5325e assets/boulanger/models/item/pine_fence_gate.json
 a4b0c555681ed424830767419f9942b84d593461 assets/boulanger/models/item/pine_resin.json
@@ -117,6 +125,7 @@ e93feffb865c7138c712d6d187fe421365ba96c8 assets/boulanger/models/item/unfired_li
 d6acb58752542a3650807f872627b79b1f21fbb7 assets/boulanger/models/item/unfired_porcelain_brick.json
 4e33b9ef5e1c478ee0caf1d207482aa80c343eb2 assets/boulanger/models/item/vital_wheat_gluten_fifty_pound_bag.json
 3547e4c7215fe0643cdfcb9292c0b42347f53855 assets/boulanger/models/item/wheat_berries.json
+cc8dc51e91ff8668fde73c144f1b1ab28a2ed93f assets/boulanger/models/item/wheat_bushel.json
 0c94c28e4a97aad583e0af433d881e9da9c13ef7 assets/boulanger/models/item/wheat_seeds.json
 84f4a4231aa97e36369772ccd7da555468a55bc0 assets/boulanger/models/item/whole_milk.json
 9af236b1b27d1d727613dce97508ce0775116c72 assets/boulanger/models/item/whole_wheat_flour_fifty_pound_bag.json
@@ -127,7 +136,3 @@ df0247347d9d2795ea2d97589bed0e8ea693f10f assets/boulanger/models/item/woodgas_en
 b9ed889e5cd29c55582ed8045dbcaf50aa9b9622 assets/boulanger/models/item/woodgas_pipe.json
 867a160a2b20688d0955ea1e82c758ee1dc5c20e assets/boulanger/models/item/woodgas_valve.json
 2f1e338015987ca12117c46303d359692c876b03 assets/boulanger/models/item/wood_oven.json
-a263f1b106b1e2e4975b43290f679ba13f99b48d assets/boulanger/models/pan/baguette/empty.json
-6b79cdbf619b6afe9da4993b04a1ea2c97bff929 assets/boulanger/models/pan/baguette/full.json
-8e2dde21bbce885036f9f2c53db71fb692bdb410 assets/boulanger/models/pan/loaf/empty.json
-bb2c73ae588099d976aa15baae4037440ff3e348 assets/boulanger/models/pan/loaf/full.json

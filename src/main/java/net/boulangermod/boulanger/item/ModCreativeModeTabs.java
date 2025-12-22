@@ -2,6 +2,7 @@ package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.component.IngredientTypeComponent;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.PanTypeComponent;
 import net.boulangermod.boulanger.component.WeightComponent;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.core.component.DataComponents;
@@ -182,15 +183,16 @@ public class ModCreativeModeTabs {
                         }
 
                         ItemStack loafPan = new ItemStack(ModItems.PAN.get());
-                        loafPan.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(0));
-                        loafPan.set(DataComponents.CUSTOM_NAME, Component.translatable("item.boulanger.pan.loaf")); // add lang key
+                        loafPan.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(PanType.LOAF.getId()));
+                        PanItem.ensureContainerSized(loafPan);
+                        PanItem.syncModelToContents(loafPan);
                         pOutput.accept(loafPan);
 
                         ItemStack baguettePan = new ItemStack(ModItems.PAN.get());
-                        baguettePan.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(4));
-                        baguettePan.set(DataComponents.CUSTOM_NAME, Component.translatable("item.boulanger.pan.baguette")); // add lang key
+                        baguettePan.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(PanType.BAGUETTE.getId()));
+                        PanItem.ensureContainerSized(baguettePan);
+                        PanItem.syncModelToContents(baguettePan);
                         pOutput.accept(baguettePan);
-
 
                         pOutput.accept(bakeryAddStack((BakeryAdditiveItem) ModItems.ASCORBIC_ACID.get()));
                         pOutput.accept(bakeryAddStack((BakeryAdditiveItem) ModItems.CALCIUM_PROPIONATE.get()));

@@ -1,127 +1,154 @@
 package net.boulangermod.boulanger.recipe;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.PanTypeComponent;
-import net.boulangermod.boulanger.util.StreamCodecsCompat;
+import net.boulangermod.boulanger.item.PanType;
+import net.boulangermod.boulanger.item.PortionKind;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.level.Level;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static net.boulangermod.boulanger.recipe.ModRecipeSerializers.*;
+/**
+ * Minutes-native dough process recipe.
+ * - steps: ordered list of ProcessingStep (each stores minutes)
+ * - serving: per portion kind rules (pan type, per-pan capacity, serving weight, etc.)
+ */
+public final class DoughProcessRecipe implements Recipe<RecipeInput> {
 
-public class DoughProcessRecipe implements Recipe<DoughProcessInput> {
+    // ===== Fields =====
     private final ResourceLocation id;
-    private final ResourceLocation doughType;
-    private final @Nullable ResourceLocation panType;
-    private final List<ProcessingStep> steps;
+    private final List<ProcessingStep> steps;                  // ordered pipeline (minutes-native)
+    private final Map<PortionKind, PanServing> serving;        // per-portion rules (weight, pan, capacity)
 
+    // ===== Construction =====
     public DoughProcessRecipe(ResourceLocation id,
-                              ResourceLocation doughType,
-                              @Nullable ResourceLocation panType,
-                              List<ProcessingStep> steps) {
-        this.id        = id;
-        this.doughType = doughType;
-        this.panType   = panType;
-        this.steps     = List.copyOf(steps);
+                              List<ProcessingStep> steps,
+                              Map<PortionKind, PanServing> serving) {
+        this.id = id;
+        this.steps = steps != null ? List.copyOf(steps) : List.of();
+        this.serving = serving != null ? Map.copyOf(serving) : Map.of();
     }
 
-    public ResourceLocation getId() { return id; }
-    public ResourceLocation getDoughType() { return doughType; }
-    public @Nullable ResourceLocation getPanType() { return panType; }
-    public List<ProcessingStep> getSteps() { return steps; }
+    // ===== Accessors =====
+    public ResourceLocation id() { return id; }
+    public List<ProcessingStep> steps() { return steps; }
+    public Map<PortionKind, PanServing> serving() { return serving; }
 
-    /**
-     * Optional step-skipping policy. With serving weights removed, we no longer
-     * auto-skip DIVIDE based on a size target—return false for now.
-     */
-    public boolean canSkipStep(ItemStack dough, ProcessingStep step) {
-        return false;
-    }
+    private static final StreamCodec<RegistryFriendlyByteBuf, ResourceLocation> RL_STREAM_CODEC =
+            StreamCodec.of(
+                    (buf, id) -> buf.writeResourceLocation(id),
+                    buf -> buf.readResourceLocation()
+            );
 
-    @Override
-    public boolean matches(DoughProcessInput input, Level level) {
-        // What’s stored on the dough (we stamp process-id today, old items might stamp dough_type)
-        ResourceLocation tag = input.getDoughType();
-        if (tag == null) return false;
+    private static final StreamCodec<RegistryFriendlyByteBuf, java.util.List<ProcessingStep>> STEP_LIST_STREAM_CODEC =
+            StreamCodec.of(
+                    (buf, list) -> {
+                        buf.writeVarInt(list.size());
+                        for (ProcessingStep s : list) ProcessingStep.STREAM_CODEC.encode(buf, s);
+                    },
+                    buf -> {
+                        int n = buf.readVarInt();
+                        java.util.ArrayList<ProcessingStep> out = new java.util.ArrayList<>(n);
+                        for (int i = 0; i < n; i++) out.add(ProcessingStep.STREAM_CODEC.decode(buf));
+                        return out;
+                    }
+            );
 
-        // Accept either exact process id or dough_type id for back-compat.
-        if (!tag.equals(this.id) && !tag.equals(this.doughType)) {
-            return false;
-        }
-
-        // Pan handling:
-        // - If this process defines a panType, we only require it when a pan stack is actually provided here.
-        // - Many machines (bulk proof, divide, punchdown) don't have/need a pan yet, so don't hard-fail.
-        if (this.panType == null) {
-            return true; // no pan requirements at all
-        }
-
-        ItemStack panStack = input.getPanStack();
-        if (panStack == null) {
-            return true; // allow match; step/machine logic will enforce pan when needed
-        }
-
-        if (!panStack.has(ModDataComponentTypes.PAN_TYPE.get())) {
-            return false;
-        }
-        PanTypeComponent actual = panStack.get(ModDataComponentTypes.PAN_TYPE.get());
-        if (actual == null) return false;
-
-        ResourceLocation actualRL = ResourceLocation.tryParse(actual.id());
-        return actualRL != null && actualRL.equals(this.panType);
-    }
-
-    @Override public ItemStack assemble(DoughProcessInput input, HolderLookup.Provider provider) { return ItemStack.EMPTY; }
-    @Override public boolean canCraftInDimensions(int width, int height) { return false; }
-    @Override public ItemStack getResultItem(HolderLookup.Provider ctx) { return ItemStack.EMPTY; }
-    @Override public RecipeSerializer<?> getSerializer() { return DOUGH_PROCESS_SERIALIZER.get(); }
-    @Override public RecipeType<?> getType() { return DOUGH_PROCESS_TYPE.get(); }
-
-    // ------------------------------------------------------------------
-    // SERIALIZER
-    // ------------------------------------------------------------------
-    public static final class Serializer implements RecipeSerializer<DoughProcessRecipe> {
-        public static final MapCodec<DoughProcessRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-                ResourceLocation.CODEC.fieldOf("id").forGetter(DoughProcessRecipe::getId),
-                ResourceLocation.CODEC.fieldOf("dough_type").forGetter(DoughProcessRecipe::getDoughType),
-                // Keep pan_type required if your datagen always writes it; switch to optionalFieldOf if you want it optional.
-                ResourceLocation.CODEC.fieldOf("pan_type").forGetter(DoughProcessRecipe::getPanType),
-                ProcessingStep.CODEC.listOf().fieldOf("steps").forGetter(DoughProcessRecipe::getSteps)
-        ).apply(instance, DoughProcessRecipe::new));
-
-        @Override public MapCodec<DoughProcessRecipe> codec() { return CODEC; }
-
-        public static final StreamCodec<RegistryFriendlyByteBuf, DoughProcessRecipe> STREAM_CODEC =
-                StreamCodec.of(
-                        // encode
-                        (buf, r) -> {
-                            ResourceLocation.STREAM_CODEC.encode(buf, r.getId());
-                            ResourceLocation.STREAM_CODEC.encode(buf, r.getDoughType());
-                            ResourceLocation.STREAM_CODEC.encode(buf, r.getPanType());
-                            StreamCodecsCompat.list(ProcessingStep.STREAM_CODEC).encode(buf, r.getSteps());
-                        },
-                        // decode
-                        buf -> {
-                            ResourceLocation id = ResourceLocation.STREAM_CODEC.decode(buf);
-                            ResourceLocation doughType = ResourceLocation.STREAM_CODEC.decode(buf);
-                            ResourceLocation panType = ResourceLocation.STREAM_CODEC.decode(buf);
-                            List<ProcessingStep> steps =
-                                    StreamCodecsCompat.list(ProcessingStep.STREAM_CODEC).decode(buf);
-                            return new DoughProcessRecipe(id, doughType, panType, steps);
+    private static final StreamCodec<RegistryFriendlyByteBuf, java.util.Map<PortionKind, PanServing>> SERVING_MAP_STREAM_CODEC =
+            StreamCodec.of(
+                    (buf, map) -> {
+                        buf.writeVarInt(map.size());
+                        for (var e : map.entrySet()) {
+                            PortionKind.STREAM_CODEC.encode(buf, e.getKey());
+                            PanServing.STREAM_CODEC.encode(buf, e.getValue());
                         }
-                );
+                    },
+                    buf -> {
+                        int n = buf.readVarInt();
+                        java.util.HashMap<PortionKind, PanServing> out = new java.util.HashMap<>(n);
+                        for (int i = 0; i < n; i++) {
+                            var k = PortionKind.STREAM_CODEC.decode(buf);
+                            var v = PanServing.STREAM_CODEC.decode(buf);
+                            out.put(k, v);
+                        }
+                        return out;
+                    }
+            );
 
-        @Override public StreamCodec<RegistryFriendlyByteBuf, DoughProcessRecipe> streamCodec() { return STREAM_CODEC; }
+    // final recipe codec (manual encode/decode for 3 fields)
+    public static final StreamCodec<RegistryFriendlyByteBuf, DoughProcessRecipe> STREAM_CODEC =
+            StreamCodec.of(
+                    (buf, v) -> {
+                        RL_STREAM_CODEC.encode(buf, v.id());
+                        STEP_LIST_STREAM_CODEC.encode(buf, v.steps());
+                        SERVING_MAP_STREAM_CODEC.encode(buf, v.serving());
+                    },
+                    buf -> new DoughProcessRecipe(
+                            RL_STREAM_CODEC.decode(buf),
+                            STEP_LIST_STREAM_CODEC.decode(buf),
+                            SERVING_MAP_STREAM_CODEC.decode(buf)
+                    )
+            );
+
+    // JSON codec (MapCodec required by RecipeSerializer.codec())
+    public static final MapCodec<DoughProcessRecipe> MAP_CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+            ResourceLocation.CODEC.fieldOf("id").forGetter(DoughProcessRecipe::id),
+            ProcessingStep.CODEC.listOf().fieldOf("steps").forGetter(DoughProcessRecipe::steps),
+            // value must be Codec<PanServing>, not MapCodec
+            Codec.unboundedMap(PortionKind.CODEC, PanServing.VALUE_CODEC)
+                    .fieldOf("serving")
+                    .forGetter(DoughProcessRecipe::serving)
+    ).apply(i, DoughProcessRecipe::new));
+
+    // Optional value codec if you use it elsewhere
+    public static final Codec<DoughProcessRecipe> CODEC = MAP_CODEC.codec();
+
+
+    // ===== Recipe<?> impl (recipe-like holder; not craftable directly) =====
+    @Override public boolean matches(RecipeInput input, net.minecraft.world.level.Level level) { return false; }
+    @Override public ItemStack assemble(RecipeInput input, HolderLookup.Provider lookup) { return ItemStack.EMPTY; }
+    @Override public boolean canCraftInDimensions(int w, int h) { return false; }
+    @Override public ItemStack getResultItem(HolderLookup.Provider lookup) { return ItemStack.EMPTY; }
+
+    @Override public RecipeSerializer<?> getSerializer() {
+        return ModRecipeSerializers.DOUGH_PROCESS.get();
+    }
+
+    @Override public RecipeType<?> getType() {
+        return ModRecipeTypes.DOUGH_PROCESS.get();
+    }
+
+    // ===== Convenience helpers =====
+    public ResourceLocation getId() { return id; }
+
+    public @org.jetbrains.annotations.Nullable PanType getPanTypeFor(PortionKind kind) {
+        PanServing ps = serving.get(kind);
+        return ps != null ? ps.panType() : null;
+    }
+
+    public @org.jetbrains.annotations.Nullable Integer getPerPanCapacityFor(PortionKind kind) {
+        PanServing ps = serving.get(kind);
+        return ps != null ? ps.perPanCapacity() : null;
+    }
+
+    public @org.jetbrains.annotations.Nullable Integer getServingWeightGFor(PortionKind kind) {
+        PanServing ps = serving.get(kind);
+        return ps != null ? ps.servingWeightG() : null;
+    }
+
+    public @org.jetbrains.annotations.Nullable PanType getAnyPanType() {
+        return serving.isEmpty() ? null : serving.values().iterator().next().panType();
     }
 }

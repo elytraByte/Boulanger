@@ -2,7 +2,10 @@ package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.entity.*;
+import net.boulangermod.boulanger.item.ModItems;
+import net.boulangermod.boulanger.item.PanItem;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -105,6 +108,13 @@ public final class ModCapabilities {
                 Capabilities.FluidHandler.BLOCK,
                 ModBlockEntities.WOODGAS_VALVE_BE.get(),
                 (be, side) -> ((WoodGasValveBlockEntity) be).getFluidHandler(side)
+        );
+
+        event.registerItem(
+                Capabilities.ItemHandler.ITEM,
+                // provider: (stack, ctx) -> IItemHandler
+                (stack, ctx) -> new PanItem.PanItemHandler(stack),
+                ModItems.PAN.get()
         );
     }
 

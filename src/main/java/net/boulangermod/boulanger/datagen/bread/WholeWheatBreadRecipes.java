@@ -4,7 +4,7 @@ import net.boulangermod.boulanger.datagen.builder.DoughProcessRecipeBuilder;
 import net.boulangermod.boulanger.datagen.builder.RatioRecipeBuilder;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.item.PanType;
-import net.boulangermod.boulanger.recipe.StepType;
+import net.boulangermod.boulanger.item.PortionKind;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.world.item.ItemStack;
@@ -13,6 +13,7 @@ import java.util.List;
 
 public final class WholeWheatBreadRecipes {
     private WholeWheatBreadRecipes() {}
+
     public static void register(RecipeOutput out) {
         new RatioRecipeBuilder(
                 DatagenIds.id("whole_wheat_bread"),
@@ -33,22 +34,23 @@ public final class WholeWheatBreadRecipes {
                         List.of(DatagenIds.id("fancy_egg")))
                 .addComponent(IngredientCategory.WATER, 72.0,
                         List.of(DatagenIds.mc("water_bucket")))
-                .rollSizeG(65)     // whole-wheat roll
-                .loafSizeG(680)    // whole-wheat loaf
+                .rollSizeG(75)      // roll size 75 g
+                .loafSizeG(680)     // loaf size 680 g
                 .save(out);
 
         new DoughProcessRecipeBuilder(
-                DatagenIds.id("dough_process/whole_wheat_bread"),
-                DatagenIds.id("whole_wheat_bread")
+                DatagenIds.id("dough_process/whole_wheat_bread")
         )
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.DIVIDE) // serving weight omitted (optional)
-                .addStep(StepType.SHAPE)
-                .setPanType(DatagenIds.pan(PanType.LOAF))
-                .addStep(StepType.PROOF, 1600)
+                .proof(5)
+                .punchdown()
+                .proof(5)
+                .punchdown()
+                .divide()
+                .shape()
+                .proof(5)
+                // Per-portion pan enforcement & capacities
+                .serve(PortionKind.ROLL, 75, PanType.BAGUETTE, 12) // rolls on baguette pan (12 per pan)
+                .serve(PortionKind.LOAF, 680, PanType.LOAF, 1)     // loaf on loaf pan (1 per pan)
                 .save(out);
     }
 }

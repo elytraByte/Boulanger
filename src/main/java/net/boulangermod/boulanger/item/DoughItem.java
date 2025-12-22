@@ -1,10 +1,7 @@
 package net.boulangermod.boulanger.item;
 
 import net.boulangermod.boulanger.component.*;
-import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
-import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
-import net.boulangermod.boulanger.recipe.ProcessingStep;
-import net.boulangermod.boulanger.recipe.StepType;
+import net.boulangermod.boulanger.recipe.*;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -98,13 +95,13 @@ public class DoughItem extends Item {
             Level lvl = Minecraft.getInstance().level;
             if (lvl != null && procId != null) {
                 var opt = lvl.getRecipeManager()
-                        .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                        .getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get()).stream()
                         .map(RecipeHolder::value)
-                        .filter(r -> r.getDoughType().equals(procId))
+                        .filter(r -> r.getType().equals(procId))
                         .findFirst();
 
                 if (opt.isPresent()) {
-                    var steps = opt.get().getSteps();
+                    var steps = opt.get().steps();
                     int total = steps.size();
 
                     if (idx0 >= total) {
@@ -206,17 +203,17 @@ public class DoughItem extends Item {
 
         Level level = context.getLevel();
         Optional<DoughProcessRecipe> recipeOpt = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get()).stream()
                 .map(RecipeHolder::value)
-                .filter(r -> r.getDoughType().equals(recipeId))
+                .filter(r -> r.getType().equals(recipeId))
                 .findFirst();
 
         if (recipeOpt.isEmpty()) return InteractionResult.PASS;
 
         DoughProcessRecipe recipe = recipeOpt.get();
-        if (state.stepIndex() >= recipe.getSteps().size()) return InteractionResult.PASS;
+        if (state.stepIndex() >= recipe.steps().size()) return InteractionResult.PASS;
 
-        ProcessingStep currentStep = recipe.getSteps().get(state.stepIndex());
+        ProcessingStep currentStep = recipe.steps().get(state.stepIndex());
         if (currentStep.type() == StepType.PUNCHDOWN) {
             stack.set(ModDataComponentTypes.PROOFING_STATE.get(),
                     new ProofingStateComponent(state.stepIndex() + 1, 0, state.shaped()));
@@ -247,13 +244,13 @@ public class DoughItem extends Item {
         if (state == null || processId == null || level == null) return 0;
 
         Optional<DoughProcessRecipe> opt = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get()).stream()
                 .map(RecipeHolder::value)
-                .filter(r -> r.getDoughType().equals(processId))
+                .filter(r -> r.getType().equals(processId))
                 .findFirst();
         if (opt.isEmpty()) return 0;
 
-        List<ProcessingStep> steps = opt.get().getSteps();
+        List<ProcessingStep> steps = opt.get().steps();
         int idx = state.stepIndex();
         if (idx < 0) return 0;
         if (idx >= steps.size()) return 13; // done
@@ -280,13 +277,13 @@ public class DoughItem extends Item {
         if (state == null || processId == null) return false;
 
         var opt = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get()).stream()
                 .map(RecipeHolder::value)
-                .filter(r -> r.getDoughType().equals(processId))
+                .filter(r -> r.getType().equals(processId))
                 .findFirst();
         if (opt.isEmpty()) return false;
 
-        List<ProcessingStep> steps = opt.get().getSteps();
+        List<ProcessingStep> steps = opt.get().steps();
         int idx = state.stepIndex();
         if (idx < 0 || idx >= steps.size()) return false;
 
@@ -301,13 +298,13 @@ public class DoughItem extends Item {
         if (state == null || processId == null) return -1f;
 
         var opt = level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
+                .getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get()).stream()
                 .map(RecipeHolder::value)
-                .filter(r -> r.getDoughType().equals(processId))
+                .filter(r -> r.getType().equals(processId))
                 .findFirst();
         if (opt.isEmpty()) return -1f;
 
-        List<ProcessingStep> steps = opt.get().getSteps();
+        List<ProcessingStep> steps = opt.get().steps();
         int idx = state.stepIndex();
         if (idx < 0 || idx >= steps.size()) return -1f;
 

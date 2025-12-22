@@ -5,6 +5,7 @@ import net.boulangermod.boulanger.item.BreadType;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
+import net.boulangermod.boulanger.recipe.ModRecipeTypes;
 import net.boulangermod.boulanger.recipe.RatioRecipe;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.resources.ResourceLocation;
@@ -89,8 +90,17 @@ public final class DoughFactory {
         dough.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), WeightComponent.ofGrams((float) built.totalGrams()));
 
         // 4) DoughRecipe snapshot (ratio id + target map + ingredients)
-        dough.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
-                DoughRecipeComponent.of(ratioId, pctByCat, built.ingredients(), built.totalGrams()));
+        dough.set(
+                ModDataComponentTypes.DOUGH_RECIPE.get(),
+                DoughRecipeComponent.of(
+                        ratioId,
+                        built.ingredients(),
+                        built.totalGrams(),   // ← weight first
+                        pctByCat              // ← then the map
+                )
+        );
+
+
 
         // 5) Proofing state by ABSOLUTE step (never shaped on spawn)
         if (proc != null) {
@@ -143,18 +153,25 @@ public final class DoughFactory {
                 HUMANIZE_NON_ADDITIVES_TO_GRAMS, /*respectTolerance*/ true, tolerance);
 
         bread.set(ModDataComponentTypes.INGREDIENT_GRAMS.get(), WeightComponent.ofGrams((float) built.totalGrams()));
-        bread.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
-                DoughRecipeComponent.of(ratioId, pctByCat, built.ingredients(), built.totalGrams()));
+        bread.set(
+                ModDataComponentTypes.DOUGH_RECIPE.get(),
+                DoughRecipeComponent.of(
+                        ratioId,
+                        built.ingredients(),
+                        built.totalGrams(),   // ← weight first
+                        pctByCat
+                )
+        );
 
         // Resolve bread type & model
         BreadType bt = BreadType.fromRecipeId(ratioId).orElse(null);
-        if (bt == null && proc != null && proc.getPanType() != null) {
-            String path = proc.getPanType().getPath();
+        if (bt == null && proc != null && proc.getType() != null) {
+            String path = proc.getType().toString();
             if (path.contains("baguette")) bt = BreadType.BAGUETTE;
         }
 
-        if (proc != null && proc.getPanType() != null) {
-            bread.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(proc.getPanType().toString()));
+        if (proc != null && proc.getType() != null) {
+            bread.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(proc.getType().toString()));
         }
         if (bt != null) {
             bread.set(ModDataComponentTypes.BREAD_TYPE.get(), bt);
@@ -274,7 +291,7 @@ public final class DoughFactory {
     // ─────────────────────────────────────────────────────────────────────
 
     private static ProofingStateComponent computeStateByAbsoluteStep(DoughProcessRecipe proc, int stepOrdinal) {
-        List<?> steps = proc.getSteps();
+        List<?> steps = proc.steps();
         if (steps == null || steps.isEmpty()) {
             return ProofingStateComponent.finalProofed();
         }
@@ -435,10 +452,10 @@ public final class DoughFactory {
     @Nullable
     private static ResourceLocation findLinkedDoughProcessId(ServerLevel level, ResourceLocation ratioId) {
         List<RecipeHolder<DoughProcessRecipe>> list =
-                level.getRecipeManager().getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get());
+                level.getRecipeManager().getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get());
         for (RecipeHolder<DoughProcessRecipe> h : list) {
             DoughProcessRecipe proc = h.value();
-            if (ratioId.equals(proc.getDoughType())) return h.id();
+            if (ratioId.equals(proc.getType())) return h.id();
         }
         return null;
     }

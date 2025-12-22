@@ -2,32 +2,32 @@ package net.boulangermod.boulanger.recipe;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.boulangermod.boulanger.util.StreamCodecsCompat;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 
 public record ProcessingStep(
         StepType type,
-        int durationTicks // optional for some step types
+        int minutes
 ) {
-    public static final Codec<ProcessingStep> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+    public static final Codec<ProcessingStep> CODEC = RecordCodecBuilder.create(i -> i.group(
             StepType.CODEC.fieldOf("type").forGetter(ProcessingStep::type),
-            Codec.INT.optionalFieldOf("duration", 0).forGetter(ProcessingStep::durationTicks)
-    ).apply(instance, ProcessingStep::new));
+            Codec.INT.fieldOf("minutes").forGetter(ProcessingStep::minutes)
+    ).apply(i, ProcessingStep::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ProcessingStep> STREAM_CODEC =
-            StreamCodec.composite(
-                    StepType.STREAM_CODEC, ProcessingStep::type,
-                    StreamCodecsCompat.INT, ProcessingStep::durationTicks,
-                    ProcessingStep::new
+            StreamCodec.of(
+                    (buf, v) -> {
+                        StepType.STREAM_CODEC.encode(buf, v.type());
+                        buf.writeVarInt(v.minutes());
+                    },
+                    buf -> {
+                        StepType t = StepType.STREAM_CODEC.decode(buf);
+                        int m = buf.readVarInt();
+                        return new ProcessingStep(t, m);
+                    }
             );
-    /** JavaBean‐style getter for the step type. */
-    public StepType getType() {
-        return this.type;
-    }
 
-    // (Optional) JavaBean‐style getter for duration
-    public int getDurationTicks() {
-        return this.durationTicks;
-    }
+    public int durationTicks() { return Math.max(0, minutes) * 20 * 60; }
+
+    public int getMinutes() { return minutes; } // optional
 }

@@ -25,8 +25,6 @@ import java.util.List;
 
 public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private static final int INPUT_SLOT  = 0;
     private static final int OUTPUT_SLOT = 1;
     // grams of wiggle room
@@ -38,12 +36,6 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
 
     public DoughDividerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.DOUGH_DIVIDER.get(), pos, state, 2);
-    }
-
-    // ---------- New: mode API ----------
-
-    public boolean isRollMode() {
-        return rollMode;
     }
 
     public void setRollMode(boolean roll) {
@@ -102,8 +94,8 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
             return;
         }
 
-        ProcessingStep currentStep = recipe.getSteps().get(stepIdx);
-        if (currentStep.getType() != StepType.DIVIDE) return;
+        ProcessingStep currentStep = recipe.steps().get(stepIdx);
+        if (currentStep.type() != StepType.DIVIDE) return;
 
         // 3) Only now check weight/tolerance and actually process
         if (!canProcess()) return;
@@ -114,7 +106,7 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
     private int safeStepIndex(ItemStack stack, DoughProcessRecipe recipe) {
         ProofingStateComponent proof = stack.get(ModDataComponentTypes.PROOFING_STATE);
         int idx = (proof != null ? proof.stepIndex() : 0);
-        int size = recipe.getSteps().size();
+        int size = recipe.steps().size();
         if (idx < 0) idx = 0;
         if (idx >= size) {
             // Already beyond last step => complete
@@ -123,95 +115,75 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         return idx;
     }
 
+    // Returns true if the divider should run this tick.
     protected boolean canProcess() {
+        // 0) Input must be dough
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
         if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) return false;
 
-        // NEW: Require an explicit mode selection before doing anything
-        if (!this.modeSelected) {
-            return false;
-        }
+        // 1) Must be at DIVIDE step
+        ProofingStateComponent ps = input.get(ModDataComponentTypes.PROOFING_STATE.get());
+        ResourceLocation procId   = input.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+        if (ps == null || procId == null) return false;
 
-        // a) recipe must exist
         DoughProcessRecipe recipe = findRecipeFor(input);
         if (recipe == null) return false;
 
-        // b) must be on a valid step and that step must be DIVIDE
-        int stepIdx = safeStepIndex(input, recipe);
-        if (stepIdx < 0) return false; // finished/invalid
-        ProcessingStep currentStep = recipe.getSteps().get(stepIdx);
-        if (currentStep.getType() != StepType.DIVIDE) return false;
+        int idx = ps.stepIndex();
+        List<ProcessingStep> steps = recipe.steps();
+        if (idx < 0 || idx >= steps.size()) return false;
+        if (steps.get(idx).type() != StepType.DIVIDE) return false;
 
-        // c) weight checks
-        WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
-        if (wc == null || wc.grams() <= 0) return false;
-
-        double total = wc.grams();
-
-        // base RatioRecipe and serving by mode
-        RatioRecipe base = findRatioRecipeFor(input);
-        if (base == null) return false;
-
-        double serving = getTargetServingWeight(base); // mode-based
+        // 2) Compute serving weight safely from the DOUGH stack
+        double serving = getTargetServingWeight(input);
         if (serving <= 0) return false;
 
-        boolean minimalOk = Math.abs(total - serving) <= TOLERANCE_GRAMS;
-        boolean multiOk   = total >= (2 * serving - TOLERANCE_GRAMS);
-        return minimalOk || multiOk;
+        // 3) Total grams must be positive
+        var wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        double total = (wc != null ? wc.grams() : 0.0);
+        if (total <= 0) return false;
+
+        // 4) Either ≈1 serving (within tolerance) or ≥2 servings
+        int floorPortions = (int)Math.floor(total / serving);
+        boolean canSingle = floorPortions < 2 && Math.abs(total - serving) <= TOLERANCE_GRAMS;
+        boolean canMulti  = floorPortions >= 2;
+        if (!(canSingle || canMulti)) return false;
+
+        // 5) Output must be free
+        if (!itemHandler.getStackInSlot(OUTPUT_SLOT).isEmpty()) return false;
+
+        return true;
     }
 
     protected void processItem() {
-        // 0) Grab the input stack
         ItemStack input = itemHandler.getStackInSlot(INPUT_SLOT);
         if (input.isEmpty() || !input.is(ModItems.DOUGH.get())) return;
 
-        // 1) Look up the dough‐process recipe
         DoughProcessRecipe recipe = findRecipeFor(input);
-        if (recipe == null) {
-            return;
-        }
-        RatioRecipe base = findRatioRecipeFor(input);
-        if (base == null) { return; }
+        if (recipe == null) return;
 
-        double serving = getTargetServingWeight(base); // <-- mode-based from RatioRecipe
-        if (serving <= 0) { return; }
+        double serving = getTargetServingWeight(input);
+        if (serving <= 0) return;
 
-        // 2) Read total grams from the weight component
-        WeightComponent wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS);
+        var wc = input.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
         double total = (wc != null ? wc.grams() : 0.0);
-        int floorPortions = (int) Math.floor(total / serving);
+        if (total <= 0) return;
 
-        // --- 3) Minimal‐portion branch (≈1× serving) ---
+        int floorPortions = (int)Math.floor(total / serving);
+
         if (floorPortions < 2) {
-            double diff = Math.abs(total - serving);
-            if (diff <= TOLERANCE_GRAMS) {
+            if (Math.abs(total - serving) <= TOLERANCE_GRAMS) {
                 advanceSinglePortion(input);
-            } else {
-                // within divide step but not close enough to target; do nothing
             }
             return;
         }
 
-        // --- 4) Multi‐portion branch (≥2× serving) ---
         double leftover = total - (floorPortions * serving);
-        int portions;
-        double portionWeight;
+        int portions = floorPortions;
+        double portionWeight = (leftover <= TOLERANCE_GRAMS) ? serving : (total / portions);
 
-        if (leftover <= TOLERANCE_GRAMS) {
-            // exact multiples: trim leftover
-            portions      = floorPortions;
-            portionWeight = serving;
-        } else {
-            // split evenly
-            portions      = floorPortions;
-            portionWeight = total / portions;
-        }
+        if (portions <= 0 || portionWeight <= 0) return;
 
-        if (portions <= 0 || portionWeight <= 0) {
-            return;
-        }
-
-        // 5) Perform the divide‐and‐stamp
         divideIntoPortions(input, portions, portionWeight);
     }
 
@@ -319,12 +291,35 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         // Keep component's top-level total as whole grams (rounded from mg)
         int totalGramsRounded = Math.round(newTotalMg / 1000f);
 
+        // NEW: pass process id as 2nd arg
         return new DoughRecipeComponent(
                 old.recipeId(),
+                resolveProcessId(old),                 // <- add this
                 old.targetPercentages(),
                 scaled,
                 totalGramsRounded
         );
+    }
+
+    /** Prefer old.processId() if present; otherwise fall back to "<base>_process". */
+    private static ResourceLocation resolveProcessId(DoughRecipeComponent comp) {
+        try {
+            // supports either record accessor 'processId()' or getter 'getProcessId()'
+            try {
+                var m = DoughRecipeComponent.class.getMethod("processId");
+                Object v = m.invoke(comp);
+                if (v instanceof ResourceLocation rl) return rl;
+                if (v instanceof String s) return ResourceLocation.parse(s);
+            } catch (NoSuchMethodException ignore) {
+                var m = DoughRecipeComponent.class.getMethod("getProcessId");
+                Object v = m.invoke(comp);
+                if (v instanceof ResourceLocation rl) return rl;
+                if (v instanceof String s) return ResourceLocation.parse(s);
+            }
+        } catch (Throwable ignored) {}
+
+        ResourceLocation base = comp.recipeId();
+        return ResourceLocation.fromNamespaceAndPath(base.getNamespace(), base.getPath() + "_process");
     }
 
     @SuppressWarnings("unchecked")
@@ -360,10 +355,10 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
 
         // 3) stream your Process recipes, unwrap via RecipeHolder::value, then match on that ID
         return level.getRecipeManager()
-                .getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get())
+                .getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get())
                 .stream()
                 .map(RecipeHolder::value)
-                .filter(r -> r.getDoughType().equals(processId))
+                .filter(r -> r.getType().equals(processId))
                 .findFirst()
                 .orElse(null);
     }
@@ -391,22 +386,52 @@ public class DoughDividerBlockEntity extends AbstractProcessingBlockEntity imple
         setChanged();
     }
 
-    private double getTargetServingWeight(RatioRecipe recipe) {
-        if (!this.modeSelected) return 0.0; // neutral → requires player choice
-        return this.rollMode ? recipe.getRollSizeG() : recipe.getLoafSizeG();
+    // Returns desired grams of ONE divided piece. 0 = unknown (don’t run).
+    private int getTargetServingWeight(ItemStack dough) {
+        if (dough == null || dough.isEmpty() || this.level == null) return 0;
+
+        // Current dough total grams (used as last-resort fallback)
+        var gramsComp = dough.get(ModDataComponentTypes.INGREDIENT_GRAMS.get());
+        final int totalG = (gramsComp != null) ? (int) Math.round(gramsComp.grams()) : 0;
+
+        // Prefer serving sizes defined on the base ratio recipe.
+        var ratio = findRatioRecipeFor(dough);
+        Integer rollI = null, loafI = null;
+        if (ratio != null) {
+            rollI = ratio.getRollSizeG();  // may be null
+            loafI = ratio.getLoafSizeG();  // may be null
+        }
+
+        // If the player explicitly chose a mode, honor it first.
+        if (this.modeSelected) {
+            Integer preferred = this.rollMode ? rollI : loafI;
+            Integer fallback  = this.rollMode ? loafI : rollI;
+            if (preferred != null && preferred > 0) return preferred;
+            if (fallback  != null && fallback  > 0) return fallback;
+        } else {
+            // No explicit choice: if only one is defined, use it; if both, prefer loaf by default.
+            if (loafI != null && loafI > 0) return loafI;
+            if (rollI != null && rollI > 0) return rollI;
+        }
+
+        // Last resort: treat current dough as a single piece;
+        // (lets the machine “nudge” one serving even without recipe sizes)
+        return totalG > 0 ? totalG : 0;
     }
+
+
 
     /** Find the base RatioRecipe that produced this dough (via DoughRecipeComponent.recipeId). */
     private RatioRecipe findRatioRecipeFor(ItemStack stack) {
-        if (level == null) return null;
-        DoughRecipeComponent dr = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+        if (this.level == null) return null;
+        var dr = stack.get(ModDataComponentTypes.DOUGH_RECIPE.get());
         if (dr == null) return null;
 
-        return level.getRecipeManager()
+        return this.level.getRecipeManager()
                 .byKey(dr.recipeId())
-                .map(RecipeHolder::value)
-                .filter(RatioRecipe.class::isInstance)
-                .map(RatioRecipe.class::cast)
+                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
+                .filter(net.boulangermod.boulanger.recipe.RatioRecipe.class::isInstance)
+                .map(net.boulangermod.boulanger.recipe.RatioRecipe.class::cast)
                 .orElse(null);
     }
 

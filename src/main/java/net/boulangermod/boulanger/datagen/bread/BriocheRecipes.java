@@ -4,7 +4,7 @@ import net.boulangermod.boulanger.datagen.builder.DoughProcessRecipeBuilder;
 import net.boulangermod.boulanger.datagen.builder.RatioRecipeBuilder;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.item.PanType;
-import net.boulangermod.boulanger.recipe.StepType;
+import net.boulangermod.boulanger.item.PortionKind;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.world.item.ItemStack;
@@ -13,7 +13,9 @@ import java.util.List;
 
 public final class BriocheRecipes {
     private BriocheRecipes() {}
+
     public static void register(RecipeOutput out) {
+        // Composition + serving sizes
         new RatioRecipeBuilder(
                 DatagenIds.id("brioche"),
                 new ItemStack(ModItems.DOUGH.get()),
@@ -34,22 +36,24 @@ public final class BriocheRecipes {
                         List.of(DatagenIds.id("calcium_propionate")))
                 .addComponent(IngredientCategory.ADDITIVE, 0.03,
                         List.of(DatagenIds.id("ascorbic_acid")))
-                .rollSizeG(65)    // brioche roll
-                .loafSizeG(680)   // brioche loaf
+                .rollSizeG(65)     // 65 g roll
+                .loafSizeG(680)    // 680 g loaf
                 .save(out);
 
+        // Process: proof 3m, punch, proof 3m, punch, divide, shape, proof 4m
         new DoughProcessRecipeBuilder(
-                DatagenIds.id("dough_process/brioche"),
-                DatagenIds.id("brioche")
+                DatagenIds.id("dough_process/brioche")
         )
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.PROOF, 1600)
-                .addStep(StepType.PUNCHDOWN)
-                .addStep(StepType.DIVIDE) // serving weight omitted (optional)
-                .addStep(StepType.SHAPE)
-                .setPanType(DatagenIds.pan(PanType.LOAF))
-                .addStep(StepType.PROOF, 800)
+                .proof(3)
+                .punchdown()
+                .proof(3)
+                .punchdown()
+                .divide()
+                .shape()
+                .proof(4)
+                // Per-portion pan rules
+                .serve(PortionKind.ROLL, 65, PanType.LOAF, 12) // 12 rolls per pan
+                .serve(PortionKind.LOAF, 680, PanType.LOAF, 1) // 1 loaf per pan
                 .save(out);
     }
 }

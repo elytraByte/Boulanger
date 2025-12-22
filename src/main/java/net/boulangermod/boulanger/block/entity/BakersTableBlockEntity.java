@@ -2,38 +2,45 @@ package net.boulangermod.boulanger.block.entity;
 
 import net.boulangermod.boulanger.block.AbstractProcessingBlock;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.component.PanTypeComponent;
 import net.boulangermod.boulanger.component.ProofingStateComponent;
-import net.boulangermod.boulanger.item.PanType;
-import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
-import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
-import net.boulangermod.boulanger.recipe.ProcessingStep;
-import net.boulangermod.boulanger.recipe.StepType;
+import net.boulangermod.boulanger.item.PanItem;
+import net.boulangermod.boulanger.recipe.*;
 import net.boulangermod.boulanger.screen.BakersTableMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
+/**
+ * Baker's Table — shapes dough and loads it into a pan (internal container).
+ * Requirements:
+ *  - Dough must have PROOFING_STATE and be at the SHAPE step (not already shaped).
+ *  - Dough must also carry either a DOUGH_PROCESS_(ID/TYPE) or a DOUGH_RECIPE.
+ *  - Pan is a PanItem; we size its container to capacity, insert one dough per cavity.
+ *  - When full, we move the pan to OUTPUT.
+ */
 public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implements AbstractProcessingBlock.Tickable {
+    private static final Logger LOG = LogManager.getLogger();
+
     public static final int DOUGH_SLOT  = 0;
     public static final int PAN_SLOT    = 1;
     public static final int OUTPUT_SLOT = 2;
 
-    private static final String MODID = "boulanger";
-
     public BakersTableBlockEntity(BlockPos pos, BlockState state) {
+        // 3 slots: DOUGH, PAN, OUTPUT
         super(ModBlockEntities.BAKERS_TABLE.get(), pos, state, 3);
     }
 
@@ -49,146 +56,218 @@ public class BakersTableBlockEntity extends AbstractProcessingBlockEntity implem
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide()) return;
-        tryShape();
-    }
+        // Server-side auto-shape when conditions are met
+        if (level == null || level.isClientSide) return;
+        try {
+            var inv = this.itemHandler;
+            ItemStack out   = inv.getStackInSlot(OUTPUT_SLOT);
+            ItemStack dough = inv.getStackInSlot(DOUGH_SLOT);
+            ItemStack pan   = inv.getStackInSlot(PAN_SLOT);
 
-    @SuppressWarnings("unchecked")
-    private static void copyKnownDoughComponents(ItemStack source, ItemStack target) {
-        for (var comp : List.of(
-                ModDataComponentTypes.DOUGH_RECIPE.get(),
-                ModDataComponentTypes.PROOFING_STATE.get(),
-                ModDataComponentTypes.INGREDIENT_GRAMS.get(),
-                ModDataComponentTypes.BAKER_PERCENTAGES.get(),
-                ModDataComponentTypes.DOUGH_PROCESS_TYPE.get(),
-                ModDataComponentTypes.INGREDIENT_TYPE.get()
-                // intentionally NOT copying PAN_TYPE from dough
-        )) {
-            if (source.has(comp)) {
-                target.set((net.minecraft.core.component.DataComponentType<Object>) comp, source.get(comp));
+            if (out.isEmpty() && !dough.isEmpty() && !pan.isEmpty()) {
+                boolean ok = this.tryShape();
+                LOG.debug("[BakersTable.tick] auto tryShape() → {}", ok);
             }
+        } catch (Throwable t) {
+            LOG.debug("[BakersTable.tick] error in auto-shape: {}", t.toString());
         }
     }
 
-    /** Ensure an id is namespaced; if missing, prefix with our MODID. */
-    private static String normalizedPanId(String id) {
-        if (id == null || id.isEmpty()) return id;
-        return (id.indexOf(':') >= 0) ? id : (MODID + ":" + id);
-    }
-
+    // ---------------------------------------------------------------------
+    // Shaping action — called by menu/screen button
+    // ---------------------------------------------------------------------
     public boolean tryShape() {
-        var handler = getItemHandler(null);
-        ItemStack dough  = handler.getStackInSlot(DOUGH_SLOT);
-        ItemStack pan    = handler.getStackInSlot(PAN_SLOT);
-        ItemStack output = handler.getStackInSlot(OUTPUT_SLOT);
+        if (this.level == null || this.level.isClientSide) return false;
+
+        final var inv    = this.itemHandler;
+        final ItemStack dough  = inv.getStackInSlot(DOUGH_SLOT);
+        final ItemStack pan    = inv.getStackInSlot(PAN_SLOT);
+        final ItemStack output = inv.getStackInSlot(OUTPUT_SLOT);
 
         if (dough.isEmpty() || pan.isEmpty() || !output.isEmpty()) return false;
+        if (!(pan.getItem() instanceof PanItem)) return false;
 
-        var ds      = net.boulangermod.boulanger.component.ModDataComponentTypes.PROOFING_STATE.get();
-        var pt      = net.boulangermod.boulanger.component.ModDataComponentTypes.DOUGH_PROCESS_TYPE.get();
-        var panComp = net.boulangermod.boulanger.component.ModDataComponentTypes.PAN_TYPE.get();
+        // Require proofing state and ensure we are at SHAPE step (and not already shaped)
+        var ps = dough.get(ModDataComponentTypes.PROOFING_STATE.get());
+        if (ps == null) return false;
+        int stepIndex = ps.stepIndex();
+        if (ps.shaped()) return false;
+        if (!isAtShapeStep(dough)) return false;
 
-        // Dough must have process + proofing; pan MUST declare its type (strict)
-        if (!dough.has(ds) || !dough.has(pt) || !pan.has(panComp)) return false;
+        // Prepare pan handler
+        PanItem.ensurePanType(pan);
+        PanItem.ensureContainerSized(pan);
+        PanItem.PanItemHandler panHandler = new PanItem.PanItemHandler(pan);
+        final int capacity = PanItem.capacityFor(pan);
 
-        // Resolve process recipe
-        var recipeOpt = level.getRecipeManager()
-                .getAllRecipesFor(net.boulangermod.boulanger.recipe.ModRecipeSerializers.DOUGH_PROCESS_TYPE.get()).stream()
-                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
-                .filter(r -> r.getDoughType().equals(dough.get(pt)))
-                .findFirst();
-        if (recipeOpt.isEmpty()) return false;
-        net.boulangermod.boulanger.recipe.DoughProcessRecipe recipe = recipeOpt.get();
-
-        // Current step
-        int idx = dough.get(ds).stepIndex();
-        var steps = recipe.getSteps();
-        if (idx < 0 || idx >= steps.size()) return false;
-
-        boolean atShape  = steps.get(idx).type() == net.boulangermod.boulanger.recipe.StepType.SHAPE;
-        boolean atDivide = steps.get(idx).type() == net.boulangermod.boulanger.recipe.StepType.DIVIDE;
-
-        // Permit shaping from DIVIDE if the dough is already ~one serving (matches divider tolerance),
-        // but now the serving size comes from the RatioRecipe (loaf size preferred for pan shaping).
-        int shapeIdx = -1;
-        if (!atShape) {
-            if (!atDivide) return false;
-
-            final double TOLERANCE_GRAMS = 2.0;
-            var wc = dough.get(net.boulangermod.boulanger.component.ModDataComponentTypes.INGREDIENT_GRAMS);
-            double grams = (wc != null ? wc.grams() : 0.0);
-
-            // Find the base RatioRecipe via DoughRecipeComponent
-            var base = findRatioRecipeFor(dough);
-            double serving = (base != null ? base.getLoafSizeG() : 0.0);
-            if (serving <= 0 && base != null) {
-                // fallback to roll size if loaf size isn't defined
-                serving = base.getRollSizeG();
+        // Pan must have room
+        int filledBefore = 0;
+        var contBefore = pan.get(net.minecraft.core.component.DataComponents.CONTAINER);
+        if (contBefore != null) {
+            int n = contBefore.getSlots();
+            for (int i = 0; i < n; i++) {
+                if (!contBefore.getStackInSlot(i).isEmpty()) filledBefore++;
             }
+        }
+        if (filledBefore >= capacity) return false;
 
-            if (!(serving > 0 && Math.abs(grams - serving) <= TOLERANCE_GRAMS)) {
-                return false; // needs dividing first
-            }
+        // Create the piece to insert and advance to the LAST PROOF step after SHAPE, if any
+        ItemStack one = dough.copy();
+        one.setCount(1);
 
-            // Find next SHAPE step after DIVIDE
-            for (int i = idx + 1; i < steps.size(); i++) {
-                if (steps.get(i).type() == net.boulangermod.boulanger.recipe.StepType.SHAPE) { shapeIdx = i; break; }
+        int writeIdx = stepIndex;
+        var proc = resolveProcessRecipe(dough);
+        if (proc != null) {
+            var steps = proc.steps();
+            if (steps != null && !steps.isEmpty()) {
+                for (int i = Math.max(0, stepIndex + 1), n = steps.size(); i < n; i++) {
+                    var t = steps.get(i).type();
+                    // If you want to include FINAL_PROOF too, use: (t == StepType.PROOF || t == StepType.FINAL_PROOF)
+                    if (t == StepType.PROOF) {
+                        writeIdx = i; // keep updating → last PROOF after SHAPE
+                    }
+                }
             }
-            if (shapeIdx < 0) return false; // malformed process
         }
 
-        // STRICT pan enforcement:
-        // Recipe MUST declare a pan type; pan item MUST match exactly (after namespacing)
-        if (recipe.getPanType() == null) return false;
-        String reqNorm  = normalizedPanId(recipe.getPanType().toString());
-        String presNorm = normalizedPanId(pan.get(panComp).id());
-        if (!reqNorm.equals(presNorm)) return false;
+        // Reset ticks and mark shaped=true
+        var newPs = new ProofingStateComponent(writeIdx, 0, true);
+        one.set(ModDataComponentTypes.PROOFING_STATE.get(), newPs);
 
-        // Build shaped pan output
-        ItemStack shapedPan = pan.copy();
-        shapedPan.setCount(1);
+        // Insert the shaped piece into the first available cavity
+        ItemStack remainder = one;
+        for (int slot = 0; slot < panHandler.getSlots() && !remainder.isEmpty(); slot++) {
+            if (panHandler.isItemValid(slot, remainder)) {
+                remainder = panHandler.insertItem(slot, remainder, false);
+            }
+        }
+        if (!remainder.isEmpty()) return false;
 
-        // Copy dough metadata (but NOT dough PAN_TYPE; the pan keeps its own)
-        copyKnownDoughComponents(dough, shapedPan);
+        // Shrink input by 1
+        ItemStack newDough = dough.copy();
+        newDough.shrink(1);
+        inv.setStackInSlot(DOUGH_SLOT, newDough);
 
-        // Stamp the (normalized) PAN_TYPE from the recipe
-        shapedPan.set(panComp, new net.boulangermod.boulanger.component.PanTypeComponent(reqNorm));
+        // Update model
+        PanItem.syncModelToContents(pan);
 
-        // Advance past SHAPE and mark shaped=true
-        int nextIdxAfterShape = atShape ? (idx + 1) : (shapeIdx + 1);
-        shapedPan.set(ds, new net.boulangermod.boulanger.component.ProofingStateComponent(nextIdxAfterShape, 0, true));
-
-        // Flip the pan’s model to “full”
-        var panType = net.boulangermod.boulanger.item.PanType.byId(net.minecraft.resources.ResourceLocation.tryParse(reqNorm));
-        shapedPan.set(net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA,
-                new CustomModelData(panType.getFullModelIndex()));
-
-        // Consume inputs and output shaped pan
-        dough.shrink(1);
-        pan.shrink(1);
-        handler.setStackInSlot(DOUGH_SLOT, dough.isEmpty() ? ItemStack.EMPTY : dough);
-        handler.setStackInSlot(PAN_SLOT,  pan.isEmpty()  ? ItemStack.EMPTY : pan);
-        handler.setStackInSlot(OUTPUT_SLOT, shapedPan);
+        // Move pan to OUTPUT if full
+        int filledAfter = 0;
+        var contAfter = pan.get(net.minecraft.core.component.DataComponents.CONTAINER);
+        if (contAfter != null) {
+            int n = contAfter.getSlots();
+            for (int i = 0; i < n; i++) {
+                if (!contAfter.getStackInSlot(i).isEmpty()) filledAfter++;
+            }
+        }
+        if (filledAfter >= capacity) {
+            inv.setStackInSlot(OUTPUT_SLOT, pan.copy());
+            inv.setStackInSlot(PAN_SLOT, ItemStack.EMPTY);
+        } else {
+            inv.setStackInSlot(PAN_SLOT, pan);
+        }
 
         setChanged();
         return true;
     }
 
 
-    // Helper: find the RatioRecipe that produced this dough (via DoughRecipeComponent.recipeId)
-    @Nullable
-    private net.boulangermod.boulanger.recipe.RatioRecipe findRatioRecipeFor(ItemStack dough) {
-        if (level == null) return null;
-        var dr = dough.get(net.boulangermod.boulanger.component.ModDataComponentTypes.DOUGH_RECIPE.get());
-        if (dr == null) return null;
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
 
-        return level.getRecipeManager()
-                .byKey(dr.recipeId())
-                .map(net.minecraft.world.item.crafting.RecipeHolder::value)
-                .filter(net.boulangermod.boulanger.recipe.RatioRecipe.class::isInstance)
-                .map(net.boulangermod.boulanger.recipe.RatioRecipe.class::cast)
-                .orElse(null);
+    private boolean isAtShapeStep(ItemStack dough) {
+        var ps = dough.get(ModDataComponentTypes.PROOFING_STATE.get());
+        if (ps == null) { LOG.debug("[BakersTable.isAtShapeStep] no PROOFING_STATE"); return false; }
+
+        int idx;
+        try { idx = ps.stepIndex(); } catch (Throwable t) { LOG.debug("[BakersTable.isAtShapeStep] no stepIndex: {}", t.toString()); return false; }
+
+        DoughProcessRecipe proc = resolveProcessRecipe(dough);
+        if (proc == null) { LOG.debug("[BakersTable.isAtShapeStep] no process"); return false; }
+
+        var steps = proc.steps();
+        if (steps == null) { LOG.debug("[BakersTable.isAtShapeStep] steps=null"); return false; }
+        if (idx < 0 || idx >= steps.size()) { LOG.debug("[BakersTable.isAtShapeStep] idx out of bounds idx={} size={}", idx, steps.size()); return false; }
+
+        var step = steps.get(idx);
+        LOG.debug("[BakersTable.isAtShapeStep] step[{}]={}", idx, step.type());
+        return step.type() == StepType.SHAPE;
+    }
+
+    @Nullable
+    private DoughProcessRecipe resolveProcessRecipe(ItemStack dough) {
+        ResourceLocation processId = null;
+
+        // Prefer explicit process id (newer items)
+        try {
+            var pid = dough.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+            if (pid instanceof ResourceLocation rl) processId = rl;
+        } catch (Throwable ignored) {}
+
+        // Fallback: DOUGH_PROCESS_TYPE (older field name)
+        if (processId == null) {
+            try {
+                var ptype = dough.get(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get());
+                if (ptype instanceof ResourceLocation rl) processId = rl;
+            } catch (Throwable ignored2) {}
+        }
+
+        // Final fallback: use the ratio recipe id
+        if (processId == null) {
+            var dr = dough.get(ModDataComponentTypes.DOUGH_RECIPE.get());
+            if (dr != null) processId = dr.recipeId();
+        }
+
+        LOG.debug("[BakersTable.resolveProcessRecipe] resolved candidate id={}", safeId(processId));
+
+        // 1) Try exact key first (works if your process is registered under that id)
+        if (processId != null) {
+            var byKey = this.level.getRecipeManager()
+                    .byKey(processId)
+                    .map(net.minecraft.world.item.crafting.RecipeHolder::value)
+                    .filter(DoughProcessRecipe.class::isInstance)
+                    .map(DoughProcessRecipe.class::cast);
+            if (byKey.isPresent()) {
+                LOG.debug("[BakersTable.resolveProcessRecipe] found by exact key: {}", byKey.get().getId());
+                return byKey.get();
+            }
+        }
+
+        // 2) Fallback: scan all dough-process recipes and match by dough_type
+        var all = this.level.getRecipeManager()
+                .getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get());
+        LOG.debug("[BakersTable.resolveProcessRecipe] scanning {} process recipes for dough_type={}",
+                all.size(), safeId(processId));
+
+        for (var holder : all) {
+            if (holder.value() instanceof DoughProcessRecipe r) {
+                if (processId != null && processId.equals(r.getType())) {
+                    LOG.debug("[BakersTable.resolveProcessRecipe] matched by dough_type: {}", r.getId());
+                    return r;
+                }
+            }
+        }
+
+        LOG.debug("[BakersTable.resolveProcessRecipe] no process recipe found for {}", safeId(processId));
+        return null;
     }
 
 
+    private static String safeId(@Nullable ResourceLocation id) {
+        return id == null ? "null" : id.toString();
+    }
+
+    private static String debugStack(@Nullable ItemStack s) {
+        if (s == null) return "null";
+        if (s.isEmpty()) return "empty";
+        var key = BuiltInRegistries.ITEM.getKey(s.getItem());
+        int cnt = s.getCount();
+        boolean hasProof = s.has(ModDataComponentTypes.PROOFING_STATE.get());
+        boolean hasRec   = s.has(ModDataComponentTypes.DOUGH_RECIPE.get());
+        boolean hasProcT = false;
+        boolean hasProcI = false;
+        try { hasProcT = s.has(ModDataComponentTypes.DOUGH_PROCESS_TYPE.get()); } catch (Throwable ignored) {}
+        return key + " x" + cnt + " [proof=" + hasProof + " recipe=" + hasRec + " procType=" + hasProcT + " procId=" + hasProcI + "]";
+    }
 }

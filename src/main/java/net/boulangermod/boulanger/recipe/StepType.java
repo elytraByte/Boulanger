@@ -2,6 +2,7 @@ package net.boulangermod.boulanger.recipe;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
 public enum StepType {
@@ -18,9 +19,9 @@ public enum StepType {
             StepType::name
     );
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, StepType> STREAM_CODEC =
-            StreamCodec.of(
-                    (buf, value) -> buf.writeUtf(value.name()),
-                    buf -> StepType.valueOf(buf.readUtf())
+    public static final StreamCodec<io.netty.buffer.ByteBuf, StepType> STREAM_CODEC =
+            ByteBufCodecs.idMapper(
+                    (int i) -> StepType.values()[i],
+                    StepType::ordinal
             );
 }

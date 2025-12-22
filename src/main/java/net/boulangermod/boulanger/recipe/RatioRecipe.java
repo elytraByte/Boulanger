@@ -30,6 +30,7 @@ public class RatioRecipe implements Recipe<MixingContainer> {
     private final List<IngredientComponent> components;
     private final double tolerance;
     private final ItemStack result;
+    private final ResourceLocation processId;
 
     // New optional size hints (grams). These are NOT required for crafting; they are UI/Divider hints.
     private final @Nullable Integer rollSizeG;
@@ -40,13 +41,15 @@ public class RatioRecipe implements Recipe<MixingContainer> {
                        double tolerance,
                        ItemStack result,
                        @Nullable Integer rollSizeG,
-                       @Nullable Integer loafSizeG) {
+                       @Nullable Integer loafSizeG,
+                       @Nullable ResourceLocation processId) {
         this.id = Objects.requireNonNull(id);
         this.components = List.copyOf(Objects.requireNonNull(components));
         this.tolerance = tolerance;
         this.result = Objects.requireNonNull(result);
         this.rollSizeG = rollSizeG;
         this.loafSizeG = loafSizeG;
+        this.processId = processId;
 
         // ---------- Advanced Logging ----------
         LOG.info("🔧 Loaded RatioRecipe: {}", id);
@@ -88,6 +91,8 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         return true;
     }
 
+    public @Nullable ResourceLocation getProcessId() { return processId; }
+
     @Override
     public ItemStack getResultItem(HolderLookup.Provider ctx) {
         return result.copy();
@@ -95,7 +100,9 @@ public class RatioRecipe implements Recipe<MixingContainer> {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return RATIO_SERIALIZER.get();
+        return ModRecipeSerializers.RATIO_SERIALIZER.isBound()
+                ? ModRecipeSerializers.RATIO_SERIALIZER.get()
+                : new Serializer();
     }
 
     @Override
@@ -162,48 +169,40 @@ public class RatioRecipe implements Recipe<MixingContainer> {
          *   if "loaf_size_g" is absent.
          * We never WRITE legacy fields back out.
          */
+// inside Serializer.CODEC (MapCodec) group(...)
         public static final MapCodec<RatioRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
-                ResourceLocation.CODEC
-                        .fieldOf("id")
-                        .forGetter(RatioRecipe::getId),
+                ResourceLocation.CODEC.fieldOf("id").forGetter(RatioRecipe::getId),
+                IngredientComponent.CODEC.listOf().fieldOf("components").forGetter(RatioRecipe::getComponents),
+                Codec.DOUBLE.fieldOf("tolerance").forGetter(RatioRecipe::getTolerance),
+                ItemStack.CODEC.fieldOf("result").forGetter(r -> r.result),
 
-                IngredientComponent.CODEC
-                        .listOf()
-                        .fieldOf("components")
-                        .forGetter(RatioRecipe::getComponents),
+                // NEW: optional process id
+                ResourceLocation.CODEC.optionalFieldOf("process")
+                        .forGetter(r -> Optional.ofNullable(r.getProcessId())),
 
-                Codec.DOUBLE
-                        .fieldOf("tolerance")
-                        .forGetter(RatioRecipe::getTolerance),
-
-                ItemStack.CODEC
-                        .fieldOf("result")
-                        .forGetter(r -> r.result),
-
-                // New optional hints
+                // existing optionals
                 Codec.INT.optionalFieldOf("roll_size_g")
                         .forGetter(r -> Optional.ofNullable(r.getRollSizeG())),
                 Codec.INT.optionalFieldOf("loaf_size_g")
                         .forGetter(r -> Optional.ofNullable(r.getLoafSizeG())),
 
-                // Legacy (read-only)
-                Codec.DOUBLE.optionalFieldOf("serving_weight")
-                        .forGetter(r -> Optional.empty()),
-                Codec.INT.optionalFieldOf("serving_weight_g")
-                        .forGetter(r -> Optional.empty())
+                // legacy read-only (leave as-is)
+                Codec.DOUBLE.optionalFieldOf("serving_weight").forGetter(r -> Optional.empty()),
+                Codec.INT.optionalFieldOf("serving_weight_g").forGetter(r -> Optional.empty())
 
         ).apply(inst, (id, components, tolerance, result,
-                       rollOpt, loafOpt, legacyServingOpt, legacyServingGOpt) -> {
+                       processOpt, rollOpt, loafOpt, legacyServingOpt, legacyServingGOpt) -> {
 
-            Integer loaf = loafOpt.orElseGet(() -> {
-                if (legacyServingGOpt.isPresent()) return legacyServingGOpt.get();
-                if (legacyServingOpt.isPresent()) return (int) Math.round(legacyServingOpt.get());
-                return null;
-            });
-            Integer roll = rollOpt.orElse(null);
+            Integer loaf = loafOpt.orElseGet(() ->
+                    legacyServingGOpt.orElse(null));
 
-            return new RatioRecipe(id, components, tolerance, result, roll, loaf);
+            return new RatioRecipe(
+                    id, components, tolerance, result,
+                    rollOpt.orElse(null), loaf,
+                    processOpt.orElse(null) // NEW
+            );
         }));
+
 
         @Override
         public MapCodec<RatioRecipe> codec() {
@@ -216,34 +215,39 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         public static final StreamCodec<RegistryFriendlyByteBuf, RatioRecipe> STREAM_CODEC =
                 StreamCodec.of(
                         (buf, r) -> {
-                            // write
                             ResourceLocation.STREAM_CODEC.encode(buf, r.getId());
                             StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC).encode(buf, r.getComponents());
                             StreamCodecsCompat.DOUBLE.encode(buf, r.getTolerance());
                             ItemStack.STREAM_CODEC.encode(buf, r.result);
 
-                            // roll (optional)
+                            // NEW: process id (optional)
+                            buf.writeBoolean(r.getProcessId() != null);
+                            if (r.getProcessId() != null) {
+                                ResourceLocation.STREAM_CODEC.encode(buf, r.getProcessId());
+                            }
+
+                            // existing optionals
                             buf.writeBoolean(r.getRollSizeG() != null);
                             if (r.getRollSizeG() != null) buf.writeVarInt(r.getRollSizeG());
-
-                            // loaf (optional)
                             buf.writeBoolean(r.getLoafSizeG() != null);
                             if (r.getLoafSizeG() != null) buf.writeVarInt(r.getLoafSizeG());
                         },
                         buf -> {
-                            // read
                             ResourceLocation id = ResourceLocation.STREAM_CODEC.decode(buf);
-                            List<IngredientComponent> comps =
-                                    StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC).decode(buf);
+                            List<IngredientComponent> comps = StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC).decode(buf);
                             double tol = StreamCodecsCompat.DOUBLE.decode(buf);
                             ItemStack result = ItemStack.STREAM_CODEC.decode(buf);
+
+                            // NEW: process id (optional)
+                            ResourceLocation proc = buf.readBoolean() ? ResourceLocation.STREAM_CODEC.decode(buf) : null;
 
                             Integer roll = buf.readBoolean() ? buf.readVarInt() : null;
                             Integer loaf = buf.readBoolean() ? buf.readVarInt() : null;
 
-                            return new RatioRecipe(id, comps, tol, result, roll, loaf);
+                            return new RatioRecipe(id, comps, tol, result, roll, loaf, proc);
                         }
                 );
+
 
         @Override
         public StreamCodec<RegistryFriendlyByteBuf, RatioRecipe> streamCodec() {

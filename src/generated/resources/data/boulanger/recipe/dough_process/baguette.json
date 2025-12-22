@@ -1,28 +1,46 @@
 {
   "type": "boulanger:dough_process",
-  "dough_type": "boulanger:baguette",
   "id": "boulanger:dough_process/baguette",
-  "pan_type": "boulanger:baguette",
+  "serving": {
+    "LOAF": {
+      "pan_type": "boulanger:baguette",
+      "per_pan_capacity": 3,
+      "serving_weight_g": 454
+    },
+    "ROLL": {
+      "pan_type": "boulanger:baguette",
+      "per_pan_capacity": 6,
+      "serving_weight_g": 180
+    }
+  },
   "steps": [
     {
       "type": "PROOF",
-      "duration": 1600
+      "ticks": 3
     },
     {
-      "type": "PUNCHDOWN"
+      "type": "PUNCHDOWN",
+      "ticks": 0
     },
     {
       "type": "PROOF",
-      "duration": 1600
+      "ticks": 3
     },
     {
-      "type": "PUNCHDOWN"
+      "type": "PUNCHDOWN",
+      "ticks": 0
     },
     {
-      "type": "DIVIDE"
+      "type": "DIVIDE",
+      "ticks": 0
     },
     {
-      "type": "SHAPE"
+      "type": "SHAPE",
+      "ticks": 0
+    },
+    {
+      "type": "PROOF",
+      "ticks": 3
     }
   ]
 }

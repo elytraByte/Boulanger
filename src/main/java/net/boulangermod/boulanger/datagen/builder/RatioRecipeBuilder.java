@@ -43,6 +43,7 @@ public class RatioRecipeBuilder {
     // New optional unit sizes (omitted from JSON when null)
     private @Nullable Integer rollSizeG = null;
     private @Nullable Integer loafSizeG = null;
+    private @Nullable ResourceLocation processId = null;
 
     // Back-compat only: if used and loafSizeG not set, we map it to loaf_size_g.
     @Deprecated
@@ -65,6 +66,11 @@ public class RatioRecipeBuilder {
 
     public RatioRecipeBuilder addItemRequirement(ResourceLocation itemId, double amount) {
         this.itemRequirements.add(new IngredientRequirement(itemId, amount));
+        return this;
+    }
+
+    public RatioRecipeBuilder process(ResourceLocation processId) {
+        this.processId = processId;
         return this;
     }
 
@@ -121,6 +127,9 @@ public class RatioRecipeBuilder {
         }
         if (loafToWrite != null) {
             json.addProperty("loaf_size_g", loafToWrite);
+        }
+        if (processId != null) {
+            json.addProperty("process", processId.toString());
         }
 
         // result — let vanilla encode it so field names match the runtime (“id”, “count”, …)

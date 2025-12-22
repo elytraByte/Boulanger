@@ -465,18 +465,34 @@ public class WoodGasifierBlockEntity extends AbstractProcessingBlockEntity {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider regs) {
         super.saveAdditional(tag, regs);
-        if (anchorPos != null) tag.putLong("anchorPos", anchorPos.asLong());
+
+        if (anchorPos != null) {
+            tag.putLong("anchorPos", anchorPos.asLong());
+        }
         tag.putInt("burnTime", burnTime);
-        tag.put("tank", woodGasTank.writeToNBT(regs, new CompoundTag()));
+
+        // FluidTank (NeoForge 1.21): writeToNBT(regs, CompoundTag)
+        CompoundTag tankTag = new CompoundTag();
+        woodGasTank.writeToNBT(regs, tankTag);
+        tag.put("tank", tankTag);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider regs) {
         super.loadAdditional(tag, regs);
-        anchorPos = tag.contains("anchorPos") ? BlockPos.of(tag.getLong("anchorPos")) : null;
-        burnTime  = tag.getInt("burnTime");
-        if (tag.contains("tank")) woodGasTank.readFromNBT(regs, tag.getCompound("tank"));
+
+        anchorPos = tag.contains("anchorPos", net.minecraft.nbt.Tag.TAG_LONG)
+                ? BlockPos.of(tag.getLong("anchorPos"))
+                : null;
+
+        burnTime = tag.getInt("burnTime");
+
+        // FluidTank (NeoForge 1.21): readFromNBT(regs, CompoundTag)
+        if (tag.contains("tank", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            woodGasTank.readFromNBT(regs, tag.getCompound("tank"));
+        }
     }
+
 
     /* ─────────────────────────────── UI / menus ──────────────────────────────── */
     @Override

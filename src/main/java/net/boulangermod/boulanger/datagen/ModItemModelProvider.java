@@ -9,8 +9,12 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.registries.DeferredBlock;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ModItemModelProvider extends ItemModelProvider {
     public ModItemModelProvider(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
@@ -70,24 +74,11 @@ public class ModItemModelProvider extends ItemModelProvider {
                     .end();
         }
 
+        generatePanItemModels();
 
-        // ─── Pans with overrides (unchanged) ──────────────────────────────────
-        ItemModelBuilder pan = withExistingParent("pan", mcLoc("item/generated"))
-                .texture("layer0", modLoc("item/loaf_pan"));
 
-        for (PanType type : PanType.values()) {
-            String id = type.getId();
-            int empty = type.getEmptyModelIndex();
-            int full  = type.getFullModelIndex();
 
-            ItemModelBuilder emptyModel = withExistingParent("pan/" + id + "/empty", mcLoc("item/generated"))
-                    .texture("layer0", modLoc("item/" + id + "_pan"));
-            ItemModelBuilder fullModel = withExistingParent("pan/" + id + "/full", mcLoc("item/generated"))
-                    .texture("layer0", modLoc("item/" + id + "_pan_full"));
 
-            pan.override().predicate(mcLoc("custom_model_data"), empty).model(emptyModel).end();
-            pan.override().predicate(mcLoc("custom_model_data"), full ).model(fullModel ).end();
-        }
 
         // ─── Simple items (generated) ─────────────────────────────────────────
         basicItem(ModItems.BUTTER.get());
@@ -223,6 +214,45 @@ public class ModItemModelProvider extends ItemModelProvider {
                 .end();
         return b;
     }
+
+    private void generatePanItemModels() {
+        // 1) Variant leaf models (flat, texture-only):
+        //    models/item/pan_loaf_empty.json, pan_loaf_full.json, pan_baguette_empty.json, pan_baguette_full.json
+        for (PanType type : PanType.values()) {
+            // PanType#getId returns e.g. "boulanger:loaf" / "boulanger:baguette"
+            ResourceLocation rl = ResourceLocation.tryParse(type.getId());
+            String id = (rl != null ? rl.getPath() : type.getId()); // "loaf", "baguette"
+
+            // empty
+            withExistingParent("pan_" + id + "_empty", mcLoc("item/generated"))
+                    .texture("layer0", modLoc("item/" + id + "_pan"));
+            // full
+            withExistingParent("pan_" + id + "_full", mcLoc("item/generated"))
+                    .texture("layer0", modLoc("item/" + id + "_pan_full"));
+        }
+
+        // 2) Base model with overrides (models/item/pan.json)
+        //    Default texture is just a harmless fallback; all real routing is via overrides.
+        ItemModelBuilder base = withExistingParent("pan", mcLoc("item/generated"))
+                .texture("layer0", modLoc("item/loaf_pan"));
+
+        // Route by CustomModelData → the indices come from PanType (e.g., LOAF empty=1, full=2, BAGUETTE empty=3, full=4)
+        for (PanType type : PanType.values()) {
+            ResourceLocation rl = ResourceLocation.tryParse(type.getId());
+            String id = (rl != null ? rl.getPath() : type.getId()); // "loaf", "baguette"
+
+            // empty
+            base.override()
+                    .predicate(mcLoc("custom_model_data"), (float) type.getEmptyModelIndex())
+                    .model(new ModelFile.UncheckedModelFile(modLoc("item/pan_" + id + "_empty")));
+
+            // full
+            base.override()
+                    .predicate(mcLoc("custom_model_data"), (float) type.getFullModelIndex())
+                    .model(new ModelFile.UncheckedModelFile(modLoc("item/pan_" + id + "_full")));
+        }
+    }
+
 
     private ItemModelBuilder saplingItem(DeferredBlock<Block> item) {
         return withExistingParent(item.getId().getPath(), ResourceLocation.parse("item/generated"))

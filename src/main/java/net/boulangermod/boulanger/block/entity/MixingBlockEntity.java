@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -163,29 +164,6 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
         }
     }
 
-    // ── Persistence ──────────────────────────────────────────────────────────────
-    @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider regs) {
-        super.saveAdditional(tag, regs);
-        tag.putBoolean("Mixing", mixing);
-        tag.putInt("MixProgress", mixProgress);
-        tag.put("Ingredients", mixer.saveIngredientList());
-        tag.put("PreciseTotalsG", mixer.savePreciseTotals());
-    }
-
-    @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider regs) {
-        super.loadAdditional(tag, regs);
-        mixing = tag.getBoolean("Mixing");
-        mixProgress = tag.getInt("MixProgress");
-        mixer.loadIngredientList(tag.getList("Ingredients", ListTag.TAG_COMPOUND));
-        if (tag.contains("PreciseTotalsG")) {
-            mixer.loadPreciseTotals(tag.getCompound("PreciseTotalsG"));
-        } else {
-            mixer.loadPreciseTotals(null);
-        }
-    }
-
     // ── Menu / name ──────────────────────────────────────────────────────────────
     @Override public Component getDisplayName() {
         return Component.translatable("mixing_block.boulanger");
@@ -215,6 +193,32 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
     }
 
     @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider regs) {
+        super.saveAdditional(tag, regs);
+        tag.putBoolean("Mixing", mixing);
+        tag.putInt("MixProgress", mixProgress);
+        tag.put("Ingredients", mixer.saveIngredientList());       // ✅ ListTag is fine here
+        tag.put("PreciseTotalsG", mixer.savePreciseTotals());     // whatever your method returns
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider regs) {
+        super.loadAdditional(tag, regs);
+        mixing = tag.getBoolean("Mixing");
+        mixProgress = tag.getInt("MixProgress");
+
+        // IMPORTANT: the list’s element type is COMPOUND (each entry is a CompoundTag)
+        if (tag.contains("Ingredients", Tag.TAG_LIST)) {
+            mixer.loadIngredientList(tag.getList("Ingredients", Tag.TAG_COMPOUND));
+        }
+
+        if (tag.contains("PreciseTotalsG", Tag.TAG_COMPOUND)) {
+            mixer.loadPreciseTotals(tag.getCompound("PreciseTotalsG"));
+        }
+    }
+
+    // 1.21 adds the Provider here
+    @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider regs) {
         CompoundTag tag = super.getUpdateTag(regs);
         tag.putBoolean("Mixing", mixing);
@@ -229,13 +233,13 @@ public class MixingBlockEntity extends AbstractProcessingBlockEntity
         super.handleUpdateTag(tag, regs);
         mixing = tag.getBoolean("Mixing");
         mixProgress = tag.getInt("MixProgress");
-        if (tag.contains("Ingredients")) {
-            mixer.loadIngredientList(tag.getList("Ingredients", ListTag.TAG_COMPOUND));
+        if (tag.contains("Ingredients", Tag.TAG_LIST)) {
+            mixer.loadIngredientList(tag.getList("Ingredients", Tag.TAG_COMPOUND));
         }
-        if (tag.contains("PreciseTotalsG")) {
+        if (tag.contains("PreciseTotalsG", Tag.TAG_COMPOUND)) {
             mixer.loadPreciseTotals(tag.getCompound("PreciseTotalsG"));
-        } else {
-            mixer.loadPreciseTotals(null);
         }
     }
+
+
 }

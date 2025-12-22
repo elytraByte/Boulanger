@@ -1,70 +1,98 @@
+// src/main/java/net/boulangermod/boulanger/item/PanType.java
 package net.boulangermod.boulanger.item;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import net.boulangermod.boulanger.Boulanger;
+import net.boulangermod.boulanger.component.ModDataComponentTypes;
+import net.boulangermod.boulanger.component.PanTypeComponent;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomModelData;
+
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public enum PanType {
-    // Use multiples of 4 so every type gets a clean block of indices.
-    LOAF("loaf", 0),
-    BAGUETTE("baguette", 4);
+    // id (string or namespaced), capacity, empty CMD, full CMD, assetKey RL (texture/model stem)
+    LOAF(
+            "boulanger:loaf",
+            1, 1, 2,
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "loaf_pan")
+    ),
+    BAGUETTE(
+            "boulanger:baguette",
+            3, 3, 4,
+            ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, "baguette_pan")
+    );
 
-    private final String id;
-    /** Base (even) model index. Derived states are base+1 (full) and base+3 (proofed). */
-    private final int baseModelIndex;
+    private final ResourceLocation id;              // canonical type id (e.g., boulanger:loaf)
+    private final int capacity;                     // per-pan capacity for this pan form
+    private final int emptyModelIndex;              // CustomModelData index for empty
+    private final int fullModelIndex;               // CustomModelData index for full
+    private final ResourceLocation assetKey;        // e.g., boulanger:loaf_pan (-> textures/item/loaf_pan.png)
 
-    PanType(String id, int baseModelIndex) {
-        this.id = id;
-        this.baseModelIndex = baseModelIndex;
+    PanType(String idOrPath, int capacity, int emptyModelIndex, int fullModelIndex, ResourceLocation assetKey) {
+        ResourceLocation parsed = ResourceLocation.tryParse(idOrPath);
+        this.id = parsed != null ? parsed : ResourceLocation.fromNamespaceAndPath(Boulanger.MODID, idOrPath);
+        this.capacity = capacity;
+        this.emptyModelIndex = emptyModelIndex;
+        this.fullModelIndex = fullModelIndex;
+        this.assetKey = assetKey;
     }
 
-    /** The simple name (matches the JSON/datagen `pan_type` value). */
-    public String getId() {
-        return id;
-    }
+    private static final Map<ResourceLocation, PanType> BY_ID =
+            Arrays.stream(values()).collect(Collectors.toMap(PanType::getIdRL, Function.identity()));
 
-    /** Even: empty state (render empty pan). */
-    public int getEmptyModelIndex() {
-        return baseModelIndex;
-    }
+    /** JSON codec: serialize as the PanType id (ResourceLocation), e.g. "boulanger:loaf". */
+    public static final Codec<PanType> CODEC =
+            ResourceLocation.CODEC.flatXmap(
+                    rl -> {
+                        PanType t = BY_ID.get(rl);
+                        return t != null
+                                ? DataResult.success(t)
+                                : DataResult.error(() -> "Unknown PanType id: " + rl);
+                    },
+                    t -> DataResult.success(t.getIdRL())
+            );
 
-    /** Odd: full state (render pan with dough). */
-    public int getFullModelIndex() {
-        return baseModelIndex + 1;
-    }
 
-    /** Odd: proofed state (render pan with proofed dough). */
-    public int getProofedModelIndex() {
-        return baseModelIndex + 3;
-    }
+    public ResourceLocation getIdRL() { return id; }
+    @Deprecated public String getId() { return id.toString(); } // legacy callers
+    public int getCapacity() { return capacity; }
+    public int getEmptyModelIndex() { return emptyModelIndex; }
+    public int getFullModelIndex() { return fullModelIndex; }
+    public ResourceLocation getAssetKey() { return assetKey; }   // use in datagen/model/texture resolution
 
-    /** If you still need the legacy single index, treat it as 'empty'. */
-    public int getModelIndex() {
-        return getEmptyModelIndex();
-    }
-
-    /** Expose the base in case you want to compute other variants later. */
-    public int getBaseModelIndex() {
-        return baseModelIndex;
-    }
-
-    /**
-     * Lookup by the simple string ID.
-     * @param id the path part of a ResourceLocation (e.g. "baguette" not "boulanger:baguette")
-     */
-    public static PanType fromId(String id) {
-        for (PanType type : values()) {
-            if (type.id.equals(id)) {
-                return type;
-            }
+    /** Prefer this to infer PanType from a stack. */
+    @Nullable
+    public static PanType getId(ItemStack stack) {
+        PanTypeComponent comp = stack.get(ModDataComponentTypes.PAN_TYPE.get());
+        if (comp != null) {
+            for (PanType t : values()) if (t.id.equals(comp.id())) return t;
         }
-        return LOAF; // fallback default
+        CustomModelData cmd = stack.get(DataComponents.CUSTOM_MODEL_DATA);
+        if (cmd != null) {
+            int v = cmd.value();
+            for (PanType t : values()) if (t.emptyModelIndex == v || t.fullModelIndex == v) return t;
+        }
+        return null;
     }
 
-    /**
-     * Lookup by a full ResourceLocation, matching on its path.
-     * @param loc the namespaced ID (e.g. boulanger:baguette)
-     */
-    public static PanType byId(ResourceLocation loc) {
-        if (loc == null) return LOAF;
-        return fromId(loc.getPath());
+    public static @Nullable PanType byId(ResourceLocation id) {
+        return BY_ID.get(id);
+    }
+
+    public static java.util.Optional<PanType> byIdOpt(ResourceLocation id) {
+        return java.util.Optional.ofNullable(BY_ID.get(id));
+    }
+
+    // if useful:
+    public static @Nullable PanType byId(String id) {
+        return id == null ? null : byId(ResourceLocation.tryParse(id));
     }
 }

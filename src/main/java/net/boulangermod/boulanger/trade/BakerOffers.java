@@ -3,9 +3,12 @@ package net.boulangermod.boulanger.trade;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.component.*;
 import net.boulangermod.boulanger.item.BreadType;
+import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.item.PanType;
+import net.boulangermod.boulanger.item.PortionKind;
 import net.boulangermod.boulanger.recipe.DoughProcessRecipe;
 import net.boulangermod.boulanger.recipe.ModRecipeSerializers;
+import net.boulangermod.boulanger.recipe.ModRecipeTypes;
 import net.boulangermod.boulanger.recipe.RatioRecipe;
 import net.boulangermod.boulanger.util.IngredientCategory;
 import net.boulangermod.boulanger.util.dev.DoughFactory;
@@ -17,6 +20,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.level.ItemLike;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -66,20 +70,35 @@ public final class BakerOffers {
         // non-additives are in whole grams (water adjusted to keep total == serving).
         var built = DoughFactory.buildIngredientInfosFromRatio(rr, pctByCat, proc, /*servings*/1, /*humanize*/true);
 
-        // Resolve bread/pan
-        BreadType breadType = BreadType.fromRecipeId(ratioId).orElse(BreadType.BAGUETTE);
+// --- choose a PortionKind to shape ---
+        PortionKind preferredKind = PortionKind.BAGUETTE; // TODO: wire to your UI/choice if you have one
+
+        PortionKind kind =
+                preferredKind != null ? preferredKind
+                        : (proc != null && proc.serving().containsKey(PortionKind.BAGUETTE)) ? PortionKind.BAGUETTE
+                        : (proc != null && proc.serving().containsKey(PortionKind.ROLL))     ? PortionKind.ROLL
+                        : (proc != null && proc.serving().containsKey(PortionKind.LOAF))     ? PortionKind.LOAF
+                        : PortionKind.LOAF;
+
+// --- resolve the pan (override wins; else recipe’s serving rule for that kind) ---
         PanType pan = (panOverride != null)
                 ? panOverride
-                : (proc != null && proc.getPanType() != null ? PanType.byId(proc.getPanType()) : null);
+                : (proc != null ? proc.getPanTypeFor(kind) : null);
 
-        // Make the stack from the *ingredients mg* first (grams = sum(mg)/1000 rounded)
+// fallback to “any” pan in the recipe if that kind isn’t defined
+        if (pan == null && proc != null && !proc.serving().isEmpty()) {
+            pan = proc.serving().values().iterator().next().panType();
+        }
+
+// --- build the item stack (NOTE: use PortionKind instead of BreadType) ---
         ItemStack stack = buildBread(
                 ratioId,
-                breadType,
+                kind,
                 pan,
                 built.ingredients(),
                 canonicalizeTargets(pctByCat)
         );
+
 
         // Stamp normalized process id
         if (procNorm != null) {
@@ -97,6 +116,40 @@ public final class BakerOffers {
                         built.ingredients(),
                         gramsAdj,
                         canonicalizeTargets(pctByCat)));
+
+        return stack;
+    }
+
+    // Choose the right output item by portion kind, then apply your usual components.
+    private static ItemStack buildBread(
+            ResourceLocation ratioId,
+            PortionKind kind,
+            @Nullable PanType pan,
+            java.util.List<IngredientInfo> ingredients,              // keep your existing type
+            java.util.Map<IngredientCategory, Double> targets        // keep your existing type
+    ) {
+        // Map PortionKind -> base item. Adjust names if your ModItems differ.
+        ItemLike baseItem;
+        switch (kind) {
+            case BAGUETTE -> baseItem = ModItems.BREAD.get();
+            case ROLL     -> baseItem = ModItems.BREAD.get();
+            case LOAF     -> baseItem = ModItems.BREAD.get();
+            default       -> baseItem = ModItems.BREAD.get();
+        }
+
+        ItemStack stack = new ItemStack(baseItem);
+
+        // Whatever your old buildBread did (components, tags), do the same here:
+        // - set dough recipe / ingredient list
+        // - set targets
+        // - set chosen pan (if non-null)
+        // Example (adapt to your component APIs):
+        stack.set(ModDataComponentTypes.DOUGH_RECIPE.get(),
+                DoughRecipeComponent.of(ratioId, ingredients, /*grams placeholder*/0, targets));
+
+        if (pan != null) {
+            stack.set(ModDataComponentTypes.PAN_TYPE.get(), new PanTypeComponent(pan.getId()));
+        }
 
         return stack;
     }
@@ -166,10 +219,10 @@ public final class BakerOffers {
     }
 
     private static @Nullable ResourceLocation findLinkedDoughProcessId(ServerLevel level, ResourceLocation ratioId) {
-        var list = level.getRecipeManager().getAllRecipesFor(ModRecipeSerializers.DOUGH_PROCESS_TYPE.get());
+        var list = level.getRecipeManager().getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get());
         for (var h : list) {
             DoughProcessRecipe proc = h.value();
-            if (ratioId.equals(proc.getDoughType())) return h.id();
+            if (ratioId.equals(proc.getType())) return h.id();
         }
         return null;
     }
