@@ -1,5 +1,2 @@
-// 1.21	2025-04-27T09:31:36.7624776	Tags for minecraft:block mod id boulanger
-534ee46d508e3c02396685a759008603afa0db10 data/minecraft/tags/block/fences.json
-d83b6b0d66b1be3e4a7dcd7b916ba6889d8ac09b data/minecraft/tags/block/fence_gates.json
-3ac11b18bad497f3841ce107844bea45eaf06bad data/minecraft/tags/block/logs_that_burn.json
-d2a90cd8beca40f098ef4519751ba26df0607c8b data/minecraft/tags/block/mineable/pickaxe.json
+// 1.21	2025-12-23T02:14:54.2145762	Tags for minecraft:block mod id boulanger
+3d4015ce4694a11e9c33905f8da3fa80367346b2 data/minecraft/tags/block/mineable/shovel.json

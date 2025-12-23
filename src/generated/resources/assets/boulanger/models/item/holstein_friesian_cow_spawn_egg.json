@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "boulanger:item/holstein_friesian_cow_spawn_egg"
-  }
-}

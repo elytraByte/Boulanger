@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/brewing_stand_empty2",
-  "render_type": "minecraft:cutout",
-  "textures": {
-    "stand": "boulanger:block/sugar_refinery"
-  }
-}
