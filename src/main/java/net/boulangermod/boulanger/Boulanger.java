@@ -2,16 +2,18 @@ package net.boulangermod.boulanger;
 
 import com.mojang.logging.LogUtils;
 import net.boulangermod.boulanger.block.ModBlocks;
+import net.boulangermod.boulanger.block.entity.ModBlockEntities;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
-import net.boulangermod.boulanger.datagen.ModWorldGenProvider;
+import net.boulangermod.boulanger.content.ingredient.profile.IngredientProfileReloadListener;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.loot.ModLootFunctions;
+import net.boulangermod.boulanger.pneumatic.client.PneumaticClientEvents;
+import net.boulangermod.boulanger.pneumatic.event.PneumaticEvents;
 import net.boulangermod.boulanger.recipe.ModRecipeTypes;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.level.block.Blocks;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -21,7 +23,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
@@ -44,6 +46,7 @@ public class Boulanger {
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
 
         ModTrunkPlacers.register(modEventBus);
 
@@ -56,6 +59,11 @@ public class Boulanger {
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
 
+        NeoForge.EVENT_BUS.register(PneumaticEvents.class);
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            NeoForge.EVENT_BUS.register(PneumaticClientEvents.class);
+        }
+
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
@@ -63,13 +71,6 @@ public class Boulanger {
     private void commonSetup(final FMLCommonSetupEvent event) {
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
-
-        if (Config.logDirtBlock)
-            LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
-
-        LOGGER.info(Config.magicNumberIntroduction + Config.magicNumber);
-
-        Config.items.forEach((item) -> LOGGER.info("ITEM >> {}", item.toString()));
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
@@ -78,6 +79,12 @@ public class Boulanger {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
     }
+
+    @SubscribeEvent
+    public void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(new IngredientProfileReloadListener());
+    }
+
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @EventBusSubscriber(modid = MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

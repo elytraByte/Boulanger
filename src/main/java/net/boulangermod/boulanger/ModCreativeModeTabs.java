@@ -32,6 +32,7 @@ public class ModCreativeModeTabs {
                             pOutput.accept(wheatSeedStack(v));
                             pOutput.accept(wheatBushelStack(v));
                         }
+                        pOutput.accept(ModItems.WHEAT_BERRIES);
                         pOutput.accept(ModBlocks.KAOLINITE_CLAY);
                         pOutput.accept(ModItems.KAOLINITE_CLAY_BALL);
                         pOutput.accept(ModItems.BRICK_MOLD);
@@ -52,6 +53,12 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModBlocks.PINE_FENCE_GATE);
                         pOutput.accept(ModBlocks.PINE_PRESSURE_PLATE);
                         pOutput.accept(ModBlocks.PINE_BUTTON);
+                        pOutput.accept(ModBlocks.PNEUMATIC_DUCT);
+                        pOutput.accept(ModItems.BLIND_FLANGE);
+                        pOutput.accept(ModBlocks.AIR_COMPRESSOR);
+                        pOutput.accept(ModBlocks.AIR_TANK);
+                        pOutput.accept(ModBlocks.VALVE_DUCT);
+                        pOutput.accept(ModBlocks.ONE_WAY_VALVE_DUCT);
 
                     }).build());
 

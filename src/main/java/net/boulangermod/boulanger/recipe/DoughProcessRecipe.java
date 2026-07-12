@@ -11,17 +11,18 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeInput;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-public final class DoughProcessRecipe implements Recipe<RecipeInput> {
+public final class DoughProcessRecipe implements Recipe<DoughProcessInput> {
 
     private final List<ProcessingStep> steps;
     private final Map<PortionKind, PanServing> serving;
@@ -34,6 +35,45 @@ public final class DoughProcessRecipe implements Recipe<RecipeInput> {
     public List<ProcessingStep> steps() { return steps; }
     public Map<PortionKind, PanServing> serving() { return serving; }
 
+    // ---------------------------------------------------------------------
+    // ID Lookup Model (Index)
+    // ---------------------------------------------------------------------
+    private static volatile Map<ResourceLocation, DoughProcessRecipe> INDEX = Map.of();
+
+    /** Rebuild the id -> recipe map from the current RecipeManager (call on reload). */
+    public static void rebuildIndex(RecipeManager manager) {
+        Map<ResourceLocation, DoughProcessRecipe> out = new HashMap<>();
+        for (RecipeHolder<DoughProcessRecipe> h : manager.getAllRecipesFor(ModRecipeTypes.DOUGH_PROCESS.get())) {
+            out.put(h.id(), h.value());
+        }
+        INDEX = Map.copyOf(out);
+    }
+
+    /** Clears the index (optional; useful on server stop). */
+    public static void clearIndex() {
+        INDEX = Map.of();
+    }
+
+    /** Resolve a process recipe by its datapack id (the recipe file path id). */
+    public static @Nullable DoughProcessRecipe resolve(Level level, @Nullable ResourceLocation processId) {
+        if (level == null || processId == null) return null;
+
+        DoughProcessRecipe r = INDEX.get(processId);
+        if (r != null) return r;
+
+        // Lazy rebuild fallback (covers initial access and datapack reloads if you forgot to call rebuildIndex)
+        rebuildIndex(level.getRecipeManager());
+        return INDEX.get(processId);
+    }
+
+    /** Resolve from an input that stores DOUGH_PROCESS_TYPE on the dough stack. */
+    public static @Nullable DoughProcessRecipe resolve(Level level, DoughProcessInput input) {
+        return resolve(level, input != null ? input.getDoughType() : null);
+    }
+
+    // ---------------------------------------------------------------------
+    // Stream / JSON Codecs (no "id" field)
+    // ---------------------------------------------------------------------
     private static final StreamCodec<RegistryFriendlyByteBuf, List<ProcessingStep>> STEP_LIST_STREAM_CODEC =
             StreamCodec.of(
                     (buf, list) -> {
@@ -81,24 +121,58 @@ public final class DoughProcessRecipe implements Recipe<RecipeInput> {
                     )
             );
 
+    /**
+     * NOTE: No "id" field. The recipe id is the datapack path and is available via RecipeHolder.id().
+     */
     public static final MapCodec<DoughProcessRecipe> MAP_CODEC = RecordCodecBuilder.mapCodec(
             i -> i.group(
-            ResourceLocation.CODEC.optionalFieldOf("id")
-                    .forGetter(r -> Optional.empty()),
-
-            ProcessingStep.CODEC.listOf().fieldOf("steps").forGetter(DoughProcessRecipe::steps),
-
-            Codec.unboundedMap(PortionKind.CODEC, PanServing.CODEC)
-                    .optionalFieldOf("serving", Map.of())
-                    .forGetter(DoughProcessRecipe::serving)
-    ).apply(i, (ignoredId, steps, serving) -> new DoughProcessRecipe(steps, serving)));
+                    ProcessingStep.CODEC.listOf().fieldOf("steps").forGetter(DoughProcessRecipe::steps),
+                    Codec.unboundedMap(PortionKind.CODEC, PanServing.CODEC)
+                            .optionalFieldOf("serving", Map.of())
+                            .forGetter(DoughProcessRecipe::serving)
+            ).apply(i, DoughProcessRecipe::new)
+    );
 
     public static final Codec<DoughProcessRecipe> CODEC = MAP_CODEC.codec();
 
-    @Override public boolean matches(RecipeInput input, net.minecraft.world.level.Level level) { return false; }
-    @Override public ItemStack assemble(RecipeInput input, HolderLookup.Provider lookup) { return ItemStack.EMPTY; }
-    @Override public boolean canCraftInDimensions(int w, int h) { return false; }
-    @Override public ItemStack getResultItem(HolderLookup.Provider lookup) { return ItemStack.EMPTY; }
+    // ---------------------------------------------------------------------
+    // Recipe implementation
+    // ---------------------------------------------------------------------
+
+    /**
+     * This recipe is intended to be selected by id (via DOUGH_PROCESS_TYPE),
+     * but we implement matches defensively so RecipeManager#getRecipeFor can work.
+     */
+    @Override
+    public boolean matches(DoughProcessInput input, Level level) {
+        if (input == null || level == null) return false;
+
+        ResourceLocation wanted = input.getDoughType();
+        if (wanted == null) return false;
+
+        // Ensure the index exists; avoid repeated work after first build.
+        if (INDEX.isEmpty() || !INDEX.containsKey(wanted)) {
+            rebuildIndex(level.getRecipeManager());
+        }
+
+        // Match only the recipe referenced by the dough.
+        return INDEX.get(wanted) == this;
+    }
+
+    @Override
+    public ItemStack assemble(DoughProcessInput input, HolderLookup.Provider lookup) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public boolean canCraftInDimensions(int w, int h) {
+        return true;
+    }
+
+    @Override
+    public ItemStack getResultItem(HolderLookup.Provider lookup) {
+        return ItemStack.EMPTY;
+    }
 
     @Override
     public RecipeSerializer<?> getSerializer() {
@@ -109,6 +183,10 @@ public final class DoughProcessRecipe implements Recipe<RecipeInput> {
     public RecipeType<?> getType() {
         return ModRecipeTypes.DOUGH_PROCESS.get();
     }
+
+    // ---------------------------------------------------------------------
+    // Serving helpers
+    // ---------------------------------------------------------------------
 
     public @Nullable PanType getPanTypeFor(PortionKind kind) {
         PanServing ps = serving.get(kind);

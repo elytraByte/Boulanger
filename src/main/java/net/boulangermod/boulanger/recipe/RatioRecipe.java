@@ -26,7 +26,6 @@ import java.util.Optional;
 public class RatioRecipe implements Recipe<MixingContainer> {
     private static final Logger LOG = LogManager.getLogger();
 
-    private final ResourceLocation id;
     private final List<IngredientComponent> components;
     private final double tolerance;
     private final ItemStack result;
@@ -36,14 +35,14 @@ public class RatioRecipe implements Recipe<MixingContainer> {
     private final @Nullable Integer rollSizeG;
     private final @Nullable Integer loafSizeG;
 
-    public RatioRecipe(ResourceLocation id,
-                       List<IngredientComponent> components,
-                       double tolerance,
-                       ItemStack result,
-                       @Nullable Integer rollSizeG,
-                       @Nullable Integer loafSizeG,
-                       @Nullable ResourceLocation processId) {
-        this.id = Objects.requireNonNull(id);
+    public RatioRecipe(
+            List<IngredientComponent> components,
+            double tolerance,
+            ItemStack result,
+            @Nullable Integer rollSizeG,
+            @Nullable Integer loafSizeG,
+            @Nullable ResourceLocation processId
+    ) {
         this.components = List.copyOf(Objects.requireNonNull(components));
         this.tolerance = tolerance;
         this.result = Objects.requireNonNull(result);
@@ -51,10 +50,11 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         this.loafSizeG = loafSizeG;
         this.processId = processId;
 
-        // (logging unchanged)
-        LOG.info("🔧 Loaded RatioRecipe: {}", id);
+        // Logging (no id anymore; the holder id is the datapack path)
+        LOG.info("🔧 Loaded RatioRecipe");
         LOG.info("   → Result: {}", result.getItem());
         LOG.info("   → Tolerance: {} ({}%)", tolerance, tolerance * 100.0);
+        if (processId != null) LOG.info("   → Process: {}", processId);
         if (rollSizeG != null) LOG.info("   → Roll size hint: {} g", rollSizeG);
         if (loafSizeG != null) LOG.info("   → Loaf size hint: {} g", loafSizeG);
         for (IngredientComponent comp : components) {
@@ -96,7 +96,6 @@ public class RatioRecipe implements Recipe<MixingContainer> {
         return ModRecipeTypes.RATIO.get();
     }
 
-    public ResourceLocation getId() { return id; }
     public List<IngredientComponent> getComponents() { return components; }
     public double getTolerance() { return tolerance; }
     public @Nullable Integer getRollSizeG() { return rollSizeG; }
@@ -116,8 +115,10 @@ public class RatioRecipe implements Recipe<MixingContainer> {
     // -------------------------------------------------------------
     public static final class Serializer implements RecipeSerializer<RatioRecipe> {
 
+        /**
+         * NOTE: No "id" field here anymore. The recipe ID is the datapack path.
+         */
         public static final MapCodec<RatioRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
-                ResourceLocation.CODEC.fieldOf("id").forGetter(RatioRecipe::getId),
                 IngredientComponent.CODEC.listOf().fieldOf("components").forGetter(RatioRecipe::getComponents),
                 Codec.DOUBLE.fieldOf("tolerance").forGetter(RatioRecipe::getTolerance),
                 ItemStack.CODEC.fieldOf("result").forGetter(r -> r.result),
@@ -130,12 +131,13 @@ public class RatioRecipe implements Recipe<MixingContainer> {
                 Codec.INT.optionalFieldOf("loaf_size_g")
                         .forGetter(r -> Optional.ofNullable(r.getLoafSizeG())),
 
-                // legacy read-only
+                // legacy read-only (ignored; kept so old JSON fields don't crash loading)
                 Codec.DOUBLE.optionalFieldOf("serving_weight").forGetter(r -> Optional.empty()),
                 Codec.INT.optionalFieldOf("serving_weight_g").forGetter(r -> Optional.empty())
 
-        ).apply(inst, (id, components, tolerance, result,
-                       processOpt, rollOpt, loafOpt, legacyServingOpt, legacyServingGOpt) -> {
+        ).apply(inst, (components, tolerance, result,
+                       processOpt, rollOpt, loafOpt,
+                       legacyServingOpt, legacyServingGOpt) -> {
 
             Integer loaf = loafOpt.orElseGet(() ->
                     legacyServingGOpt.orElseGet(() ->
@@ -144,8 +146,11 @@ public class RatioRecipe implements Recipe<MixingContainer> {
             );
 
             return new RatioRecipe(
-                    id, components, tolerance, result,
-                    rollOpt.orElse(null), loaf,
+                    components,
+                    tolerance,
+                    result,
+                    rollOpt.orElse(null),
+                    loaf,
                     processOpt.orElse(null)
             );
         }));
@@ -155,10 +160,12 @@ public class RatioRecipe implements Recipe<MixingContainer> {
             return CODEC;
         }
 
+        /**
+         * NOTE: Stream codec encodes recipe DATA ONLY; the recipe ID is handled externally.
+         */
         public static final StreamCodec<RegistryFriendlyByteBuf, RatioRecipe> STREAM_CODEC =
                 StreamCodec.of(
                         (buf, r) -> {
-                            ResourceLocation.STREAM_CODEC.encode(buf, r.getId());
                             StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC).encode(buf, r.getComponents());
                             StreamCodecsCompat.DOUBLE.encode(buf, r.getTolerance());
                             ItemStack.STREAM_CODEC.encode(buf, r.result);
@@ -175,8 +182,8 @@ public class RatioRecipe implements Recipe<MixingContainer> {
                             if (r.getLoafSizeG() != null) buf.writeVarInt(r.getLoafSizeG());
                         },
                         buf -> {
-                            ResourceLocation id = ResourceLocation.STREAM_CODEC.decode(buf);
-                            List<IngredientComponent> comps = StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC).decode(buf);
+                            List<IngredientComponent> comps =
+                                    StreamCodecsCompat.list(IngredientComponent.STREAM_CODEC).decode(buf);
                             double tol = StreamCodecsCompat.DOUBLE.decode(buf);
                             ItemStack result = ItemStack.STREAM_CODEC.decode(buf);
 
@@ -185,7 +192,7 @@ public class RatioRecipe implements Recipe<MixingContainer> {
                             Integer roll = buf.readBoolean() ? buf.readVarInt() : null;
                             Integer loaf = buf.readBoolean() ? buf.readVarInt() : null;
 
-                            return new RatioRecipe(id, comps, tol, result, roll, loaf, proc);
+                            return new RatioRecipe(comps, tol, result, roll, loaf, proc);
                         }
                 );
 

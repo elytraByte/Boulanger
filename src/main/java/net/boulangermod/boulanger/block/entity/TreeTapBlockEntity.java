@@ -24,7 +24,7 @@ public class  TreeTapBlockEntity extends BlockEntity {
     private int storedResin = 0;
 
     public TreeTapBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.TREE_TAP.get(), pos, state);
+        super(ModBlockEntities.TREE_TAP_BE.get(), pos, state);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, TreeTapBlockEntity tap) {

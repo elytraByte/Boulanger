@@ -3,15 +3,22 @@ package net.boulangermod.boulanger.datagen;
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.block.PineResinLogBlock;
+import net.boulangermod.boulanger.block.crop.BoulangerWheatCrop;
+import net.boulangermod.boulanger.block.pneumatic.DuctSide;
+import net.boulangermod.boulanger.block.pneumatic.OneWayValveDuctBlock;
+import net.boulangermod.boulanger.block.pneumatic.PneumaticDuctBlock;
+import net.boulangermod.boulanger.block.pneumatic.ValveDuctBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 public class ModBlockStateProvider extends BlockStateProvider {
@@ -24,7 +31,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
     protected void registerStatesAndModels() {
         // ─────────────────────────────────────────────────────────────
         // Pine textures live in: assets/boulanger/textures/block/pine/*.png
-        // So we always reference them as: modLoc("block/pine/<name>")
         // ─────────────────────────────────────────────────────────────
 
         // ─── PINE LOG (resin variants) ────────────────────────────────────────
@@ -35,8 +41,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         ModelFile pineLog      = models().cubeColumn("pine_log", pineLogSide, pineLogEnd);
         ModelFile pineLogResin = models().cubeColumn("resin_pine_log", pineLogSideResin, pineLogEnd);
 
-
-        // Pine log (with resin variant chosen by resin_remaining)
         {
             RotatedPillarBlock log = (RotatedPillarBlock) ModBlocks.PINE_LOG.get();
 
@@ -51,6 +55,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
                         else if (axis == Direction.Axis.Z) b.rotationX(90);
                         return b.build();
                     }, PineResinLogBlock.HAS_RESIN);
+
             {
                 String n = name(log);
                 itemModels().withExistingParent(n, pineLog.getLocation())
@@ -71,7 +76,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         axisBlock((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_LOG.get(), strippedLog, strippedLogHorz);
         simpleBlockItem(ModBlocks.STRIPPED_PINE_LOG.get(), strippedLog);
 
-        // ─── STRIPPED PINE WOOD (bark on all faces; has its own textures) ─────
+        // ─── STRIPPED PINE WOOD ────────────────────────────────────────────────
         ResourceLocation strippedWoodSide = pineTex("stripped_pine_wood");
         ResourceLocation strippedWoodEnd  = pineTex("stripped_pine_wood_top");
 
@@ -81,7 +86,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         axisBlock((RotatedPillarBlock) ModBlocks.STRIPPED_PINE_WOOD.get(), strippedWood, strippedWoodHorz);
         simpleBlockItem(ModBlocks.STRIPPED_PINE_WOOD.get(), strippedWood);
 
-        // ─── PINE WOOD (bark on all faces; reuse pine_log for every face) ─────
+        // ─── PINE WOOD ────────────────────────────────────────────────────────
         ModelFile pineWood     = models().cubeColumn("pine_wood", pineLogSide, pineLogSide);
         ModelFile pineWoodHorz = models().cubeColumnHorizontal("pine_wood_horizontal", pineLogSide, pineLogSide);
 
@@ -89,9 +94,10 @@ public class ModBlockStateProvider extends BlockStateProvider {
         simpleBlockItem(ModBlocks.PINE_WOOD.get(), pineWood);
 
         // ─── PLANKS ──────────────────────────────────────────────────────────
+        Block planks = ModBlocks.PINE_PLANKS.get();
         ResourceLocation planksTex = pineTex("pine_planks");
-        ModelFile planksModel = models().cubeAll("pine_planks", planksTex);
-        simpleBlockWithItem(ModBlocks.PINE_PLANKS.get(), planksModel);
+        ModelFile planksModel = models().cubeAll(name(planks), planksTex);
+        simpleBlockWithItem(planks, planksModel);
 
         // ─── STAIRS ──────────────────────────────────────────────────────────
         {
@@ -102,7 +108,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
             ModelFile stairsInner = models().stairsInner(n + "_inner", planksTex, planksTex, planksTex);
             ModelFile stairsOuter = models().stairsOuter(n + "_outer", planksTex, planksTex, planksTex);
 
-            // Use the overload that accepts ModelFiles so nothing needs to "already exist"
             stairsBlock(stairs, stairsModel, stairsInner, stairsOuter);
             simpleBlockItem(stairs, stairsModel);
         }
@@ -124,14 +129,12 @@ public class ModBlockStateProvider extends BlockStateProvider {
                     .texture("top", planksTex)
                     .texture("side", planksTex);
 
-            // Blockstate: choose bottom/top/double (double uses full planks cube model)
             getVariantBuilder(slab).forAllStates(state -> {
                 SlabType type = state.getValue(SlabBlock.TYPE);
                 ModelFile pick = (type == SlabType.DOUBLE) ? planksModel : (type == SlabType.TOP) ? slabTop : slabBottom;
                 return ConfiguredModel.builder().modelFile(pick).build();
             });
 
-            // Item model = bottom slab
             simpleBlockItem(slab, slabBottom);
         }
 
@@ -141,21 +144,19 @@ public class ModBlockStateProvider extends BlockStateProvider {
             String n = name(fence);
 
             fenceBlock(fence, n, planksTex);
-
             ModelFile inv = models().fenceInventory(n + "_inventory", planksTex);
             simpleBlockItem(fence, inv);
         }
-
 
         // ─── FENCE GATE ──────────────────────────────────────────────────────
         {
             FenceGateBlock gate = (FenceGateBlock) ModBlocks.PINE_FENCE_GATE.get();
             String n = name(gate);
 
-            ModelFile closed    = models().fenceGate(n, planksTex);
-            ModelFile open      = models().fenceGateOpen(n + "_open", planksTex);
-            ModelFile wall      = models().fenceGateWall(n + "_wall", planksTex);
-            ModelFile wallOpen  = models().fenceGateWallOpen(n + "_wall_open", planksTex);
+            ModelFile closed   = models().fenceGate(n, planksTex);
+            ModelFile open     = models().fenceGateOpen(n + "_open", planksTex);
+            ModelFile wall     = models().fenceGateWall(n + "_wall", planksTex);
+            ModelFile wallOpen = models().fenceGateWallOpen(n + "_wall_open", planksTex);
 
             fenceGateBlock(gate, closed, open, wall, wallOpen);
             simpleBlockItem(gate, closed);
@@ -174,22 +175,19 @@ public class ModBlockStateProvider extends BlockStateProvider {
             simpleBlockWithItem(leaves, leavesModel);
         }
 
-        // ─── SAPLING ────────────────────────────────────────────────────────────
+        // ─── SAPLING ─────────────────────────────────────────────────────────
         {
             Block sapling = ModBlocks.PINE_SAPLING.get();
 
-            // Blockstate/model (cross, cutout)
             ModelFile saplingBlockModel = models()
                     .cross(name(sapling), pineTex("pine_sapling"))
                     .renderType("cutout");
             simpleBlock(sapling, saplingBlockModel);
 
-            // Item model (flat icon, correct size)
             itemModels()
                     .withExistingParent(name(sapling), mcLoc("item/generated"))
                     .texture("layer0", pineTex("pine_sapling"));
         }
-
 
         // ─── PRESSURE PLATE ──────────────────────────────────────────────────
         {
@@ -222,8 +220,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         {
             TrapDoorBlock trapdoor = (TrapDoorBlock) ModBlocks.PINE_TRAPDOOR.get();
             trapdoorBlockWithRenderType(trapdoor, pineTex("pine_trapdoor"), true, "cutout");
-
-            // Item model = bottom
             simpleBlockItem(trapdoor, models().getExistingFile(modLoc("block/pine_trapdoor_bottom")));
         }
 
@@ -231,12 +227,250 @@ public class ModBlockStateProvider extends BlockStateProvider {
         {
             DoorBlock door = (DoorBlock) ModBlocks.PINE_DOOR.get();
             doorBlockWithRenderType(door, pineTex("pine_door_bottom"), pineTex("pine_door_top"), "cutout");
-            // Door item uses item texture (assets/.../textures/item/pine_door.png)
             itemModels().basicItem(door.asItem());
         }
 
-        // ─── KAOLINITE CLAY (keep) ───────────────────────────────────────────
+        // ─── KAOLINITE CLAY ──────────────────────────────────────────────────
         simpleBlockWithItem(ModBlocks.KAOLINITE_CLAY.get(), cubeAll(ModBlocks.KAOLINITE_CLAY.get()));
+
+        // ─── PNEUMATICS ──────────────────────────────────────────────────────
+        pneumaticDuct(ModBlocks.PNEUMATIC_DUCT.get());
+        simpleBlockWithItem(ModBlocks.AIR_COMPRESSOR.get(), cubeAll(ModBlocks.AIR_COMPRESSOR.get()));
+        simpleBlockWithItem(ModBlocks.AIR_TANK.get(), cubeAll(ModBlocks.AIR_TANK.get()));
+
+        // INLINE valves only (no multipart / no flanges / no up/down)
+        valveDuctInline(ModBlocks.VALVE_DUCT.get());
+        oneWayValveDuctInline(ModBlocks.ONE_WAY_VALVE_DUCT.get());
+
+        // ─── WHEAT ───────────────────────────────────────────────────────────
+        wheatBlocks();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Wheat crop + wild wheat
+    // ─────────────────────────────────────────────────────────────
+    private void wheatBlocks() {
+        Block wild = ModBlocks.WILD_WHEAT.get();
+        ModelFile wildModel = models()
+                .cross(name(wild), modLoc("block/wheat/wild_wheat"))
+                .renderType("cutout");
+        simpleBlockWithItem(wild, wildModel);
+
+        Block crop = ModBlocks.WHEAT_BUSHEL_BLOCK.get();
+        String cropName = name(crop);
+
+        ModelFile[] stages = new ModelFile[8];
+        for (int age = 0; age <= 7; age++) {
+            stages[age] = models()
+                    .crop(cropName + "_stage" + age, modLoc("block/wheat/boulanger_wheat_stage" + age))
+                    .renderType("cutout");
+        }
+
+        getVariantBuilder(crop).forAllStates(state -> {
+            int age = state.getValue(BoulangerWheatCrop.AGE);
+            if (age < 0) age = 0;
+            if (age > 7) age = 7;
+            return ConfiguredModel.builder().modelFile(stages[age]).build();
+        });
+
+        itemModels().withExistingParent(cropName, stages[7].getLocation());
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Pneumatic duct multipart state
+    // ─────────────────────────────────────────────────────────────
+    private static final DuctSide[] PIPE_SIDES = new DuctSide[]{DuctSide.OPEN, DuctSide.CONNECTED, DuctSide.FLANGED};
+
+    private void pneumaticDuct(Block duct) {
+        // Authored E/W outlets
+        ModelFile straightEW = models().getExistingFile(modLoc("block/pneumatic_duct_horizontal"));
+        ModelFile straightUD = models().getExistingFile(modLoc("block/pneumatic_duct_verticle")); // your asset spelling
+
+        ModelFile core = models().getExistingFile(modLoc("block/pneumatic_duct_core"));
+        ModelFile armNorth = models().getExistingFile(modLoc("block/pneumatic_duct_multipart"));
+
+        // flange authored facing NORTH
+        ModelFile flange = models().getExistingFile(modLoc("block/flange"));
+
+        MultiPartBlockStateBuilder b = getMultipartBuilder(duct);
+
+        // East/West straight (matches authored orientation)
+        b.part().modelFile(straightEW).addModel()
+                .condition(PneumaticDuctBlock.EAST, PIPE_SIDES)
+                .condition(PneumaticDuctBlock.WEST, PIPE_SIDES)
+                .condition(PneumaticDuctBlock.NORTH, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.SOUTH, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.UP, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.DOWN, DuctSide.CLOSED)
+                .end();
+
+        // North/South straight (rotate E/W model 90)
+        b.part().modelFile(straightEW).rotationY(90).addModel()
+                .condition(PneumaticDuctBlock.NORTH, PIPE_SIDES)
+                .condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES)
+                .condition(PneumaticDuctBlock.EAST, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.WEST, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.UP, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.DOWN, DuctSide.CLOSED)
+                .end();
+
+        // Up/Down straight
+        b.part().modelFile(straightUD).addModel()
+                .condition(PneumaticDuctBlock.UP, PIPE_SIDES)
+                .condition(PneumaticDuctBlock.DOWN, PIPE_SIDES)
+                .condition(PneumaticDuctBlock.NORTH, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.SOUTH, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.EAST, DuctSide.CLOSED)
+                .condition(PneumaticDuctBlock.WEST, DuctSide.CLOSED)
+                .end();
+
+        // Core ONLY when not a perfect straight
+        {
+            MultiPartBlockStateBuilder.PartBuilder pb = b.part().modelFile(core).addModel();
+            pb.useOr();
+            addNotStraightWhenGroups(pb);
+            pb.end();
+        }
+
+        // Arms + flange per face
+        for (Direction dir : Direction.values()) {
+            EnumProperty<DuctSide> face = PneumaticDuctBlock.propFor(dir);
+
+            {
+                int rx = rotXFromNorth(dir);
+                int ry = rotYFromNorth(dir);
+
+                MultiPartBlockStateBuilder.PartBuilder pb = b.part()
+                        .modelFile(armNorth)
+                        .rotationX(rx)
+                        .rotationY(ry)
+                        .addModel();
+
+                pb.useOr();
+                addArmVisibilityGroups(pb, dir);
+                pb.end();
+            }
+
+            b.part()
+                    .modelFile(flange)
+                    .rotationX(rotXFromNorth(dir))
+                    .rotationY(rotYFromNorth(dir))
+                    .addModel()
+                    .condition(face, DuctSide.FLANGED)
+                    .end();
+        }
+
+        simpleBlockItem(duct, straightEW);
+    }
+
+    private void valveDuctInline(Block duct) {
+        ModelFile open = models().getExistingFile(modLoc("block/valve"));
+        ModelFile closed = models().getExistingFile(modLoc("block/valve_closed"));
+
+        var vb = getVariantBuilder(duct);
+
+        for (Direction facing : Direction.Plane.HORIZONTAL) {
+            vb.partialState()
+                    .with(ValveDuctBlock.FACING, facing)
+                    .with(ValveDuctBlock.OPEN, true)
+                    .modelForState()
+                    .modelFile(open)
+                    .rotationY(rotYFromNorth(facing))
+                    .addModel();
+
+            vb.partialState()
+                    .with(ValveDuctBlock.FACING, facing)
+                    .with(ValveDuctBlock.OPEN, false)
+                    .modelForState()
+                    .modelFile(closed)
+                    .rotationY(rotYFromNorth(facing))
+                    .addModel();
+        }
+
+        simpleBlockItem(duct, open);
+    }
+
+    private void oneWayValveDuctInline(Block duct) {
+        ModelFile open = models().getExistingFile(modLoc("block/one_way_valve"));
+        ModelFile closed = models().getExistingFile(modLoc("block/one_way_valve_closed"));
+
+        var vb = getVariantBuilder(duct);
+
+        for (Direction facing : Direction.Plane.HORIZONTAL) {
+            vb.partialState()
+                    .with(OneWayValveDuctBlock.FACING, facing)
+                    .with(OneWayValveDuctBlock.OPEN, true)
+                    .modelForState()
+                    .modelFile(open)
+                    .rotationY(rotYFromNorth(facing))
+                    .addModel();
+
+            vb.partialState()
+                    .with(OneWayValveDuctBlock.FACING, facing)
+                    .with(OneWayValveDuctBlock.OPEN, false)
+                    .modelForState()
+                    .modelFile(closed)
+                    .rotationY(rotYFromNorth(facing))
+                    .addModel();
+        }
+
+        simpleBlockItem(duct, open);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Multipart condition helpers
+    // ─────────────────────────────────────────────────────────────
+    private static void addNotStraightWhenGroups(MultiPartBlockStateBuilder.PartBuilder pb) {
+        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
+
+        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
+
+        pb.nestedGroup().condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
+        pb.nestedGroup().condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
+    }
+
+    private static void addArmVisibilityGroups(MultiPartBlockStateBuilder.PartBuilder pb, Direction dir) {
+        EnumProperty<DuctSide> face = PneumaticDuctBlock.propFor(dir);
+
+        for (Direction adj : Direction.values()) {
+            if (adj == dir || adj == dir.getOpposite()) continue;
+
+            pb.nestedGroup()
+                    .condition(face, PIPE_SIDES)
+                    .condition(PneumaticDuctBlock.propFor(adj), PIPE_SIDES)
+                    .end();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Rotation helpers
+    // Arms/flanges authored facing NORTH
+    // Valve inline models authored along North/South axis
+    // ─────────────────────────────────────────────────────────────
+    private static int rotXFromNorth(Direction dir) {
+        return switch (dir) {
+            case UP -> 270;
+            case DOWN -> 90;
+            default -> 0;
+        };
+    }
+
+    private static int rotYFromNorth(Direction dir) {
+        return switch (dir) {
+            case NORTH -> 0;
+            case EAST -> 90;
+            case SOUTH -> 180;
+            case WEST -> 270;
+            default -> 0;
+        };
     }
 
     private ResourceLocation pineTex(String name) {

@@ -8,6 +8,7 @@ import net.boulangermod.boulanger.component.value.WeightComponent;
 import net.boulangermod.boulanger.content.WheatVariety;
 import net.boulangermod.boulanger.content.flour.FiftyPoundBagType;
 import net.boulangermod.boulanger.content.ingredient.IngredientCategory;
+import net.boulangermod.boulanger.item.pneumatic.BlindFlangeItem;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -57,9 +58,16 @@ public class ModItems {
 
     public static final DeferredItem<Item> KAOLINITE_CLAY_BALL = ITEMS.registerSimpleItem("kaolinite_clay_ball");
 
+    public static final DeferredItem<Item> WHEAT_BERRIES = ITEMS.registerSimpleItem("wheat_berries");
+
     public static final DeferredItem<BrickMoldItem> BRICK_MOLD =
             ITEMS.register("brick_mold",
                     () -> new BrickMoldItem(new Item.Properties().durability(256)));
+
+    public static final DeferredItem<BlindFlangeItem> BLIND_FLANGE =
+            ITEMS.register("blind_flange",
+                    () -> new BlindFlangeItem(new Item.Properties().stacksTo(16)));
+
 
 //    public static final DeferredHolder<Item, Item> BUTTER = ITEMS.register("butter",
 //            () -> new FoodAdditiveItem(

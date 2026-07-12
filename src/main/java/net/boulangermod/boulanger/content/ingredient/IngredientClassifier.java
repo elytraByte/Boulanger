@@ -7,6 +7,7 @@ public final class IngredientClassifier {
 
     public static IngredientCategory fromItem(Item item) {
         if (item.builtInRegistryHolder().is(IngredientTags.WATER))       return IngredientCategory.WATER;
+        if (item.builtInRegistryHolder().is(IngredientTags.FLOUR))       return IngredientCategory.FLOUR;
         if (item.builtInRegistryHolder().is(IngredientTags.EGGS))        return IngredientCategory.EGGS;
         if (item.builtInRegistryHolder().is(IngredientTags.DAIRY))       return IngredientCategory.DAIRY;
         if (item.builtInRegistryHolder().is(IngredientTags.SALT))        return IngredientCategory.SALT;

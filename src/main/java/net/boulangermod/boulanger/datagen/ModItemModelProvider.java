@@ -20,10 +20,12 @@ public class ModItemModelProvider extends ItemModelProvider {
     protected void registerModels() {
         basicItem(ModItems.WHEAT_SEEDS.get());
         basicItem(ModItems.WHEAT_BUSHEL.get());
+        basicItem(ModItems.WHEAT_BERRIES.get());
         basicItem(ModItems.PINE_RESIN.get());
         basicItem(ModItems.SPLIT_PINE_LOGS.get());
         basicItem(ModItems.KAOLINITE_CLAY_BALL.get());
         basicItem(ModItems.BRICK_MOLD.get());
+        basicItem(ModItems.BLIND_FLANGE.get());
 
         ItemModelBuilder flour = withExistingParent("flour", mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/flour/flour"));

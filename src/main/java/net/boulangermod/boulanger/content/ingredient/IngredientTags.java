@@ -7,6 +7,7 @@ import net.minecraft.world.item.Item;
 
 public class IngredientTags {
     public static final TagKey<Item> WATER = tag("ingredients/water");
+    public static final TagKey<Item> FLOUR = tag("ingredients/flour");
     public static final TagKey<Item> EGGS = tag("ingredients/eggs");
     public static final TagKey<Item> DAIRY = tag("ingredients/dairy");
     public static final TagKey<Item> SALT = tag("ingredients/salt");

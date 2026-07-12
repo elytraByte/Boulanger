@@ -102,7 +102,7 @@ public class TreeTapBlock extends Block implements EntityBlock {
                                                                   BlockState st,
                                                                   BlockEntityType<T> type) {
         if (lvl.isClientSide) return null;
-        return type == ModBlockEntities.TREE_TAP.get()
+        return type == ModBlockEntities.TREE_TAP_BE.get()
                 ? (level, p, bs, be) ->
                 TreeTapBlockEntity.serverTick(level, p, bs, (TreeTapBlockEntity) be)
                 : null;
