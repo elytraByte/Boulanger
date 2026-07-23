@@ -5,6 +5,7 @@ import net.boulangermod.boulanger.content.ingredient.IngredientCategory;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public enum FoodAdditiveType {
@@ -39,6 +40,7 @@ public enum FoodAdditiveType {
     //CARAMEL_COLOR      ("caramel_color", 1000f, IngredientCategory.ADDITIVE),
     EGG_YOLK           ("egg_yolk", 20f, IngredientCategory.EGGS),
     EGG_WHITE          ("egg_white", 30f, IngredientCategory.EGGS);
+
     private final String id;
     private final int unitMg;
     private final IngredientCategory category;
@@ -59,9 +61,10 @@ public enum FoodAdditiveType {
     }
 
     private static final Map<String, FoodAdditiveType> BY_ID =
-            Arrays.stream(values()).collect(Collectors.toMap(FoodAdditiveType::id, t -> t));
+            Arrays.stream(values())
+                    .collect(Collectors.toUnmodifiableMap(FoodAdditiveType::id, type -> type));
 
-    public static FoodAdditiveType fromId(String id) {
-        return BY_ID.getOrDefault(id, BUTTER);
+    public static Optional<FoodAdditiveType> byId(String id) {
+        return Optional.ofNullable(BY_ID.get(id));
     }
 }
