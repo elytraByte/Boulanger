@@ -39,7 +39,7 @@ public class ModItems {
 
     // Flour bags
     public static final DeferredItem<Item> FIFTY_POUND_BAG =
-            ITEMS.register("fifty_pound_bag", () -> new FiftyPoundBagItem(new Item.Properties()));
+            ITEMS.register("fifty_pound_bag", () -> new FiftyPoundBagItem(new Item.Properties().stacksTo(1)));
 
 
     public static ItemStack createFlourBag(FiftyPoundBagType type) {
