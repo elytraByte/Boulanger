@@ -53,12 +53,14 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModBlocks.PINE_FENCE_GATE);
                         pOutput.accept(ModBlocks.PINE_PRESSURE_PLATE);
                         pOutput.accept(ModBlocks.PINE_BUTTON);
-                        pOutput.accept(ModBlocks.PNEUMATIC_DUCT);
-                        pOutput.accept(ModItems.BLIND_FLANGE);
-                        pOutput.accept(ModBlocks.AIR_COMPRESSOR);
-                        pOutput.accept(ModBlocks.AIR_TANK);
-                        pOutput.accept(ModBlocks.VALVE_DUCT);
-                        pOutput.accept(ModBlocks.ONE_WAY_VALVE_DUCT);
+
+//pneumatic ducting deprecated for the time being
+//                        pOutput.accept(ModBlocks.PNEUMATIC_DUCT);
+//                        pOutput.accept(ModItems.BLIND_FLANGE);
+//                        pOutput.accept(ModBlocks.AIR_COMPRESSOR);
+//                        pOutput.accept(ModBlocks.AIR_TANK);
+//                        pOutput.accept(ModBlocks.VALVE_DUCT);
+//                        pOutput.accept(ModBlocks.ONE_WAY_VALVE_DUCT);
 
                     }).build());
 
@@ -84,6 +86,34 @@ public class ModCreativeModeTabs {
                             pOutput.accept(ModItems.createFlourBag(type));
 
                         }
+
+                        pOutput.accept(ModItems.KOSHER_SALT);
+                        pOutput.accept(ModItems.MOLASSES);
+                        pOutput.accept(ModItems.BROWN_SUGAR);
+                        pOutput.accept(ModItems.POWDERED_SUGAR);
+                        pOutput.accept(ModItems.MARGARINE);
+                        pOutput.accept(ModItems.LARD);
+                        pOutput.accept(ModItems.BUTTER);
+                        pOutput.accept(ModItems.EUROPEAN_BUTTER);
+                        pOutput.accept(ModItems.EUROPEAN_BUTTER_BLEND);
+                        pOutput.accept(ModItems.BUTTER_SALTED);
+                        pOutput.accept(ModItems.EUROPEAN_BUTTER_SALTED);
+                        pOutput.accept(ModItems.EUROPEAN_BUTTER_BLEND_SALTED);
+                        pOutput.accept(ModItems.SAF_RED_YEAST);
+                        pOutput.accept(ModItems.SAF_GOLD_YEAST);
+                        pOutput.accept(ModItems.FLEISCHMANNS_YEAST);
+                        pOutput.accept(ModItems.BREWERS_YEAST);
+                        pOutput.accept(ModItems.FRESH_YEAST);
+                        pOutput.accept(ModItems.RYE_SOUR_STARTER);
+                        pOutput.accept(ModItems.SOURDOUGH_STARTER);
+                        pOutput.accept(ModItems.S_500_RED);
+                        pOutput.accept(ModItems.IM_PROVE_200);
+                        pOutput.accept(ModItems.ADVANTAGE_500_CL);
+                        pOutput.accept(ModItems.SOYBEAN_OIL);
+                        pOutput.accept(ModItems.CANOLA_OIL);
+                        pOutput.accept(ModItems.DRY_WHOLE_MILK_POWDER);
+                        pOutput.accept(ModItems.DRY_BUTTERMILK_POWDER);
+
                     }).build());
 
 

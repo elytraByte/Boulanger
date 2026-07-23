@@ -1,8 +1,5 @@
-// 1.21	2026-01-09T14:25:16.6126917	Loot Tables
-0ada8983e2fac8b7a8c2b117e2386bbff8ce3aa4 data/boulanger/loot_table/blocks/air_compressor.json
-aabc3ec696ebcf61c423ab792900679919cf58ef data/boulanger/loot_table/blocks/air_tank.json
+// 1.21	2026-07-13T13:17:16.7443314	Loot Tables
 edda6d61e6650b1e5b37f040fb142ddaff8e2e5e data/boulanger/loot_table/blocks/kaolinite_clay.json
-a3e496a574ef6d0b17862d19e82adb906f6d5222 data/boulanger/loot_table/blocks/one_way_valve_duct.json
 5ea813e523479f2f32b18441976bfb759205986f data/boulanger/loot_table/blocks/pine_button.json
 92f1fb3927ad46d07116cb11ee021a2fc7d453fb data/boulanger/loot_table/blocks/pine_door.json
 03c682dcb855569cde783555b5109a89dc34d50d data/boulanger/loot_table/blocks/pine_fence.json
@@ -16,10 +13,8 @@ f2eef4133768ecde4c2f3913b1a135cb8cf96ae4 data/boulanger/loot_table/blocks/pine_s
 373980ad1db8f0af7a3995898af4211de2ab251d data/boulanger/loot_table/blocks/pine_stairs.json
 babaec7711299f2fa7f0eb9d9f3605882b22185e data/boulanger/loot_table/blocks/pine_trapdoor.json
 2644e370719161474ccc318efe905b7c95c4d606 data/boulanger/loot_table/blocks/pine_wood.json
-5db62d9f372b0a3cb7d7fb9fddfc7ddf432eefdf data/boulanger/loot_table/blocks/pneumatic_duct.json
 4581344b2e365aa7572871d42aaf394b13b62fcd data/boulanger/loot_table/blocks/stripped_pine_log.json
 94995ebfc44e525352d37d93109309ca58c42545 data/boulanger/loot_table/blocks/stripped_pine_wood.json
 419490d35db9b2713c8079cfed1cfaa754988ef0 data/boulanger/loot_table/blocks/tree_tap.json
-7550dd9d42865ff74c69daea27d3e41ede85f66e data/boulanger/loot_table/blocks/valve_duct.json
 df99ab96fc5abf52d36420ecd18d6e98620a7df0 data/boulanger/loot_table/blocks/wheat_bushel_block.json
 a47765e652f67642999e0c0a5e5c9cd4ea973c92 data/boulanger/loot_table/blocks/wild_wheat.json

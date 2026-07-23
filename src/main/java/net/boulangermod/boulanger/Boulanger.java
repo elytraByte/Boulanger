@@ -7,8 +7,9 @@ import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.content.ingredient.profile.IngredientProfileReloadListener;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.loot.ModLootFunctions;
-import net.boulangermod.boulanger.pneumatic.client.PneumaticClientEvents;
-import net.boulangermod.boulanger.pneumatic.event.PneumaticEvents;
+//pneumatic ducting deprecated for the time being
+//import net.boulangermod.boulanger.pneumatic.client.PneumaticClientEvents;
+//import net.boulangermod.boulanger.pneumatic.event.PneumaticEvents;
 import net.boulangermod.boulanger.recipe.ModRecipeTypes;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
 import net.minecraft.client.Minecraft;
@@ -59,10 +60,11 @@ public class Boulanger {
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
 
-        NeoForge.EVENT_BUS.register(PneumaticEvents.class);
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            NeoForge.EVENT_BUS.register(PneumaticClientEvents.class);
-        }
+        //pneumatic ducting deprecated for the time being
+//        NeoForge.EVENT_BUS.register(PneumaticEvents.class);
+//        if (FMLEnvironment.dist == Dist.CLIENT) {
+//            NeoForge.EVENT_BUS.register(PneumaticClientEvents.class);
+//        }
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);

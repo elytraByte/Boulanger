@@ -25,7 +25,35 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.SPLIT_PINE_LOGS.get());
         basicItem(ModItems.KAOLINITE_CLAY_BALL.get());
         basicItem(ModItems.BRICK_MOLD.get());
-        basicItem(ModItems.BLIND_FLANGE.get());
+        folderItem(ModItems.KOSHER_SALT.getId(), "item/salt");
+        folderItem(ModItems.MOLASSES.getId(), "item/sugar");
+        folderItem(ModItems.BROWN_SUGAR.getId(), "item/sugar");
+        folderItem(ModItems.POWDERED_SUGAR.getId(), "item/sugar");
+        folderItem(ModItems.MARGARINE.getId(), "item/fat");
+        folderItem(ModItems.LARD.getId(), "item/fat");
+        folderItem(ModItems.BUTTER.getId(), "item/fat");
+        folderItem(ModItems.EUROPEAN_BUTTER.getId(), "item/fat");
+        folderItem(ModItems.EUROPEAN_BUTTER_BLEND.getId(), "item/fat");
+        folderItem(ModItems.BUTTER_SALTED.getId(), "item/fat");
+        folderItem(ModItems.EUROPEAN_BUTTER_SALTED.getId(), "item/fat");
+        folderItem(ModItems.EUROPEAN_BUTTER_BLEND_SALTED.getId(), "item/fat");
+        folderItem(ModItems.SAF_RED_YEAST.getId(), "item/yeast");
+        folderItem(ModItems.SAF_GOLD_YEAST.getId(), "item/yeast");
+        folderItem(ModItems.FLEISCHMANNS_YEAST.getId(), "item/yeast");
+        folderItem(ModItems.BREWERS_YEAST.getId(), "item/yeast");
+        folderItem(ModItems.FRESH_YEAST.getId(), "item/yeast");
+        folderItem(ModItems.RYE_SOUR_STARTER.getId(), "item/yeast");
+        folderItem(ModItems.SOURDOUGH_STARTER.getId(), "item/yeast");
+        folderItem(ModItems.S_500_RED.getId(), "item/bakery_additive");
+        folderItem(ModItems.IM_PROVE_200.getId(), "item/bakery_additive");
+        folderItem(ModItems.ADVANTAGE_500_CL.getId(), "item/bakery_additive");
+        folderItem(ModItems.SOYBEAN_OIL.getId(), "item/fat");
+        folderItem(ModItems.CANOLA_OIL.getId(), "item/fat");
+        folderItem(ModItems.DRY_WHOLE_MILK_POWDER.getId(), "item/dairy");
+        folderItem(ModItems.DRY_BUTTERMILK_POWDER.getId(), "item/dairy");
+
+//pneumatic ducting deprecated for the time being
+//        basicItem(ModItems.BLIND_FLANGE.get());
 
         ItemModelBuilder flour = withExistingParent("flour", mcLoc("item/generated"))
                 .texture("layer0", modLoc("item/flour/flour"));
@@ -81,5 +109,12 @@ public class ModItemModelProvider extends ItemModelProvider {
     private static String pathOnly(String maybeNamespacedId) {
         ResourceLocation rl = ResourceLocation.tryParse(maybeNamespacedId);
         return rl != null ? rl.getPath() : maybeNamespacedId;
+    }
+
+    private ItemModelBuilder folderItem(ResourceLocation itemId, String textureDirectory) {
+        String itemPath = itemId.getPath();
+
+        return withExistingParent(itemPath, mcLoc("item/generated"))
+                .texture("layer0", modLoc(textureDirectory + "/" + itemPath));
     }
 }

@@ -22,7 +22,9 @@ public enum FlourItemType {
     RYE_FLOUR          ("rye_flour",              7.0f,  1.6f, 16, 113000, true),
     WHOLE_WHEAT_FLOUR  ("whole_wheat_flour",      11.7f, 1.2f, 17, 113000, true),
     VITAL_WHEAT_GLUTEN ("vital_wheat_gluten",     90f,   0.7f, 18, 113000, true),
-    BRAN               ("wheat_bran",             0.0f,  0.7f, 19, 113000, true);
+    BRAN               ("wheat_bran",             0.0f,  0.7f, 19, 113000, true),
+    CORN_MEAL          ("corn_meal",              0.0f,  0.0f, 20, 113000, true),
+    CORN_STARCH        ("corn_starch",            0.0f,  0.0f, 21, 113000, true);
 
     private final String id;
     private final float proteinContent;

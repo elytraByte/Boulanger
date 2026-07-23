@@ -128,45 +128,46 @@ public class ModBlocks {
             registerBlock("tree_tap",
                     () -> new TreeTapBlock(Block.Properties.of().strength(1f).noOcclusion()));
 
-    public static final DeferredBlock<Block> PNEUMATIC_DUCT =
-            registerBlock("pneumatic_duct",
-                    () -> new PneumaticDuctBlock(BlockBehaviour.Properties.of()
-                            .strength(0.8F)
-                            .requiresCorrectToolForDrops()
-                            .noOcclusion()
-                            .sound(SoundType.COPPER)));
-
-    public static final DeferredBlock<Block> AIR_COMPRESSOR =
-            registerBlock("air_compressor",
-                    () -> new AirCompressorBlock(BlockBehaviour.Properties.of()
-                            .strength(0.8F)
-                            .requiresCorrectToolForDrops()
-                            .noOcclusion()
-                            .sound(SoundType.COPPER)));
-
-    public static final DeferredBlock<Block> AIR_TANK =
-            registerBlock("air_tank",
-                    () -> new AirTankBlock(BlockBehaviour.Properties.of()
-                            .strength(0.8F)
-                            .requiresCorrectToolForDrops()
-                            .noOcclusion()
-                            .sound(SoundType.COPPER)));
-
-    public static final DeferredBlock<Block> VALVE_DUCT =
-            registerBlock("valve_duct",
-                    () -> new ValveDuctBlock(BlockBehaviour.Properties.of()
-                            .strength(0.8F)
-                            .requiresCorrectToolForDrops()
-                            .noOcclusion()
-                            .sound(SoundType.COPPER)));
-
-    public static final DeferredBlock<Block> ONE_WAY_VALVE_DUCT =
-            registerBlock("one_way_valve_duct",
-                    () -> new OneWayValveDuctBlock(BlockBehaviour.Properties.of()
-                            .strength(0.8F)
-                            .requiresCorrectToolForDrops()
-                            .noOcclusion()
-                            .sound(SoundType.COPPER)));
+//pneumatic ducting deprecated for the time being
+//    public static final DeferredBlock<Block> PNEUMATIC_DUCT =
+//            registerBlock("pneumatic_duct",
+//                    () -> new PneumaticDuctBlock(BlockBehaviour.Properties.of()
+//                            .strength(0.8F)
+//                            .requiresCorrectToolForDrops()
+//                            .noOcclusion()
+//                            .sound(SoundType.COPPER)));
+//
+//    public static final DeferredBlock<Block> AIR_COMPRESSOR =
+//            registerBlock("air_compressor",
+//                    () -> new AirCompressorBlock(BlockBehaviour.Properties.of()
+//                            .strength(0.8F)
+//                            .requiresCorrectToolForDrops()
+//                            .noOcclusion()
+//                            .sound(SoundType.COPPER)));
+//
+//    public static final DeferredBlock<Block> AIR_TANK =
+//            registerBlock("air_tank",
+//                    () -> new AirTankBlock(BlockBehaviour.Properties.of()
+//                            .strength(0.8F)
+//                            .requiresCorrectToolForDrops()
+//                            .noOcclusion()
+//                            .sound(SoundType.COPPER)));
+//
+//    public static final DeferredBlock<Block> VALVE_DUCT =
+//            registerBlock("valve_duct",
+//                    () -> new ValveDuctBlock(BlockBehaviour.Properties.of()
+//                            .strength(0.8F)
+//                            .requiresCorrectToolForDrops()
+//                            .noOcclusion()
+//                            .sound(SoundType.COPPER)));
+//
+//    public static final DeferredBlock<Block> ONE_WAY_VALVE_DUCT =
+//            registerBlock("one_way_valve_duct",
+//                    () -> new OneWayValveDuctBlock(BlockBehaviour.Properties.of()
+//                            .strength(0.8F)
+//                            .requiresCorrectToolForDrops()
+//                            .noOcclusion()
+//                            .sound(SoundType.COPPER)));
 
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {

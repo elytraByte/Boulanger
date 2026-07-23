@@ -23,11 +23,12 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         this.tag(BlockTags.MINEABLE_WITH_SHOVEL)
                 .add(ModBlocks.KAOLINITE_CLAY.get());
 
-        // Pneumatic endpoints that ducts should visually/connectively treat as “CONNECTED”
-        this.tag(ModTags.Blocks.PNEUMATIC_CONNECTABLE)
-                .add(
-                        ModBlocks.AIR_COMPRESSOR.get(),
-                        ModBlocks.AIR_TANK.get()
-                );
+//pneumatic ducting deprecated for the time being
+//        // Pneumatic endpoints that ducts should visually/connectively treat as “CONNECTED”
+//        this.tag(ModTags.Blocks.PNEUMATIC_CONNECTABLE)
+//                .add(
+//                        ModBlocks.AIR_COMPRESSOR.get(),
+//                        ModBlocks.AIR_TANK.get()
+//                );
     }
 }

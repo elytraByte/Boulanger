@@ -133,11 +133,14 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         Block wild = ModBlocks.WILD_WHEAT.get();
         this.add(wild, createWildWheatDrops(wild, ModItems.WHEAT_SEEDS.get()));
 
+        //pneumatic ducting deprecated for the time being
+        /*
         dropSelf(ModBlocks.PNEUMATIC_DUCT.get());
         dropSelf(ModBlocks.AIR_COMPRESSOR.get());
         dropSelf(ModBlocks.AIR_TANK.get());
         dropSelf(ModBlocks.VALVE_DUCT.get());
         dropSelf(ModBlocks.ONE_WAY_VALVE_DUCT.get());
+        */
     }
 
     @Override

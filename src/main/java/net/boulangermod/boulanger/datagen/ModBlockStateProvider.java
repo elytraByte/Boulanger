@@ -5,9 +5,10 @@ import net.boulangermod.boulanger.block.ModBlocks;
 import net.boulangermod.boulanger.block.PineResinLogBlock;
 import net.boulangermod.boulanger.block.crop.BoulangerWheatCrop;
 import net.boulangermod.boulanger.block.pneumatic.DuctSide;
-import net.boulangermod.boulanger.block.pneumatic.OneWayValveDuctBlock;
-import net.boulangermod.boulanger.block.pneumatic.PneumaticDuctBlock;
-import net.boulangermod.boulanger.block.pneumatic.ValveDuctBlock;
+//pneumatic ducting deprecated for the time being
+//import net.boulangermod.boulanger.block.pneumatic.OneWayValveDuctBlock;
+//import net.boulangermod.boulanger.block.pneumatic.PneumaticDuctBlock;
+//import net.boulangermod.boulanger.block.pneumatic.ValveDuctBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
@@ -233,14 +234,15 @@ public class ModBlockStateProvider extends BlockStateProvider {
         // ─── KAOLINITE CLAY ──────────────────────────────────────────────────
         simpleBlockWithItem(ModBlocks.KAOLINITE_CLAY.get(), cubeAll(ModBlocks.KAOLINITE_CLAY.get()));
 
-        // ─── PNEUMATICS ──────────────────────────────────────────────────────
-        pneumaticDuct(ModBlocks.PNEUMATIC_DUCT.get());
-        simpleBlockWithItem(ModBlocks.AIR_COMPRESSOR.get(), cubeAll(ModBlocks.AIR_COMPRESSOR.get()));
-        simpleBlockWithItem(ModBlocks.AIR_TANK.get(), cubeAll(ModBlocks.AIR_TANK.get()));
-
-        // INLINE valves only (no multipart / no flanges / no up/down)
-        valveDuctInline(ModBlocks.VALVE_DUCT.get());
-        oneWayValveDuctInline(ModBlocks.ONE_WAY_VALVE_DUCT.get());
+//pneumatic ducting deprecated for the time being
+//        // ─── PNEUMATICS ──────────────────────────────────────────────────────
+//        pneumaticDuct(ModBlocks.PNEUMATIC_DUCT.get());
+//        simpleBlockWithItem(ModBlocks.AIR_COMPRESSOR.get(), cubeAll(ModBlocks.AIR_COMPRESSOR.get()));
+//        simpleBlockWithItem(ModBlocks.AIR_TANK.get(), cubeAll(ModBlocks.AIR_TANK.get()));
+//
+//        // INLINE valves only (no multipart / no flanges / no up/down)
+//        valveDuctInline(ModBlocks.VALVE_DUCT.get());
+//        oneWayValveDuctInline(ModBlocks.ONE_WAY_VALVE_DUCT.get());
 
         // ─── WHEAT ───────────────────────────────────────────────────────────
         wheatBlocks();
@@ -276,202 +278,202 @@ public class ModBlockStateProvider extends BlockStateProvider {
         itemModels().withExistingParent(cropName, stages[7].getLocation());
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Pneumatic duct multipart state
-    // ─────────────────────────────────────────────────────────────
-    private static final DuctSide[] PIPE_SIDES = new DuctSide[]{DuctSide.OPEN, DuctSide.CONNECTED, DuctSide.FLANGED};
-
-    private void pneumaticDuct(Block duct) {
-        // Authored E/W outlets
-        ModelFile straightEW = models().getExistingFile(modLoc("block/pneumatic_duct_horizontal"));
-        ModelFile straightUD = models().getExistingFile(modLoc("block/pneumatic_duct_verticle")); // your asset spelling
-
-        ModelFile core = models().getExistingFile(modLoc("block/pneumatic_duct_core"));
-        ModelFile armNorth = models().getExistingFile(modLoc("block/pneumatic_duct_multipart"));
-
-        // flange authored facing NORTH
-        ModelFile flange = models().getExistingFile(modLoc("block/flange"));
-
-        MultiPartBlockStateBuilder b = getMultipartBuilder(duct);
-
-        // East/West straight (matches authored orientation)
-        b.part().modelFile(straightEW).addModel()
-                .condition(PneumaticDuctBlock.EAST, PIPE_SIDES)
-                .condition(PneumaticDuctBlock.WEST, PIPE_SIDES)
-                .condition(PneumaticDuctBlock.NORTH, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.SOUTH, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.UP, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.DOWN, DuctSide.CLOSED)
-                .end();
-
-        // North/South straight (rotate E/W model 90)
-        b.part().modelFile(straightEW).rotationY(90).addModel()
-                .condition(PneumaticDuctBlock.NORTH, PIPE_SIDES)
-                .condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES)
-                .condition(PneumaticDuctBlock.EAST, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.WEST, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.UP, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.DOWN, DuctSide.CLOSED)
-                .end();
-
-        // Up/Down straight
-        b.part().modelFile(straightUD).addModel()
-                .condition(PneumaticDuctBlock.UP, PIPE_SIDES)
-                .condition(PneumaticDuctBlock.DOWN, PIPE_SIDES)
-                .condition(PneumaticDuctBlock.NORTH, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.SOUTH, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.EAST, DuctSide.CLOSED)
-                .condition(PneumaticDuctBlock.WEST, DuctSide.CLOSED)
-                .end();
-
-        // Core ONLY when not a perfect straight
-        {
-            MultiPartBlockStateBuilder.PartBuilder pb = b.part().modelFile(core).addModel();
-            pb.useOr();
-            addNotStraightWhenGroups(pb);
-            pb.end();
-        }
-
-        // Arms + flange per face
-        for (Direction dir : Direction.values()) {
-            EnumProperty<DuctSide> face = PneumaticDuctBlock.propFor(dir);
-
-            {
-                int rx = rotXFromNorth(dir);
-                int ry = rotYFromNorth(dir);
-
-                MultiPartBlockStateBuilder.PartBuilder pb = b.part()
-                        .modelFile(armNorth)
-                        .rotationX(rx)
-                        .rotationY(ry)
-                        .addModel();
-
-                pb.useOr();
-                addArmVisibilityGroups(pb, dir);
-                pb.end();
-            }
-
-            b.part()
-                    .modelFile(flange)
-                    .rotationX(rotXFromNorth(dir))
-                    .rotationY(rotYFromNorth(dir))
-                    .addModel()
-                    .condition(face, DuctSide.FLANGED)
-                    .end();
-        }
-
-        simpleBlockItem(duct, straightEW);
-    }
-
-    private void valveDuctInline(Block duct) {
-        ModelFile open = models().getExistingFile(modLoc("block/valve"));
-        ModelFile closed = models().getExistingFile(modLoc("block/valve_closed"));
-
-        var vb = getVariantBuilder(duct);
-
-        for (Direction facing : Direction.Plane.HORIZONTAL) {
-            vb.partialState()
-                    .with(ValveDuctBlock.FACING, facing)
-                    .with(ValveDuctBlock.OPEN, true)
-                    .modelForState()
-                    .modelFile(open)
-                    .rotationY(rotYFromNorth(facing))
-                    .addModel();
-
-            vb.partialState()
-                    .with(ValveDuctBlock.FACING, facing)
-                    .with(ValveDuctBlock.OPEN, false)
-                    .modelForState()
-                    .modelFile(closed)
-                    .rotationY(rotYFromNorth(facing))
-                    .addModel();
-        }
-
-        simpleBlockItem(duct, open);
-    }
-
-    private void oneWayValveDuctInline(Block duct) {
-        ModelFile open = models().getExistingFile(modLoc("block/one_way_valve"));
-        ModelFile closed = models().getExistingFile(modLoc("block/one_way_valve_closed"));
-
-        var vb = getVariantBuilder(duct);
-
-        for (Direction facing : Direction.Plane.HORIZONTAL) {
-            vb.partialState()
-                    .with(OneWayValveDuctBlock.FACING, facing)
-                    .with(OneWayValveDuctBlock.OPEN, true)
-                    .modelForState()
-                    .modelFile(open)
-                    .rotationY(rotYFromNorth(facing))
-                    .addModel();
-
-            vb.partialState()
-                    .with(OneWayValveDuctBlock.FACING, facing)
-                    .with(OneWayValveDuctBlock.OPEN, false)
-                    .modelForState()
-                    .modelFile(closed)
-                    .rotationY(rotYFromNorth(facing))
-                    .addModel();
-        }
-
-        simpleBlockItem(duct, open);
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // Multipart condition helpers
-    // ─────────────────────────────────────────────────────────────
-    private static void addNotStraightWhenGroups(MultiPartBlockStateBuilder.PartBuilder pb) {
-        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
-
-        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
-
-        pb.nestedGroup().condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
-        pb.nestedGroup().condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
-    }
-
-    private static void addArmVisibilityGroups(MultiPartBlockStateBuilder.PartBuilder pb, Direction dir) {
-        EnumProperty<DuctSide> face = PneumaticDuctBlock.propFor(dir);
-
-        for (Direction adj : Direction.values()) {
-            if (adj == dir || adj == dir.getOpposite()) continue;
-
-            pb.nestedGroup()
-                    .condition(face, PIPE_SIDES)
-                    .condition(PneumaticDuctBlock.propFor(adj), PIPE_SIDES)
-                    .end();
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // Rotation helpers
-    // Arms/flanges authored facing NORTH
-    // Valve inline models authored along North/South axis
-    // ─────────────────────────────────────────────────────────────
-    private static int rotXFromNorth(Direction dir) {
-        return switch (dir) {
-            case UP -> 270;
-            case DOWN -> 90;
-            default -> 0;
-        };
-    }
-
-    private static int rotYFromNorth(Direction dir) {
-        return switch (dir) {
-            case NORTH -> 0;
-            case EAST -> 90;
-            case SOUTH -> 180;
-            case WEST -> 270;
-            default -> 0;
-        };
-    }
+//    // ─────────────────────────────────────────────────────────────
+//    // Pneumatic duct multipart state
+//    // ─────────────────────────────────────────────────────────────
+//    private static final DuctSide[] PIPE_SIDES = new DuctSide[]{DuctSide.OPEN, DuctSide.CONNECTED, DuctSide.FLANGED};
+//
+//    private void pneumaticDuct(Block duct) {
+//        // Authored E/W outlets
+//        ModelFile straightEW = models().getExistingFile(modLoc("block/pneumatic_duct_horizontal"));
+//        ModelFile straightUD = models().getExistingFile(modLoc("block/pneumatic_duct_verticle")); // your asset spelling
+//
+//        ModelFile core = models().getExistingFile(modLoc("block/pneumatic_duct_core"));
+//        ModelFile armNorth = models().getExistingFile(modLoc("block/pneumatic_duct_multipart"));
+//
+//        // flange authored facing NORTH
+//        ModelFile flange = models().getExistingFile(modLoc("block/flange"));
+//
+//        MultiPartBlockStateBuilder b = getMultipartBuilder(duct);
+//
+//        // East/West straight (matches authored orientation)
+//        b.part().modelFile(straightEW).addModel()
+//                .condition(PneumaticDuctBlock.EAST, PIPE_SIDES)
+//                .condition(PneumaticDuctBlock.WEST, PIPE_SIDES)
+//                .condition(PneumaticDuctBlock.NORTH, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.SOUTH, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.UP, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.DOWN, DuctSide.CLOSED)
+//                .end();
+//
+//        // North/South straight (rotate E/W model 90)
+//        b.part().modelFile(straightEW).rotationY(90).addModel()
+//                .condition(PneumaticDuctBlock.NORTH, PIPE_SIDES)
+//                .condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES)
+//                .condition(PneumaticDuctBlock.EAST, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.WEST, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.UP, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.DOWN, DuctSide.CLOSED)
+//                .end();
+//
+//        // Up/Down straight
+//        b.part().modelFile(straightUD).addModel()
+//                .condition(PneumaticDuctBlock.UP, PIPE_SIDES)
+//                .condition(PneumaticDuctBlock.DOWN, PIPE_SIDES)
+//                .condition(PneumaticDuctBlock.NORTH, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.SOUTH, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.EAST, DuctSide.CLOSED)
+//                .condition(PneumaticDuctBlock.WEST, DuctSide.CLOSED)
+//                .end();
+//
+//        // Core ONLY when not a perfect straight
+//        {
+//            MultiPartBlockStateBuilder.PartBuilder pb = b.part().modelFile(core).addModel();
+//            pb.useOr();
+//            addNotStraightWhenGroups(pb);
+//            pb.end();
+//        }
+//
+//        // Arms + flange per face
+//        for (Direction dir : Direction.values()) {
+//            EnumProperty<DuctSide> face = PneumaticDuctBlock.propFor(dir);
+//
+//            {
+//                int rx = rotXFromNorth(dir);
+//                int ry = rotYFromNorth(dir);
+//
+//                MultiPartBlockStateBuilder.PartBuilder pb = b.part()
+//                        .modelFile(armNorth)
+//                        .rotationX(rx)
+//                        .rotationY(ry)
+//                        .addModel();
+//
+//                pb.useOr();
+//                addArmVisibilityGroups(pb, dir);
+//                pb.end();
+//            }
+//
+//            b.part()
+//                    .modelFile(flange)
+//                    .rotationX(rotXFromNorth(dir))
+//                    .rotationY(rotYFromNorth(dir))
+//                    .addModel()
+//                    .condition(face, DuctSide.FLANGED)
+//                    .end();
+//        }
+//
+//        simpleBlockItem(duct, straightEW);
+//    }
+//
+//    private void valveDuctInline(Block duct) {
+//        ModelFile open = models().getExistingFile(modLoc("block/valve"));
+//        ModelFile closed = models().getExistingFile(modLoc("block/valve_closed"));
+//
+//        var vb = getVariantBuilder(duct);
+//
+//        for (Direction facing : Direction.Plane.HORIZONTAL) {
+//            vb.partialState()
+//                    .with(ValveDuctBlock.FACING, facing)
+//                    .with(ValveDuctBlock.OPEN, true)
+//                    .modelForState()
+//                    .modelFile(open)
+//                    .rotationY(rotYFromNorth(facing))
+//                    .addModel();
+//
+//            vb.partialState()
+//                    .with(ValveDuctBlock.FACING, facing)
+//                    .with(ValveDuctBlock.OPEN, false)
+//                    .modelForState()
+//                    .modelFile(closed)
+//                    .rotationY(rotYFromNorth(facing))
+//                    .addModel();
+//        }
+//
+//        simpleBlockItem(duct, open);
+//    }
+//
+//    private void oneWayValveDuctInline(Block duct) {
+//        ModelFile open = models().getExistingFile(modLoc("block/one_way_valve"));
+//        ModelFile closed = models().getExistingFile(modLoc("block/one_way_valve_closed"));
+//
+//        var vb = getVariantBuilder(duct);
+//
+//        for (Direction facing : Direction.Plane.HORIZONTAL) {
+//            vb.partialState()
+//                    .with(OneWayValveDuctBlock.FACING, facing)
+//                    .with(OneWayValveDuctBlock.OPEN, true)
+//                    .modelForState()
+//                    .modelFile(open)
+//                    .rotationY(rotYFromNorth(facing))
+//                    .addModel();
+//
+//            vb.partialState()
+//                    .with(OneWayValveDuctBlock.FACING, facing)
+//                    .with(OneWayValveDuctBlock.OPEN, false)
+//                    .modelForState()
+//                    .modelFile(closed)
+//                    .rotationY(rotYFromNorth(facing))
+//                    .addModel();
+//        }
+//
+//        simpleBlockItem(duct, open);
+//    }
+//
+//    // ─────────────────────────────────────────────────────────────
+//    // Multipart condition helpers
+//    // ─────────────────────────────────────────────────────────────
+//    private static void addNotStraightWhenGroups(MultiPartBlockStateBuilder.PartBuilder pb) {
+//        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.NORTH, PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
+//
+//        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.SOUTH, PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
+//
+//        pb.nestedGroup().condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.EAST,  PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).condition(PneumaticDuctBlock.UP,    PIPE_SIDES).end();
+//        pb.nestedGroup().condition(PneumaticDuctBlock.WEST,  PIPE_SIDES).condition(PneumaticDuctBlock.DOWN,  PIPE_SIDES).end();
+//    }
+//
+//    private static void addArmVisibilityGroups(MultiPartBlockStateBuilder.PartBuilder pb, Direction dir) {
+//        EnumProperty<DuctSide> face = PneumaticDuctBlock.propFor(dir);
+//
+//        for (Direction adj : Direction.values()) {
+//            if (adj == dir || adj == dir.getOpposite()) continue;
+//
+//            pb.nestedGroup()
+//                    .condition(face, PIPE_SIDES)
+//                    .condition(PneumaticDuctBlock.propFor(adj), PIPE_SIDES)
+//                    .end();
+//        }
+//    }
+//
+//    // ─────────────────────────────────────────────────────────────
+//    // Rotation helpers
+//    // Arms/flanges authored facing NORTH
+//    // Valve inline models authored along North/South axis
+//    // ─────────────────────────────────────────────────────────────
+//    private static int rotXFromNorth(Direction dir) {
+//        return switch (dir) {
+//            case UP -> 270;
+//            case DOWN -> 90;
+//            default -> 0;
+//        };
+//    }
+//
+//    private static int rotYFromNorth(Direction dir) {
+//        return switch (dir) {
+//            case NORTH -> 0;
+//            case EAST -> 90;
+//            case SOUTH -> 180;
+//            case WEST -> 270;
+//            default -> 0;
+//        };
+//    }
 
     private ResourceLocation pineTex(String name) {
         return modLoc("block/pine/" + name);

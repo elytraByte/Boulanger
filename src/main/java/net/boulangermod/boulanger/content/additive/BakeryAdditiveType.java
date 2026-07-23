@@ -1,7 +1,6 @@
 package net.boulangermod.boulanger.content.additive;
 
 import net.boulangermod.boulanger.component.value.BakeryAdditiveComponent;
-import net.boulangermod.boulanger.component.value.FoodAdditiveComponent; // or AdditiveIdComponent if you rename later
 import net.boulangermod.boulanger.content.ingredient.IngredientCategory;
 import net.minecraft.resources.ResourceLocation;
 
@@ -15,7 +14,10 @@ public enum BakeryAdditiveType {
     CALCIUM_PROPIONATE       ("calcium_propionate",        454.0, IngredientCategory.ADDITIVE),
     DIASTATIC_MALT_POWDER    ("diastatic_malt_powder",     454.0, IngredientCategory.ADDITIVE),
     NONDIASTATIC_MALT_POWDER ("nondiastatic_malt_powder",  454.0, IngredientCategory.ADDITIVE),
-    L_CYSTEINE               ("l_cysteine",                113.0, IngredientCategory.ADDITIVE);
+    L_CYSTEINE               ("l_cysteine",                113.0, IngredientCategory.ADDITIVE),
+    S_500_RED                ("s_500_red",                 22680, IngredientCategory.ADDITIVE),
+    IM_PROVE_200             ("im_prove_200",              20412, IngredientCategory.ADDITIVE),
+    ADVANTAGE_500_CL         ("advantage_500_cl",          10000, IngredientCategory.ADDITIVE);
 
     private final String id;
     private final int unitMg;
