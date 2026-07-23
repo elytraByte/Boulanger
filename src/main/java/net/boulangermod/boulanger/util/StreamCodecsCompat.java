@@ -28,6 +28,9 @@ public final class StreamCodecsCompat {
     public static final StreamCodec<RegistryFriendlyByteBuf, Integer> INT =
             StreamCodec.of(RegistryFriendlyByteBuf::writeInt, RegistryFriendlyByteBuf::readInt);
 
+    public static final StreamCodec<RegistryFriendlyByteBuf, Long> LONG =
+            StreamCodec.of(RegistryFriendlyByteBuf::writeLong, RegistryFriendlyByteBuf::readLong);
+
     public static final StreamCodec<RegistryFriendlyByteBuf, Integer> VAR_INT =
             StreamCodec.of(RegistryFriendlyByteBuf::writeVarInt, RegistryFriendlyByteBuf::readVarInt);
 

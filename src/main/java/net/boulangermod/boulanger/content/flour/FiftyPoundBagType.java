@@ -4,16 +4,16 @@ import net.boulangermod.boulanger.Boulanger;
 import net.minecraft.resources.ResourceLocation;
 
 public enum FiftyPoundBagType {
-    ALL_PURPOSE(id("all_purpose_flour"), 101, 0.52f, 11.7f),
-    BREAD(id("bread_flour"), 102, 0.5f, 12.7f),
-    HIGH_GLUTEN(id("high_gluten_flour"), 103, 0.50f, 14.2f),
-    RYE(id("rye_flour"), 104, 1.6f, 7.0f),
-    SEMOLINA(id("semolina_flour"), 105, 0.90f, 13.0f),
-    VWG(id("vital_wheat_gluten"), 106, 0.7f, 90.0f),
-    WHOLE_WHEAT(id("whole_wheat_flour"), 107, 1.2f, 11.7f);
+    
+    ALL_PURPOSE     (id("all_purpose_flour"), 101, 0.52f, 11.7f),
+    BREAD           (id("bread_flour"), 102, 0.5f, 12.7f),
+    HIGH_GLUTEN     (id("high_gluten_flour"), 103, 0.50f, 14.2f),
+    RYE             (id("rye_flour"), 104, 1.6f, 7.0f),
+    SEMOLINA        (id("semolina_flour"), 105, 0.90f, 13.0f),
+    VWG             (id("vital_wheat_gluten"), 106, 0.7f, 90.0f),
+    WHOLE_WHEAT     (id("whole_wheat_flour"), 107, 1.2f, 11.7f);
 
-    /** 50 lb in milligrams */
-    public static final int MAX_MILLIGRAMS = 22_680_000;
+    public static final long MAX_MILLIGRAMS = 22680000L;
 
     private final ResourceLocation id;
     private final int modelIndex;

@@ -7,14 +7,14 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
-public record FlourType(String id, float ash, float protein, int modelIndex, int unitMg) {
+public record FlourType(String id, float ash, float protein, int modelIndex, long unitMg) {
 
     public static final Codec<FlourType> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.fieldOf("id").forGetter(FlourType::id),
             Codec.FLOAT.fieldOf("ash").forGetter(FlourType::ash),
             Codec.FLOAT.fieldOf("protein").forGetter(FlourType::protein),
             Codec.INT.fieldOf("modelIndex").forGetter(FlourType::modelIndex),
-            Codec.INT.fieldOf("unitMg").forGetter(FlourType::unitMg)
+            Codec.LONG.fieldOf("unitMg").forGetter(FlourType::unitMg)
     ).apply(instance, FlourType::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, FlourType> STREAM_CODEC =
@@ -23,23 +23,23 @@ public record FlourType(String id, float ash, float protein, int modelIndex, int
                     StreamCodecsCompat.FLOAT, FlourType::ash,
                     StreamCodecsCompat.FLOAT, FlourType::protein,
                     StreamCodecsCompat.INT, FlourType::modelIndex,
-                    StreamCodecsCompat.INT, FlourType::unitMg,
+                    StreamCodecsCompat.LONG, FlourType::unitMg,
                     FlourType::new
             );
 
-    public FlourType withUnitMg(int newUnitMg) {
+    public FlourType withUnitMg(long newUnitMg) {
         return new FlourType(id, ash, protein, modelIndex, newUnitMg);
     }
 
-    public long totalMilligrams(int count) {
-        return (long) unitMg * (long) count;
+    public long totalMilligrams(long count) {
+        return unitMg *  count;
     }
 
     public long totalMilligrams(ItemStack stack) {
         return totalMilligrams(stack.getCount());
     }
 
-    public double totalGrams(int count) {
+    public double totalGrams(long count) {
         return totalMilligrams(count) / 1000.0;
     }
 

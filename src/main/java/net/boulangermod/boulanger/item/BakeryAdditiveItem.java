@@ -42,7 +42,7 @@ public class BakeryAdditiveItem extends Item {
 
         // Dynamic weighed weight (Scale etc.) wins; otherwise unitMg * count
         WeightComponent wComp = stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
-        int totalMg = (wComp != null) ? wComp.milligrams() : type.unitMg() * stack.getCount();
+        long totalMg = (wComp != null) ? wComp.milligrams() : type.unitMg() * stack.getCount();
 
         tooltip.add(Component.literal("Additive: " + titleCaseTokens(id)).withStyle(ChatFormatting.GREEN));
         tooltip.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
@@ -57,7 +57,7 @@ public class BakeryAdditiveItem extends Item {
         return Component.translatable("item.boulanger.bakery_additive." + id);
     }
 
-    private static String formatGrams(int mg) {
+    private static String formatGrams(long mg) {
         mg = Math.max(0, mg);
         if (mg < 1000) return mg + " mg";
         if (mg % 1000 == 0) return (mg / 1000) + " g";

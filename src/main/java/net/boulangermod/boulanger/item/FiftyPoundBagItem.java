@@ -16,7 +16,7 @@ import java.util.List;
 
 public class FiftyPoundBagItem extends Item {
 
-    public static final int MAX_MILLIGRAMS = FiftyPoundBagType.MAX_MILLIGRAMS;
+    public static final long MAX_MILLIGRAMS = FiftyPoundBagType.MAX_MILLIGRAMS;
 
     public FiftyPoundBagItem(Properties properties) {
         super(properties);
@@ -37,21 +37,36 @@ public class FiftyPoundBagItem extends Item {
 
     @Override
     public int getBarWidth(ItemStack stack) {
-        WeightComponent weight = stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
-        int mg = (weight != null) ? weight.milligrams() : 0;
-        return Math.round(13f * (mg / (float) MAX_MILLIGRAMS));
+        WeightComponent weight =
+                stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
+
+        long mg = weight != null ? weight.milligrams() : 0L;
+        long clampedMg = Math.max(0L, Math.min(mg, MAX_MILLIGRAMS));
+
+        return (int) Math.round(
+                13.0 * clampedMg / MAX_MILLIGRAMS
+        );
     }
 
     @Override
     public int getBarColor(ItemStack stack) {
-        WeightComponent weight = stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
-        if (weight == null) return 0xFF0000;
+        WeightComponent weight =
+                stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
 
-        float percent = weight.milligrams() / (float) MAX_MILLIGRAMS;
-        percent = Math.max(0f, Math.min(1f, percent));
+        if (weight == null) {
+            return 0xFF0000;
+        }
 
-        int red = (int) ((1.0f - percent) * 255f);
-        int green = (int) (percent * 255f);
+        long mg = Math.max(
+                0L,
+                Math.min(weight.milligrams(), MAX_MILLIGRAMS)
+        );
+
+        double percent = (double) mg / MAX_MILLIGRAMS;
+
+        int red = (int) Math.round((1.0 - percent) * 255.0);
+        int green = (int) Math.round(percent * 255.0);
+
         return (red << 16) | (green << 8);
     }
 
@@ -62,7 +77,7 @@ public class FiftyPoundBagItem extends Item {
         FlourType flour = stack.get(ModDataComponentTypes.FLOUR_TYPE.get());
         WeightComponent weight = stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
 
-        int mg = (weight != null) ? weight.milligrams() : (flour != null ? flour.unitMg() : 0);
+        long mg = (weight != null) ? weight.milligrams() : (flour != null ? flour.unitMg() : 0);
 
         if (flour != null) {
             String flourKey = "item." + Boulanger.MOD_ID + ".flour." + flourPath(flour);

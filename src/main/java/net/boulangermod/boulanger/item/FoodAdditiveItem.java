@@ -15,11 +15,11 @@ import java.util.List;
 public class FoodAdditiveItem extends Item {
     private final FoodAdditiveType additiveType;
 
-    public FoodAdditiveItem(Properties properties, FoodAdditiveType additiveType) {
+    public FoodAdditiveItem(Properties properties, FoodAdditiveType type) {
         super(properties
-                .component(ModDataComponentTypes.FOOD_ADDITIVE.get(), additiveType.toComponent())
-                .component(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), additiveType.category()));
-        this.additiveType = additiveType;
+                .component(ModDataComponentTypes.FOOD_ADDITIVE.get(), type.toComponent())
+                .component(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), type.category()));
+        this.additiveType = type;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class FoodAdditiveItem extends Item {
 
         // show dynamic weighed amount if present; otherwise derive from enum unit weight * count
         WeightComponent weighed = stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
-        int mg = (weighed != null) ? weighed.milligrams() : additiveType.unitMg() * stack.getCount();
+        long mg = (weighed != null) ? weighed.milligrams() : additiveType.unitMg() * stack.getCount();
 
         tooltip.add(Component.literal("Additive: " + id).withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal("Weight: " + (mg / 1000.0) + " g").withStyle(ChatFormatting.GREEN));
