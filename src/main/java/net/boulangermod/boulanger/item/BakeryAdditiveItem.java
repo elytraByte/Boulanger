@@ -19,7 +19,9 @@ public class BakeryAdditiveItem extends Item {
     private final BakeryAdditiveType type;
 
     public BakeryAdditiveItem(Properties properties, BakeryAdditiveType type) {
-        super(properties);
+        super(properties
+                .component(ModDataComponentTypes.BAKERY_ADDITIVE.get(), type.toComponent())
+                .component(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), type.category()));
         this.type = type;
     }
 
