@@ -16,7 +16,9 @@ public class FoodAdditiveItem extends Item {
     private final FoodAdditiveType additiveType;
 
     public FoodAdditiveItem(Properties properties, FoodAdditiveType additiveType) {
-        super(properties);
+        super(properties
+                .component(ModDataComponentTypes.FOOD_ADDITIVE.get(), additiveType.toComponent())
+                .component(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), additiveType.category()));
         this.additiveType = additiveType;
     }
 
