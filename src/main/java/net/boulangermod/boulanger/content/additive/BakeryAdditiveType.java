@@ -23,9 +23,9 @@ public enum BakeryAdditiveType {
     private final long unitMg;
     private final IngredientCategory category;
 
-    BakeryAdditiveType(String id, long unitGrams, IngredientCategory category) {
+    BakeryAdditiveType(String id, long unitMg, IngredientCategory category) {
         this.id = id;
-        this.unitMg = (int) Math.round(unitGrams * 1000.0);
+        this.unitMg = unitMg;
         this.category = category;
     }
 

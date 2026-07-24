@@ -36,7 +36,7 @@ public class FlourItem extends Item {
             label = "Type: ";
         }
 
-        int unitMg = type.unitMg();
+        long unitMg = type.unitMg();
         long totalMg = type.totalMilligrams(stack);
 
         tooltip.add(Component.literal(label + prettyName).withStyle(ChatFormatting.GRAY));
