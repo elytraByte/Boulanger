@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.content.ingredient;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.value.WeightComponent;
 import net.boulangermod.boulanger.item.ModItems;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 
@@ -28,11 +29,19 @@ public final class WeightedContainerFactory {
         ItemStack result = new ItemStack(container);
 
         result.set(
-                ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get(),
-                new WeightComponent(milligrams)
+                DataComponents.MAX_STACK_SIZE,
+                1
+        );
+
+        result.set(
+                ModDataComponentTypes
+                        .INGREDIENT_MILLIGRAMS
+                        .get(),
+                WeightComponent.ofMilligrams(milligrams)
         );
 
         identity.applyTo(result);
+
         return result;
     }
 

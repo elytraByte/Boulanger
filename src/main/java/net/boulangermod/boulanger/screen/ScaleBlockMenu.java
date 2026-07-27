@@ -160,12 +160,17 @@ public final class ScaleBlockMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public boolean clickMenuButton(Player player, int buttonId) {
-        if (buttonId <= 0) {
+    public boolean clickMenuButton(
+            Player player,
+            int requestedGrams
+    ) {
+        if (requestedGrams <= 0) {
             return false;
         }
 
-        return blockEntity.measure((long) buttonId);
+        return blockEntity.measureGrams(
+                (long) requestedGrams
+        );
     }
 
     @Override

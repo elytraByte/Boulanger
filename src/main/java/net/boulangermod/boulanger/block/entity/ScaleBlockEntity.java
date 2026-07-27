@@ -1,9 +1,7 @@
 package net.boulangermod.boulanger.block.entity;
 
-import net.boulangermod.boulanger.content.ingredient.WeightedContainerFactory;
+import net.boulangermod.boulanger.content.ingredient.ScaleTransferService;
 import net.boulangermod.boulanger.content.ingredient.mass.IngredientMassResolver;
-import net.boulangermod.boulanger.content.ingredient.mass.IngredientPortioner;
-import net.boulangermod.boulanger.content.ingredient.mass.PortionResult;
 import net.boulangermod.boulanger.screen.ScaleBlockMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -33,86 +31,70 @@ public class ScaleBlockEntity
         );
     }
 
-    public boolean measure(long requestedMilligrams) {
+    public boolean measureGrams(long requestedGrams) {
+        if (requestedGrams <= 0L) {
+            return false;
+        }
+
+        final long requestedMilligrams;
+
+        try {
+            requestedMilligrams = Math.multiplyExact(
+                    requestedGrams,
+                    1_000L
+            );
+        } catch (ArithmeticException overflow) {
+            return false;
+        }
+
+        return measureMilligrams(requestedMilligrams);
+    }
+
+    private boolean measureMilligrams(
+            long requestedMilligrams
+    ) {
         if (level == null
                 || level.isClientSide()
-                || requestedMilligrams <= 0) {
+                || requestedMilligrams <= 0L) {
             return false;
         }
 
-        ItemStack source =
-                itemHandler.getStackInSlot(SLOT_SOURCE);
-
-        ItemStack bowls =
-                itemHandler.getStackInSlot(SLOT_BOWL);
-
-        if (source.isEmpty()
-                || bowls.isEmpty()
-                || !bowls.is(Items.BOWL)) {
-            return false;
-        }
-
-        PortionResult plan = IngredientPortioner.plan(
-                source,
+        var proposed = ScaleTransferService.plan(
+                itemHandler.getStackInSlot(SLOT_SOURCE),
+                itemHandler.getStackInSlot(SLOT_BOWL),
+                itemHandler.getStackInSlot(SLOT_OUTPUT),
+                itemHandler.getStackInSlot(SLOT_RESIDUAL),
+                itemHandler.getSlotLimit(SLOT_OUTPUT),
+                itemHandler.getSlotLimit(SLOT_RESIDUAL),
                 requestedMilligrams
         );
 
-        if (!plan.succeeded() || plan.identity() == null) {
+        if (proposed.isEmpty()) {
             return false;
         }
 
-        ItemStack filledBowl =
-                WeightedContainerFactory.createFilledBowl(
-                        plan.identity(),
-                        plan.transferredMilligrams()
-                );
+        ScaleTransferService.Result result =
+                proposed.get();
 
-        Optional<ItemStack> proposedOutput = merge(
-                itemHandler.getStackInSlot(SLOT_OUTPUT),
-                filledBowl,
-                itemHandler.getSlotLimit(SLOT_OUTPUT)
-        );
-
-        if (proposedOutput.isEmpty()) {
-            return false;
-        }
-
-        Optional<ItemStack> proposedResidual = merge(
-                itemHandler.getStackInSlot(SLOT_RESIDUAL),
-                plan.partialRemainder(),
-                itemHandler.getSlotLimit(SLOT_RESIDUAL)
-        );
-
-        if (proposedResidual.isEmpty()) {
-            return false;
-        }
-
-        ItemStack bowlsAfter = bowls.copy();
-        bowlsAfter.shrink(1);
-
-        /*
-         * Every possible failure has now been checked. Only now do
-         * we mutate the inventory.
-         */
         updateInventoryAtomically(() -> {
             itemHandler.setStackInSlot(
                     SLOT_SOURCE,
-                    plan.sourceRemainder().copy()
+                    result.sourceAfter()
             );
 
             itemHandler.setStackInSlot(
                     SLOT_BOWL,
-                    bowlsAfter
+                    result.bowlsAfter()
             );
 
             itemHandler.setStackInSlot(
                     SLOT_OUTPUT,
-                    proposedOutput.get()
+                    result.outputAfter()
             );
 
             itemHandler.setStackInSlot(
                     SLOT_RESIDUAL,
-                    proposedResidual.get()
+                    result.residualAfter()
             );
         });
 
@@ -136,52 +118,6 @@ public class ScaleBlockEntity
 
             default -> false;
         };
-    }
-
-    private static Optional<ItemStack> merge(
-            ItemStack existing,
-            ItemStack addition,
-            int slotLimit
-    ) {
-        if (addition.isEmpty()) {
-            return Optional.of(existing.copy());
-        }
-
-        int limit = Math.min(
-                slotLimit,
-                addition.getMaxStackSize()
-        );
-
-        if (existing.isEmpty()) {
-            if (addition.getCount() > limit) {
-                return Optional.empty();
-            }
-
-            return Optional.of(addition.copy());
-        }
-
-        if (!ItemStack.isSameItemSameComponents(
-                existing,
-                addition
-        )) {
-            return Optional.empty();
-        }
-
-        int combinedCount =
-                existing.getCount() + addition.getCount();
-
-        limit = Math.min(
-                limit,
-                existing.getMaxStackSize()
-        );
-
-        if (combinedCount > limit) {
-            return Optional.empty();
-        }
-
-        ItemStack combined = existing.copy();
-        combined.setCount(combinedCount);
-        return Optional.of(combined);
     }
 
     @Override

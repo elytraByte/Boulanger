@@ -45,8 +45,9 @@
   "item.boulanger.porcelain_mix": "Porcelain Mix",
   "item.boulanger.brick_mold": "Brick Mold",
 
-  "block.boulanger.scale": "Scale",
-  "container.boulanger.scale": "Scale",
-  "screen.boulanger.scale.milligrams": "Milligrams",
-  "screen.boulanger.scale.measure": "Measure"
+  "item.boulanger.milligram_scale": "Milligram Scale",
+  "screen.boulanger.scale.grams": "Grams",
+  "screen.boulanger.scale.measure": "Measure",
+  "screen.boulanger.milligram_scale.milligrams": "Milligrams"
+
 }

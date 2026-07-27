@@ -11,72 +11,335 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 
 public class BakeryAdditiveItem extends Item {
     private final BakeryAdditiveType type;
 
-    public BakeryAdditiveItem(Properties properties, BakeryAdditiveType type) {
-        super(properties
-                .component(ModDataComponentTypes.BAKERY_ADDITIVE.get(), type.toComponent())
-                .component(ModDataComponentTypes.INGREDIENT_CATEGORY.get(), type.category()));
+    public BakeryAdditiveItem(
+            Properties properties,
+            BakeryAdditiveType type
+    ) {
+        super(configureProperties(properties, type));
         this.type = type;
     }
 
-    public BakeryAdditiveType getType() { return type; }
+    private static Properties configureProperties(
+            Properties properties,
+            BakeryAdditiveType type
+    ) {
+        properties
+                .component(
+                        ModDataComponentTypes
+                                .BAKERY_ADDITIVE
+                                .get(),
+                        type.toComponent()
+                )
+                .component(
+                        ModDataComponentTypes
+                                .INGREDIENT_CATEGORY
+                                .get(),
+                        type.category()
+                );
+
+        /*
+         * These are mutable-weight bulk packages. Giving them
+         * their full weight as a default component causes
+         * IngredientMassResolver to use VARIABLE_WEIGHT from
+         * the first measurement onward.
+         */
+        if (isBulkConditioner(type)) {
+            properties.component(
+                    ModDataComponentTypes
+                            .INGREDIENT_MILLIGRAMS
+                            .get(),
+                    WeightComponent.ofMilligrams(
+                            type.unitMg()
+                    )
+            );
+        }
+
+        return properties;
+    }
+
+    public BakeryAdditiveType getType() {
+        return type;
+    }
 
     @Override
     public void appendHoverText(
             ItemStack stack,
-            @Nullable TooltipContext context,
+            TooltipContext context,
             List<Component> tooltip,
             TooltipFlag flag
     ) {
-        BakeryAdditiveComponent add = stack.get(ModDataComponentTypes.BAKERY_ADDITIVE.get());
-        String id = (add != null) ? add.id() : type.id();
+        super.appendHoverText(
+                stack,
+                context,
+                tooltip,
+                flag
+        );
 
-        IngredientCategory cat = stack.get(ModDataComponentTypes.INGREDIENT_CATEGORY.get());
-        if (cat == null) cat = type.category();
+        BakeryAdditiveComponent additive =
+                stack.get(
+                        ModDataComponentTypes
+                                .BAKERY_ADDITIVE
+                                .get()
+                );
 
-        // Dynamic weighed weight (Scale etc.) wins; otherwise unitMg * count
-        WeightComponent wComp = stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
-        long totalMg = (wComp != null) ? wComp.milligrams() : type.unitMg() * stack.getCount();
+        String id = additive != null
+                ? additive.id()
+                : type.id();
 
-        tooltip.add(Component.literal("Additive: " + titleCaseTokens(id)).withStyle(ChatFormatting.GREEN));
-        tooltip.add(Component.literal("----------------------------------------------").withStyle(ChatFormatting.GREEN));
-        tooltip.add(Component.literal("Category: " + titleCaseTokens(cat.name())).withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.literal("Weight: " + formatGrams(totalMg)).withStyle(ChatFormatting.GREEN));
+        IngredientCategory category =
+                stack.get(
+                        ModDataComponentTypes
+                                .INGREDIENT_CATEGORY
+                                .get()
+                );
+
+        if (category == null) {
+            category = type.category();
+        }
+
+        tooltip.add(
+                Component.literal(
+                                "Additive: "
+                                        + titleCaseTokens(id)
+                        )
+                        .withStyle(ChatFormatting.GREEN)
+        );
+
+        tooltip.add(
+                Component.literal(
+                                "----------------------------------------------"
+                        )
+                        .withStyle(ChatFormatting.GREEN)
+        );
+
+        tooltip.add(
+                Component.literal(
+                                "Category: "
+                                        + titleCaseTokens(
+                                        category.name()
+                                )
+                        )
+                        .withStyle(ChatFormatting.DARK_GRAY)
+        );
+
+        if (isBulkConditioner(type)) {
+            tooltip.add(
+                    Component.literal(
+                                    "Weight: "
+                                            + formatMilligrams(
+                                            currentMilligrams(stack)
+                                    )
+                                            + " / "
+                                            + formatMilligrams(
+                                            type.unitMg()
+                                    )
+                            )
+                            .withStyle(ChatFormatting.GREEN)
+            );
+        } else {
+            WeightComponent explicitWeight =
+                    stack.get(
+                            ModDataComponentTypes
+                                    .INGREDIENT_MILLIGRAMS
+                                    .get()
+                    );
+
+            long totalMilligrams =
+                    explicitWeight != null
+                            ? explicitWeight.milligrams()
+                            : Math.multiplyExact(
+                            type.unitMg(),
+                            (long) stack.getCount()
+                    );
+
+            tooltip.add(
+                    Component.literal(
+                                    "Weight: "
+                                            + formatMilligrams(
+                                            totalMilligrams
+                                    )
+                            )
+                            .withStyle(ChatFormatting.GREEN)
+            );
+        }
+    }
+
+    /*
+     * These three boxes always display their bar, including
+     * when they are completely full.
+     */
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return isBulkConditioner(type);
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        long capacityMilligrams =
+                Math.max(1L, type.unitMg());
+
+        long currentMilligrams = Math.max(
+                0L,
+                Math.min(
+                        currentMilligrams(stack),
+                        capacityMilligrams
+                )
+        );
+
+        return (int) Math.round(
+                13.0
+                        * currentMilligrams
+                        / capacityMilligrams
+        );
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        long capacityMilligrams =
+                Math.max(1L, type.unitMg());
+
+        long currentMilligrams = Math.max(
+                0L,
+                Math.min(
+                        currentMilligrams(stack),
+                        capacityMilligrams
+                )
+        );
+
+        double percentage =
+                (double) currentMilligrams
+                        / capacityMilligrams;
+
+        int red = (int) Math.round(
+                (1.0 - percentage) * 255.0
+        );
+
+        int green = (int) Math.round(
+                percentage * 255.0
+        );
+
+        return (red << 16) | (green << 8);
+    }
+
+    private long currentMilligrams(ItemStack stack) {
+        WeightComponent weight =
+                stack.get(
+                        ModDataComponentTypes
+                                .INGREDIENT_MILLIGRAMS
+                                .get()
+                );
+
+        return weight != null
+                ? weight.milligrams()
+                : type.unitMg();
+    }
+
+    private static boolean isBulkConditioner(
+            BakeryAdditiveType type
+    ) {
+        return switch (type) {
+            case S_500_RED,
+                 IM_PROVE_200,
+                 ADVANTAGE_500_CL -> true;
+
+            default -> false;
+        };
     }
 
     @Override
     public Component getName(ItemStack stack) {
-        BakeryAdditiveComponent add = stack.get(ModDataComponentTypes.BAKERY_ADDITIVE.get());
-        String id = (add != null) ? add.id() : type.id();
-        return Component.translatable("item.boulanger.bakery_additive." + id);
+        BakeryAdditiveComponent additive =
+                stack.get(
+                        ModDataComponentTypes
+                                .BAKERY_ADDITIVE
+                                .get()
+                );
+
+        String id = additive != null
+                ? additive.id()
+                : type.id();
+
+        return Component.translatable(
+                "item.boulanger.bakery_additive." + id
+        );
     }
 
-    private static String formatGrams(long mg) {
-        mg = Math.max(0, mg);
-        if (mg < 1000) return mg + " mg";
-        if (mg % 1000 == 0) return (mg / 1000) + " g";
-        return String.format(Locale.ROOT, "%.1f g", mg / 1000.0);
+    private static String formatMilligrams(
+            long milligrams
+    ) {
+        milligrams = Math.max(0L, milligrams);
+
+        if (milligrams < 1_000L) {
+            return milligrams + " mg";
+        }
+
+        long grams = milligrams / 1_000L;
+        long remainder = milligrams % 1_000L;
+
+        if (remainder == 0L) {
+            return grams + " g";
+        }
+
+        String fraction = String.format(
+                Locale.ROOT,
+                "%03d",
+                remainder
+        );
+
+        int end = fraction.length();
+
+        while (end > 0
+                && fraction.charAt(end - 1) == '0') {
+            end--;
+        }
+
+        return grams
+                + "."
+                + fraction.substring(0, end)
+                + " g";
     }
 
     private static String titleCaseTokens(String raw) {
-        if (raw == null || raw.isEmpty()) return "";
-        String key = raw.contains(":") ? raw.substring(raw.indexOf(':') + 1) : raw;
-        String[] parts = key.toLowerCase(Locale.ROOT).split("_");
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < parts.length; i++) {
-            String p = parts[i];
-            if (!p.isEmpty()) {
-                sb.append(Character.toUpperCase(p.charAt(0)))
-                        .append(p.length() > 1 ? p.substring(1) : "");
-                if (i < parts.length - 1) sb.append(' ');
+        if (raw == null || raw.isEmpty()) {
+            return "";
+        }
+
+        String key = raw.contains(":")
+                ? raw.substring(raw.indexOf(':') + 1)
+                : raw;
+
+        String[] parts = key
+                .toLowerCase(Locale.ROOT)
+                .split("_");
+
+        StringBuilder result = new StringBuilder();
+
+        for (String part : parts) {
+            if (part.isEmpty()) {
+                continue;
+            }
+
+            if (!result.isEmpty()) {
+                result.append(' ');
+            }
+
+            result.append(
+                    Character.toUpperCase(
+                            part.charAt(0)
+                    )
+            );
+
+            if (part.length() > 1) {
+                result.append(part.substring(1));
             }
         }
-        return sb.toString();
+
+        return result.toString();
     }
 }

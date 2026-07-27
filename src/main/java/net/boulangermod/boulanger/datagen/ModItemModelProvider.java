@@ -26,6 +26,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         basicItem(ModItems.KAOLINITE_CLAY_BALL.get());
         basicItem(ModItems.BRICK_MOLD.get());
         basicItem(ModItems.FILLED_BOWL.get());
+        basicItem(ModItems.MILLIGRAM_SCALE.get());
         folderItem(ModItems.KOSHER_SALT.getId(), "item/salt");
         folderItem(ModItems.MOLASSES.getId(), "item/sugar");
         folderItem(ModItems.BROWN_SUGAR.getId(), "item/sugar");

@@ -11,6 +11,7 @@ import net.boulangermod.boulanger.loot.ModLootFunctions;
 //import net.boulangermod.boulanger.pneumatic.client.PneumaticClientEvents;
 //import net.boulangermod.boulanger.pneumatic.event.PneumaticEvents;
 import net.boulangermod.boulanger.recipe.ModRecipeTypes;
+import net.boulangermod.boulanger.screen.MilligramScaleScreen;
 import net.boulangermod.boulanger.screen.ModMenuTypes;
 import net.boulangermod.boulanger.screen.ScaleBlockScreen;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
@@ -109,6 +110,11 @@ public class Boulanger {
             event.register(
                     ModMenuTypes.SCALE_MENU.get(),
                     ScaleBlockScreen::new
+            );
+
+            event.register(
+                    ModMenuTypes.MILLIGRAM_SCALE_MENU.get(),
+                    MilligramScaleScreen::new
             );
         }
     }

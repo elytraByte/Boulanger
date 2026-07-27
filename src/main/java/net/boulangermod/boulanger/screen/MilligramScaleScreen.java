@@ -1,6 +1,7 @@
 package net.boulangermod.boulanger.screen;
 
 import net.boulangermod.boulanger.Boulanger;
+import net.boulangermod.boulanger.item.MilligramScaleItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -10,8 +11,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-public final class ScaleBlockScreen
-        extends AbstractContainerScreen<ScaleBlockMenu> {
+public final class MilligramScaleScreen
+        extends AbstractContainerScreen<MilligramScaleMenu> {
 
     private static final ResourceLocation GUI_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(
@@ -22,10 +23,10 @@ public final class ScaleBlockScreen
     private static final int TEXTURE_WIDTH = 256;
     private static final int TEXTURE_HEIGHT = 256;
 
-    private EditBox gramInput;
+    private EditBox milligramInput;
 
-    public ScaleBlockScreen(
-            ScaleBlockMenu menu,
+    public MilligramScaleScreen(
+            MilligramScaleMenu menu,
             Inventory playerInventory,
             Component title
     ) {
@@ -39,25 +40,25 @@ public final class ScaleBlockScreen
     protected void init() {
         super.init();
 
-        gramInput = new EditBox(
+        milligramInput = new EditBox(
                 font,
                 leftPos + 98,
                 topPos + 19,
                 68,
                 18,
                 Component.translatable(
-                        "screen.boulanger.scale.grams"
+                        "screen.boulanger.milligram_scale.milligrams"
                 )
         );
 
-        gramInput.setMaxLength(10);
-        gramInput.setFilter(
+        milligramInput.setMaxLength(4);
+        milligramInput.setFilter(
                 value -> value.isEmpty()
                         || value.chars()
                         .allMatch(Character::isDigit)
         );
 
-        addRenderableWidget(gramInput);
+        addRenderableWidget(milligramInput);
 
         addRenderableWidget(
                 Button.builder(
@@ -77,29 +78,32 @@ public final class ScaleBlockScreen
     }
 
     private void submitMeasurement() {
-        String input = gramInput.getValue();
+        String input = milligramInput.getValue();
 
         if (input.isBlank()) {
-            showError("Enter a weight in grams");
+            showError(
+                    "Enter a weight from 1 to 5000 mg"
+            );
             return;
         }
 
-        final long requestedGrams;
+        final int requestedMilligrams;
 
         try {
-            requestedGrams = Long.parseLong(input);
+            requestedMilligrams =
+                    Integer.parseInt(input);
         } catch (NumberFormatException exception) {
             showError("The entered weight is invalid");
             return;
         }
 
-        if (requestedGrams <= 0L) {
-            showError("Weight must be greater than zero");
-            return;
-        }
-
-        if (requestedGrams > Integer.MAX_VALUE) {
-            showError("Requested weight is too large");
+        if (requestedMilligrams <= 0
+                || requestedMilligrams
+                > MilligramScaleItem
+                .MAX_CAPACITY_MILLIGRAMS) {
+            showError(
+                    "Milligram scale capacity is 5000 mg"
+            );
             return;
         }
 
@@ -110,7 +114,7 @@ public final class ScaleBlockScreen
 
         minecraft.gameMode.handleInventoryButtonClick(
                 menu.containerId,
-                (int) requestedGrams
+                requestedMilligrams
         );
     }
 
@@ -163,7 +167,7 @@ public final class ScaleBlockScreen
         graphics.drawString(
                 font,
                 Component.translatable(
-                        "screen.boulanger.scale.grams"
+                        "screen.boulanger.milligram_scale.milligrams"
                 ),
                 98,
                 7,

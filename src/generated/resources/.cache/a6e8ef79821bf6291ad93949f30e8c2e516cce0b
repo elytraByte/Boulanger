@@ -1,4 +1,4 @@
-// 1.21	2026-07-26T20:34:51.6382081	Item Models: boulanger
+// 1.21	2026-07-27T12:53:20.8836485	Item Models: boulanger
 2f5ff4eec12ca2f70d8ae30bdab9a7ed52a19342 assets/boulanger/models/item/advantage_500_cl.json
 9beca06bc75818b75214013efe8e8204a7116cea assets/boulanger/models/item/bread.json
 643f28748e1534ac17b02dfe06d2ffc275316e53 assets/boulanger/models/item/bread/baguette.json
@@ -75,6 +75,7 @@ aef85b2c1fe39d08ccd8f7563cf45ee9da69b275 assets/boulanger/models/item/kaolinite_
 90098c59836b44165c927e6694131ce218e0fb38 assets/boulanger/models/item/kosher_salt.json
 ee748d503b1a7080d175b445272cffa44a0c9391 assets/boulanger/models/item/lard.json
 b78a45c49ceef42efae43bb487ca4760f24fd344 assets/boulanger/models/item/margarine.json
+7779cbde0bd8a79b2a85ec62f3c5b89a3f74ed00 assets/boulanger/models/item/milligram_scale.json
 ef8c23734b9c7cd1afe3e45dc5c69ef1731d9933 assets/boulanger/models/item/molasses.json
 a4b0c555681ed424830767419f9942b84d593461 assets/boulanger/models/item/pine_resin.json
 c132c5b6d03a54442d4872ae3a279e12e79b57fb assets/boulanger/models/item/powdered_sugar.json

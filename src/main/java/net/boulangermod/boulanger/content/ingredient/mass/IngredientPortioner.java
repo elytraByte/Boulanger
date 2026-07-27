@@ -3,6 +3,7 @@ package net.boulangermod.boulanger.content.ingredient.mass;
 import net.boulangermod.boulanger.component.ModDataComponentTypes;
 import net.boulangermod.boulanger.component.value.WeightComponent;
 import net.boulangermod.boulanger.content.ingredient.IngredientIdentity;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -81,17 +82,12 @@ public final class IngredientPortioner {
         long remaining =
                 mass.totalMilligrams() - transferred;
 
-        ItemStack sourceRemainder = ItemStack.EMPTY;
-
-        if (remaining > 0) {
-            sourceRemainder = source.copy();
-            sourceRemainder.setCount(1);
-            sourceRemainder.set(
-                    ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get(),
-                    new WeightComponent(remaining)
-            );
-            identity.applyTo(sourceRemainder);
-        }
+        ItemStack sourceRemainder =
+                createVariableWeightRemainder(
+                        source,
+                        remaining,
+                        identity
+                );
 
         return PortionResult.success(
                 transferred,
@@ -122,22 +118,36 @@ public final class IngredientPortioner {
                 remaining % mass.unitMilligrams();
 
         ItemStack sourceRemainder = ItemStack.EMPTY;
-        if (fullUnits > 0) {
+        ItemStack partialRemainder = ItemStack.EMPTY;
+
+        if (fullUnits > 0L) {
             sourceRemainder = source.copy();
-            sourceRemainder.setCount(Math.toIntExact(fullUnits));
+            sourceRemainder.setCount(
+                    Math.toIntExact(fullUnits)
+            );
         }
 
-        ItemStack partialRemainder = ItemStack.EMPTY;
-        if (partialMilligrams > 0) {
-            partialRemainder = source.copy();
-            partialRemainder.setCount(1);
+        if (partialMilligrams > 0L) {
+            ItemStack weighedRemainder =
+                    createVariableWeightRemainder(
+                            source,
+                            partialMilligrams,
+                            identity
+                    );
 
-            partialRemainder.set(
-                    ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get(),
-                    new WeightComponent(partialMilligrams)
-            );
-
-            identity.applyTo(partialRemainder);
+            if (fullUnits == 0L) {
+                /*
+                 * A single divided unit can remain in the source
+                 * slot and be weighed again immediately.
+                 */
+                sourceRemainder = weighedRemainder;
+            } else {
+                /*
+                 * Whole and partial units have different components
+                 * and cannot occupy the same slot.
+                 */
+                partialRemainder = weighedRemainder;
+            }
         }
 
         return PortionResult.success(
@@ -154,57 +164,78 @@ public final class IngredientPortioner {
             IngredientMass mass,
             IngredientIdentity identity
     ) {
-        long unitMilligrams = mass.unitMilligrams();
-        long candidate = Math.min(
+        long unitMilligrams =
+                mass.unitMilligrams();
+
+        long transferableMilligrams = Math.min(
                 requestedMilligrams,
                 mass.totalMilligrams()
         );
 
-        if (candidate < unitMilligrams) {
+        /*
+         * Even one complete container cannot be transferred.
+         */
+        if (transferableMilligrams < unitMilligrams) {
             return PortionResult.failure(
                     PortionResult.Status.AMOUNT_TOO_SMALL
             );
         }
 
         /*
-         * If more source remains, the requested portion must be a whole
-         * number of containers. A request larger than all available mass
-         * may consume the complete source.
+         * If some source would remain, the requested amount must
+         * represent an exact number of complete containers.
+         *
+         * A request greater than the available mass may consume
+         * the entire source because its total is already composed
+         * of complete containers.
          */
-        if (candidate < mass.totalMilligrams()
-                && candidate % unitMilligrams != 0) {
+        if (transferableMilligrams
+                < mass.totalMilligrams()
+                && transferableMilligrams
+                % unitMilligrams != 0L) {
             return PortionResult.failure(
                     PortionResult.Status.INDIVISIBLE_CONTAINER
             );
         }
 
         long transferredUnits =
-                candidate / unitMilligrams;
+                transferableMilligrams
+                        / unitMilligrams;
 
-        long transferredMilligrams = Math.multiplyExact(
-                transferredUnits,
-                unitMilligrams
-        );
+        long transferredMilligrams =
+                Math.multiplyExact(
+                        transferredUnits,
+                        unitMilligrams
+                );
 
         long remainingUnits =
-                (long) source.getCount() - transferredUnits;
+                (long) source.getCount()
+                        - transferredUnits;
 
-        ItemStack sourceRemainder = ItemStack.EMPTY;
-        if (remainingUnits > 0) {
+        ItemStack sourceRemainder =
+                ItemStack.EMPTY;
+
+        if (remainingUnits > 0L) {
             sourceRemainder = source.copy();
             sourceRemainder.setCount(
                     Math.toIntExact(remainingUnits)
             );
         }
 
-        ItemStack emptyContainers = createEmptyContainers(
-                source.getItem(),
-                transferredUnits
-        );
+        ItemStack emptyContainers =
+                createEmptyContainers(
+                        source.getItem(),
+                        transferredUnits
+                );
 
+        /*
+         * createEmptyContainers returns null only when the empty
+         * containers cannot fit in the single residual stack.
+         */
         if (emptyContainers == null) {
             return PortionResult.failure(
-                    PortionResult.Status.INDIVISIBLE_CONTAINER
+                    PortionResult.Status
+                            .INDIVISIBLE_CONTAINER
             );
         }
 
@@ -214,6 +245,40 @@ public final class IngredientPortioner {
                 emptyContainers,
                 identity
         );
+    }
+
+    private static ItemStack createVariableWeightRemainder(
+            ItemStack source,
+            long milligrams,
+            IngredientIdentity identity
+    ) {
+        if (milligrams <= 0L) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack remainder = source.copy();
+        remainder.setCount(1);
+
+        /*
+         * Prevent two identically weighted partial ingredients from
+         * merging. INGREDIENT_MILLIGRAMS is the total represented by
+         * this one stack.
+         */
+        remainder.set(
+                DataComponents.MAX_STACK_SIZE,
+                1
+        );
+
+        remainder.set(
+                ModDataComponentTypes
+                        .INGREDIENT_MILLIGRAMS
+                        .get(),
+                WeightComponent.ofMilligrams(milligrams)
+        );
+
+        identity.applyTo(remainder);
+
+        return remainder;
     }
 
     /*

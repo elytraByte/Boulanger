@@ -26,6 +26,15 @@ public final class ModMenuTypes {
                     ScaleBlockMenu::new
             );
 
+    public static final DeferredHolder<
+            MenuType<?>,
+            MenuType<MilligramScaleMenu>
+            > MILLIGRAM_SCALE_MENU =
+            registerMenuType(
+                    "milligram_scale_menu",
+                    MilligramScaleMenu::new
+            );
+
     private ModMenuTypes() {
     }
 

@@ -73,20 +73,27 @@ public final class IngredientMassResolver {
             WeightComponent explicitWeight
     ) {
         /*
-         * INGREDIENT_MILLIGRAMS is the total for this particular stack. Until
-         * WeightComponent itself is migrated to long, widen its int immediately.
-         * Reject stacked instances because total-stack weight would be ambiguous.
+         * INGREDIENT_MILLIGRAMS is authoritative and represents the
+         * total mass of this particular stack.
+         *
+         * Do not derive the mass from stack count once this component
+         * is present. The portioner will normalize a remaining
+         * variable-weight stack to one non-stackable item.
          */
-        if (stack.getCount() != 1 || explicitWeight.milligrams() < 0) {
+        long totalMilligrams =
+                explicitWeight.milligrams();
+
+        if (totalMilligrams <= 0L) {
             return Optional.empty();
         }
 
-        long totalMilligrams = explicitWeight.milligrams();
-        return Optional.of(new IngredientMass(
-                totalMilligrams,
-                VARIABLE_WEIGHT_UNIT_MILLIGRAMS,
-                PortionMode.VARIABLE_WEIGHT
-        ));
+        return Optional.of(
+                new IngredientMass(
+                        totalMilligrams,
+                        VARIABLE_WEIGHT_UNIT_MILLIGRAMS,
+                        PortionMode.VARIABLE_WEIGHT
+                )
+        );
     }
 
     private static Optional<IngredientMass> resolveUnits(
