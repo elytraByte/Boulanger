@@ -128,6 +128,16 @@ public class ModBlocks {
             registerBlock("tree_tap",
                     () -> new TreeTapBlock(Block.Properties.of().strength(1f).noOcclusion()));
 
+    public static final DeferredBlock<ScaleBlock> SCALE =
+            registerBlock(
+                    "scale",
+                    () -> new ScaleBlock(
+                            BlockBehaviour.Properties.of()
+                                    .strength(1.5F)
+                                    .noOcclusion()
+                    )
+            );
+
 //pneumatic ducting deprecated for the time being
 //    public static final DeferredBlock<Block> PNEUMATIC_DUCT =
 //            registerBlock("pneumatic_duct",

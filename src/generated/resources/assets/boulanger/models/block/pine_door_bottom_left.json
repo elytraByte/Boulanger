@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/door_bottom_left",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "bottom": "boulanger:block/pine/pine_door_bottom",
+    "top": "boulanger:block/pine/pine_door_top"
+  }
+}

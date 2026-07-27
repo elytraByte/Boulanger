@@ -141,6 +141,8 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.VALVE_DUCT.get());
         dropSelf(ModBlocks.ONE_WAY_VALVE_DUCT.get());
         */
+
+        dropSelf(ModBlocks.SCALE.get());
     }
 
     @Override

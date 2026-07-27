@@ -43,5 +43,10 @@
   "block.boulanger.kaolinite_clay": "Kaolinite Clay",
   "item.boulanger.kaolinite_clay_ball": "Kaolinite Clay Ball",
   "item.boulanger.porcelain_mix": "Porcelain Mix",
-  "item.boulanger.brick_mold": "Brick Mold"
+  "item.boulanger.brick_mold": "Brick Mold",
+
+  "block.boulanger.scale": "Scale",
+  "container.boulanger.scale": "Scale",
+  "screen.boulanger.scale.milligrams": "Milligrams",
+  "screen.boulanger.scale.measure": "Measure"
 }

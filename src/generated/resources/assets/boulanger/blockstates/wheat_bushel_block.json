@@ -1,0 +1,124 @@
+{
+  "variants": {
+    "age=0,variety=durum": {
+      "model": "boulanger:block/wheat_bushel_block_stage0"
+    },
+    "age=0,variety=hard_red_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage0"
+    },
+    "age=0,variety=hard_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage0"
+    },
+    "age=0,variety=hard_white_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage0"
+    },
+    "age=0,variety=soft_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage0"
+    },
+    "age=1,variety=durum": {
+      "model": "boulanger:block/wheat_bushel_block_stage1"
+    },
+    "age=1,variety=hard_red_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage1"
+    },
+    "age=1,variety=hard_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage1"
+    },
+    "age=1,variety=hard_white_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage1"
+    },
+    "age=1,variety=soft_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage1"
+    },
+    "age=2,variety=durum": {
+      "model": "boulanger:block/wheat_bushel_block_stage2"
+    },
+    "age=2,variety=hard_red_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage2"
+    },
+    "age=2,variety=hard_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage2"
+    },
+    "age=2,variety=hard_white_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage2"
+    },
+    "age=2,variety=soft_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage2"
+    },
+    "age=3,variety=durum": {
+      "model": "boulanger:block/wheat_bushel_block_stage3"
+    },
+    "age=3,variety=hard_red_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage3"
+    },
+    "age=3,variety=hard_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage3"
+    },
+    "age=3,variety=hard_white_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage3"
+    },
+    "age=3,variety=soft_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage3"
+    },
+    "age=4,variety=durum": {
+      "model": "boulanger:block/wheat_bushel_block_stage4"
+    },
+    "age=4,variety=hard_red_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage4"
+    },
+    "age=4,variety=hard_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage4"
+    },
+    "age=4,variety=hard_white_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage4"
+    },
+    "age=4,variety=soft_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage4"
+    },
+    "age=5,variety=durum": {
+      "model": "boulanger:block/wheat_bushel_block_stage5"
+    },
+    "age=5,variety=hard_red_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage5"
+    },
+    "age=5,variety=hard_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage5"
+    },
+    "age=5,variety=hard_white_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage5"
+    },
+    "age=5,variety=soft_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage5"
+    },
+    "age=6,variety=durum": {
+      "model": "boulanger:block/wheat_bushel_block_stage6"
+    },
+    "age=6,variety=hard_red_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage6"
+    },
+    "age=6,variety=hard_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage6"
+    },
+    "age=6,variety=hard_white_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage6"
+    },
+    "age=6,variety=soft_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage6"
+    },
+    "age=7,variety=durum": {
+      "model": "boulanger:block/wheat_bushel_block_stage7"
+    },
+    "age=7,variety=hard_red_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage7"
+    },
+    "age=7,variety=hard_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage7"
+    },
+    "age=7,variety=hard_white_spring": {
+      "model": "boulanger:block/wheat_bushel_block_stage7"
+    },
+    "age=7,variety=soft_red_winter": {
+      "model": "boulanger:block/wheat_bushel_block_stage7"
+    }
+  }
+}

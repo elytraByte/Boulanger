@@ -32,7 +32,7 @@ import java.util.*;
 public class DoughItem extends Item {
     public DoughItem(Properties properties) { super(properties); }
 
-    private static String shortWeightLabelFromMg(int mg) {
+    private static String shortWeightLabelFromMg(long mg) {
         mg = Math.max(0, mg);
         if (mg < 1000) return mg + "mg";
 
@@ -192,7 +192,7 @@ public class DoughItem extends Item {
 
         // INGREDIENT_MILLIGRAMS is now mg-int WeightComponent; show its total if present, else recipe snapshot totalMg
         WeightComponent wComp = stack.get(ModDataComponentTypes.INGREDIENT_MILLIGRAMS.get());
-        int totalMg = (wComp != null) ? wComp.milligrams() : dr.totalMilligrams();
+        long totalMg = (wComp != null) ? wComp.milligrams() : dr.totalMilligrams();
         String totalLabel = shortWeightLabelFromMg(totalMg);
 
         tooltip.add(Component.literal("Hydration: " + hydration + "%").withStyle(ChatFormatting.GREEN));

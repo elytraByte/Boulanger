@@ -19,7 +19,7 @@ import java.util.*;
 public class BreadItem extends Item {
     public BreadItem(Properties properties) { super(properties); }
 
-    private static String shortWeightLabelFromMg(int mg) {
+    private static String shortWeightLabelFromMg(long mg) {
         mg = Math.max(0, mg);
         if (mg < 1000) return mg + "mg";
         if (mg % 1000 == 0) return (mg / 1000) + "g";

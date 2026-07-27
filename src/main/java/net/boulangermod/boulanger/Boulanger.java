@@ -11,6 +11,8 @@ import net.boulangermod.boulanger.loot.ModLootFunctions;
 //import net.boulangermod.boulanger.pneumatic.client.PneumaticClientEvents;
 //import net.boulangermod.boulanger.pneumatic.event.PneumaticEvents;
 import net.boulangermod.boulanger.recipe.ModRecipeTypes;
+import net.boulangermod.boulanger.screen.ModMenuTypes;
+import net.boulangermod.boulanger.screen.ScaleBlockScreen;
 import net.boulangermod.boulanger.worldgen.tree.ModTrunkPlacers;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -23,6 +25,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
@@ -48,6 +51,7 @@ public class Boulanger {
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
 
         ModTrunkPlacers.register(modEventBus);
 
@@ -96,6 +100,16 @@ public class Boulanger {
             // Some client setup code
             LOGGER.info("HELLO FROM CLIENT SETUP");
             LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+        }
+
+        @SubscribeEvent
+        public static void registerMenuScreens(
+                RegisterMenuScreensEvent event
+        ) {
+            event.register(
+                    ModMenuTypes.SCALE_MENU.get(),
+                    ScaleBlockScreen::new
+            );
         }
     }
 }

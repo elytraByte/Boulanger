@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "boulanger:item/flour/bread_flour_fifty_pound_bag"
+  }
+}

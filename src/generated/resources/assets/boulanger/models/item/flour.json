@@ -1,0 +1,140 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "model": "boulanger:item/flour/first_break_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 0.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/second_break_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 1.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/third_break_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 2.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/fourth_break_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 3.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/fifth_break_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 4.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/first_middlings_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 5.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/second_middlings_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 6.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/third_middlings_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 7.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/fourth_middlings_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 8.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/fifth_middlings_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 9.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/first_patent_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 10.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/second_patent_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 11.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/all_purpose_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 12.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/high_gluten_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 13.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/bread_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 14.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/semolina_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 15.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/rye_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 16.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/whole_wheat_flour",
+      "predicate": {
+        "minecraft:custom_model_data": 17.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/vital_wheat_gluten",
+      "predicate": {
+        "minecraft:custom_model_data": 18.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/wheat_bran",
+      "predicate": {
+        "minecraft:custom_model_data": 19.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/corn_meal",
+      "predicate": {
+        "minecraft:custom_model_data": 20.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/corn_starch",
+      "predicate": {
+        "minecraft:custom_model_data": 21.0
+      }
+    }
+  ],
+  "textures": {
+    "layer0": "boulanger:item/flour/flour"
+  }
+}

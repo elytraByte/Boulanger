@@ -1,0 +1,102 @@
+{
+  "type": "minecraft:block",
+  "functions": [
+    {
+      "function": "minecraft:explosion_decay"
+    }
+  ],
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "add": false,
+              "count": 1.0,
+              "function": "minecraft:set_count"
+            },
+            {
+              "components": {
+                "boulanger:wheat_variety": "hard_red_winter"
+              },
+              "function": "minecraft:set_components"
+            }
+          ],
+          "name": "boulanger:wheat_seeds"
+        },
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "add": false,
+              "count": 1.0,
+              "function": "minecraft:set_count"
+            },
+            {
+              "components": {
+                "boulanger:wheat_variety": "hard_red_spring"
+              },
+              "function": "minecraft:set_components"
+            }
+          ],
+          "name": "boulanger:wheat_seeds"
+        },
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "add": false,
+              "count": 1.0,
+              "function": "minecraft:set_count"
+            },
+            {
+              "components": {
+                "boulanger:wheat_variety": "durum"
+              },
+              "function": "minecraft:set_components"
+            }
+          ],
+          "name": "boulanger:wheat_seeds"
+        },
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "add": false,
+              "count": 1.0,
+              "function": "minecraft:set_count"
+            },
+            {
+              "components": {
+                "boulanger:wheat_variety": "soft_red_winter"
+              },
+              "function": "minecraft:set_components"
+            }
+          ],
+          "name": "boulanger:wheat_seeds"
+        },
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "add": false,
+              "count": 1.0,
+              "function": "minecraft:set_count"
+            },
+            {
+              "components": {
+                "boulanger:wheat_variety": "hard_white_spring"
+              },
+              "function": "minecraft:set_components"
+            }
+          ],
+          "name": "boulanger:wheat_seeds"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "boulanger:blocks/wild_wheat"
+}

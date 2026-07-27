@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/crop",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "crop": "boulanger:block/wheat/boulanger_wheat_stage3"
+  }
+}

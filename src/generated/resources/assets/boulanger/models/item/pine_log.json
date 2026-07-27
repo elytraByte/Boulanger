@@ -1,0 +1,11 @@
+{
+  "parent": "boulanger:block/pine_log",
+  "overrides": [
+    {
+      "model": "boulanger:block/resin_pine_log",
+      "predicate": {
+        "minecraft:custom_model_data": 1.0
+      }
+    }
+  ]
+}

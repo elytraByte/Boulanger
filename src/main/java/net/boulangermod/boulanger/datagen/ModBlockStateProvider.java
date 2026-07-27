@@ -234,6 +234,17 @@ public class ModBlockStateProvider extends BlockStateProvider {
         // ─── KAOLINITE CLAY ──────────────────────────────────────────────────
         simpleBlockWithItem(ModBlocks.KAOLINITE_CLAY.get(), cubeAll(ModBlocks.KAOLINITE_CLAY.get()));
 
+        //scale
+        ModelFile scalePlaceholder = models().cubeAll(
+                "scale",
+                mcLoc("block/iron_block")
+        );
+
+        simpleBlockWithItem(
+                ModBlocks.SCALE.get(),
+                scalePlaceholder
+        );
+
 //pneumatic ducting deprecated for the time being
 //        // ─── PNEUMATICS ──────────────────────────────────────────────────────
 //        pneumaticDuct(ModBlocks.PNEUMATIC_DUCT.get());

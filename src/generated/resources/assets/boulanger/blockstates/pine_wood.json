@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "boulanger:block/pine_wood_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "boulanger:block/pine_wood"
+    },
+    "axis=z": {
+      "model": "boulanger:block/pine_wood_horizontal",
+      "x": 90
+    }
+  }
+}

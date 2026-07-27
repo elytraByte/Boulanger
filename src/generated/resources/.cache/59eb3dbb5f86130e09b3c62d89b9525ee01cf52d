@@ -1,4 +1,4 @@
-// 1.21	2026-07-13T13:17:16.7443314	Loot Tables
+// 1.21	2026-07-26T20:34:51.6442105	Loot Tables
 edda6d61e6650b1e5b37f040fb142ddaff8e2e5e data/boulanger/loot_table/blocks/kaolinite_clay.json
 5ea813e523479f2f32b18441976bfb759205986f data/boulanger/loot_table/blocks/pine_button.json
 92f1fb3927ad46d07116cb11ee021a2fc7d453fb data/boulanger/loot_table/blocks/pine_door.json
@@ -13,6 +13,7 @@ f2eef4133768ecde4c2f3913b1a135cb8cf96ae4 data/boulanger/loot_table/blocks/pine_s
 373980ad1db8f0af7a3995898af4211de2ab251d data/boulanger/loot_table/blocks/pine_stairs.json
 babaec7711299f2fa7f0eb9d9f3605882b22185e data/boulanger/loot_table/blocks/pine_trapdoor.json
 2644e370719161474ccc318efe905b7c95c4d606 data/boulanger/loot_table/blocks/pine_wood.json
+7e74dccd0c2b0087fe2b412798aa3eb202b0643b data/boulanger/loot_table/blocks/scale.json
 4581344b2e365aa7572871d42aaf394b13b62fcd data/boulanger/loot_table/blocks/stripped_pine_log.json
 94995ebfc44e525352d37d93109309ca58c42545 data/boulanger/loot_table/blocks/stripped_pine_wood.json
 419490d35db9b2713c8079cfed1cfaa754988ef0 data/boulanger/loot_table/blocks/tree_tap.json

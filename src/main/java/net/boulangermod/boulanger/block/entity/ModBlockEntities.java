@@ -20,6 +20,15 @@ public class ModBlockEntities {
                             TreeTapBlockEntity::new, ModBlocks.TREE_TAP.get()
                     ).build(null)
             );
+
+    public static final Supplier<BlockEntityType<ScaleBlockEntity>> SCALE_BLOCK =
+            BLOCK_ENTITIES.register(
+                    "scale_be",
+                    () -> BlockEntityType.Builder.of(
+                            ScaleBlockEntity::new,
+                            ModBlocks.SCALE.get()
+                    ).build(null)
+            );
 //pneumatic ducting deprecated for the time being
 //    public static final Supplier<BlockEntityType<PneumaticDuctBlockEntity>> PNEUMATIC_DUCT_BE =
 //            BLOCK_ENTITIES.register("pneumatic_duct_be", () -> BlockEntityType.Builder.of(

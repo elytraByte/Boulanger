@@ -1,0 +1,76 @@
+{
+  "variants": {
+    "axis=x,resin_remaining=0": {
+      "model": "boulanger:block/pine_log",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,resin_remaining=1": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,resin_remaining=2": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,resin_remaining=3": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,resin_remaining=4": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,resin_remaining=5": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y,resin_remaining=0": {
+      "model": "boulanger:block/pine_log"
+    },
+    "axis=y,resin_remaining=1": {
+      "model": "boulanger:block/resin_pine_log"
+    },
+    "axis=y,resin_remaining=2": {
+      "model": "boulanger:block/resin_pine_log"
+    },
+    "axis=y,resin_remaining=3": {
+      "model": "boulanger:block/resin_pine_log"
+    },
+    "axis=y,resin_remaining=4": {
+      "model": "boulanger:block/resin_pine_log"
+    },
+    "axis=y,resin_remaining=5": {
+      "model": "boulanger:block/resin_pine_log"
+    },
+    "axis=z,resin_remaining=0": {
+      "model": "boulanger:block/pine_log",
+      "x": 90
+    },
+    "axis=z,resin_remaining=1": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90
+    },
+    "axis=z,resin_remaining=2": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90
+    },
+    "axis=z,resin_remaining=3": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90
+    },
+    "axis=z,resin_remaining=4": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90
+    },
+    "axis=z,resin_remaining=5": {
+      "model": "boulanger:block/resin_pine_log",
+      "x": 90
+    }
+  }
+}

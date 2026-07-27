@@ -1,4 +1,4 @@
-// 1.21	2026-07-13T13:17:16.7413319	Block States: boulanger
+// 1.21	2026-07-26T20:34:51.6422099	Block States: boulanger
 81256542e670eb5b462e280e84083ed07fc9b8e2 assets/boulanger/blockstates/kaolinite_clay.json
 0d0d1efa14a1c111dd116e13bddcecb40c55b27d assets/boulanger/blockstates/pine_button.json
 b48d1a947d1d7963f809e838493c14d73ff5606b assets/boulanger/blockstates/pine_door.json
@@ -13,6 +13,7 @@ b08a4c16876a60cdcacecc4fcf7da8846ea8ff69 assets/boulanger/blockstates/pine_log.j
 c1e9bd6248964529b6c442622410da6425d6dbc2 assets/boulanger/blockstates/pine_stairs.json
 e9cc3319ec4ec575ff1e37633108514f84851aa3 assets/boulanger/blockstates/pine_trapdoor.json
 a6219bbaca6f5f6f723127c04caea6ed76b511a5 assets/boulanger/blockstates/pine_wood.json
+cc3553f7346d5eab0155794248761c979c0fe919 assets/boulanger/blockstates/scale.json
 9bc7cdcc2599484e0fe9bf911f95e9ffc0b4aae3 assets/boulanger/blockstates/stripped_pine_log.json
 ec4d1e59bfd5c9dea1fee39558a54451da0f4a68 assets/boulanger/blockstates/stripped_pine_wood.json
 ab21df3255754b32cb06621305ce80a7df4c62a1 assets/boulanger/blockstates/wheat_bushel_block.json
@@ -53,6 +54,7 @@ f96abcddb7618e0da4df5463bc9bcccf9ae3fb8e assets/boulanger/models/block/pine_trap
 7e68bc9250f6c5cf8f0b718ba249140fa8592c86 assets/boulanger/models/block/pine_wood.json
 60f91d510ff3333e893871ef8a0e3441150204ed assets/boulanger/models/block/pine_wood_horizontal.json
 e619c26965af7b9f9a17093babd05a30b67923de assets/boulanger/models/block/resin_pine_log.json
+a7a1c26a7c6b0979efcf548430b04d9fca654080 assets/boulanger/models/block/scale.json
 09563ab88bba60246bd2968840315c9a9a2c19aa assets/boulanger/models/block/stripped_pine_log.json
 8ba185001892b15ccbaba4b2b1ab924896a7c27c assets/boulanger/models/block/stripped_pine_log_horizontal.json
 ff48d48814b11cbca59563889aea5d3967d82b32 assets/boulanger/models/block/stripped_pine_wood.json
@@ -80,6 +82,7 @@ a685c3eea42161c889507fc674f029721fe44e97 assets/boulanger/models/item/pine_sapli
 354b86c8b345bcfbbfb0b5a8f322135f7a059789 assets/boulanger/models/item/pine_stairs.json
 3a8a209c256cced0794e13b0b931b0803be323c3 assets/boulanger/models/item/pine_trapdoor.json
 d28a9ccbb2965b72587ce3835afc9191cf8ce7be assets/boulanger/models/item/pine_wood.json
+d0ee1f696cd684fbfba5ad39078ef58eb7f1b84b assets/boulanger/models/item/scale.json
 a3019cdc4a39fee84f842c1e8a176d4440e53521 assets/boulanger/models/item/stripped_pine_log.json
 7ebe31e3cb0e60c1a3f3302417b6122373cfc5e7 assets/boulanger/models/item/stripped_pine_wood.json
 6f50c58c49c11c0c7dc7f4c9511974c05d1ac869 assets/boulanger/models/item/wheat_bushel_block.json

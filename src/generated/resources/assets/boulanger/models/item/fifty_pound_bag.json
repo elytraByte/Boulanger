@@ -1,0 +1,50 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "model": "boulanger:item/flour/all_purpose_flour_fifty_pound_bag",
+      "predicate": {
+        "minecraft:custom_model_data": 101.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/bread_flour_fifty_pound_bag",
+      "predicate": {
+        "minecraft:custom_model_data": 102.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/high_gluten_flour_fifty_pound_bag",
+      "predicate": {
+        "minecraft:custom_model_data": 103.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/rye_flour_fifty_pound_bag",
+      "predicate": {
+        "minecraft:custom_model_data": 104.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/semolina_flour_fifty_pound_bag",
+      "predicate": {
+        "minecraft:custom_model_data": 105.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/vital_wheat_gluten_fifty_pound_bag",
+      "predicate": {
+        "minecraft:custom_model_data": 106.0
+      }
+    },
+    {
+      "model": "boulanger:item/flour/whole_wheat_flour_fifty_pound_bag",
+      "predicate": {
+        "minecraft:custom_model_data": 107.0
+      }
+    }
+  ],
+  "textures": {
+    "layer0": "boulanger:item/flour/blank_fifty_pound_bag"
+  }
+}

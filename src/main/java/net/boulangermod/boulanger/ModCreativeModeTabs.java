@@ -53,6 +53,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModBlocks.PINE_FENCE_GATE);
                         pOutput.accept(ModBlocks.PINE_PRESSURE_PLATE);
                         pOutput.accept(ModBlocks.PINE_BUTTON);
+                        pOutput.accept(ModBlocks.SCALE);
 
 //pneumatic ducting deprecated for the time being
 //                        pOutput.accept(ModBlocks.PNEUMATIC_DUCT);

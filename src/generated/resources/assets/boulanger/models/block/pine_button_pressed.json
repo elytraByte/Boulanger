@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/button_pressed",
+  "textures": {
+    "texture": "boulanger:block/pine/pine_planks"
+  }
+}

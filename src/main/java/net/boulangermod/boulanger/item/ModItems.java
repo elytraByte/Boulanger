@@ -37,6 +37,11 @@ public class ModItems {
     public static final DeferredItem<Item> FLOUR_ITEM = ITEMS.register("flour",
             () -> new FlourItem(new Item.Properties()));
 
+
+    public static final DeferredItem<Item> FILLED_BOWL =
+            ITEMS.register("filled_bowl", () -> new FilledBowlItem(new Item.Properties().stacksTo(1)));
+
+
     // Flour bags
     public static final DeferredItem<Item> FIFTY_POUND_BAG =
             ITEMS.register("fifty_pound_bag", () -> new FiftyPoundBagItem(new Item.Properties().stacksTo(1)));

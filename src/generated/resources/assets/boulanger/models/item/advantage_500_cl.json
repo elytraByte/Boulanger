@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "boulanger:item/bakery_additive/advantage_500_cl"
+  }
+}

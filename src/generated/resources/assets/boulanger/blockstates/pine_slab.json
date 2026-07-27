@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "type=bottom,waterlogged=false": {
+      "model": "boulanger:block/pine_slab"
+    },
+    "type=bottom,waterlogged=true": {
+      "model": "boulanger:block/pine_slab"
+    },
+    "type=double,waterlogged=false": {
+      "model": "boulanger:block/pine_planks"
+    },
+    "type=double,waterlogged=true": {
+      "model": "boulanger:block/pine_planks"
+    },
+    "type=top,waterlogged=false": {
+      "model": "boulanger:block/pine_slab_top"
+    },
+    "type=top,waterlogged=true": {
+      "model": "boulanger:block/pine_slab_top"
+    }
+  }
+}

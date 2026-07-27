@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "boulanger:item/dairy/dry_whole_milk_powder"
+  }
+}
