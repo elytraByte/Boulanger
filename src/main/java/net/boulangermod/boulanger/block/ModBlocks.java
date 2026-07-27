@@ -2,9 +2,6 @@ package net.boulangermod.boulanger.block;
 
 import net.boulangermod.boulanger.Boulanger;
 import net.boulangermod.boulanger.block.crop.BoulangerWheatCrop;
-import net.boulangermod.boulanger.block.crop.ModSaplingBlock;
-import net.boulangermod.boulanger.block.crop.WildWheatBlock;
-import net.boulangermod.boulanger.block.pneumatic.*;
 import net.boulangermod.boulanger.item.ModItems;
 import net.boulangermod.boulanger.worldgen.tree.ModTreeGrowers;
 import net.minecraft.core.BlockPos;
@@ -113,8 +110,13 @@ public class ModBlocks {
                 }
             });
 
-    public static final DeferredBlock<Block> PINE_SAPLING = registerBlock("pine_sapling",
-            () -> new ModSaplingBlock(ModTreeGrowers.PINE, BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING), Blocks.GRASS_BLOCK));
+    public static final DeferredBlock<Block> PINE_SAPLING = registerBlock(
+            "pine_sapling",
+            () -> new SaplingBlock(
+                    ModTreeGrowers.PINE,
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)
+            )
+    );
 
     public static final DeferredBlock<Block> PINE_PRESSURE_PLATE = registerBlock(
             "pine_pressure_plate",

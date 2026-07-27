@@ -13,8 +13,16 @@
     },
     "foliage_placer": {
       "type": "minecraft:spruce_foliage_placer",
-      "offset": 5,
-      "radius": 3,
+      "offset": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 2,
+        "min_inclusive": 0
+      },
+      "radius": {
+        "type": "minecraft:uniform",
+        "max_inclusive": 3,
+        "min_inclusive": 2
+      },
       "trunk_height": 4
     },
     "foliage_provider": {
@@ -32,9 +40,9 @@
     "ignore_vines": false,
     "minimum_size": {
       "type": "minecraft:two_layers_feature_size",
-      "limit": 0,
-      "lower_size": 3,
-      "upper_size": 5
+      "limit": 2,
+      "lower_size": 0,
+      "upper_size": 2
     },
     "trunk_placer": {
       "type": "boulanger:resin_pine_trunk_placer",

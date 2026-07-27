@@ -44,8 +44,12 @@ public class ModConfiguredFeatures {
                         BlockStateProvider.simple(ModBlocks.PINE_LOG.get().defaultBlockState()),
                         new ResinPineTrunkPlacer(8, 5, 5),
                         BlockStateProvider.simple(ModBlocks.PINE_LEAVES.get().defaultBlockState()),
-                        new SpruceFoliagePlacer(ConstantInt.of(3), ConstantInt.of(5), ConstantInt.of(4)),
-                        new TwoLayersFeatureSize(0, 3, 5)
+                        new SpruceFoliagePlacer(
+                                UniformInt.of(2, 3),
+                                UniformInt.of(0, 2),
+                                ConstantInt.of(4)
+                        ),
+                        new TwoLayersFeatureSize(2, 0, 2)
                 )
                         .dirt(BlockStateProvider.simple(Blocks.GRASS_BLOCK))
                         .forceDirt()

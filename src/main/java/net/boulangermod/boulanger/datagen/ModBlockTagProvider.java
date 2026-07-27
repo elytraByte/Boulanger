@@ -23,6 +23,14 @@ public class ModBlockTagProvider extends BlockTagsProvider {
         this.tag(BlockTags.MINEABLE_WITH_SHOVEL)
                 .add(ModBlocks.KAOLINITE_CLAY.get());
 
+        this.tag(BlockTags.LOGS_THAT_BURN)
+                .add(
+                        ModBlocks.PINE_LOG.get(),
+                        ModBlocks.PINE_WOOD.get(),
+                        ModBlocks.STRIPPED_PINE_LOG.get(),
+                        ModBlocks.STRIPPED_PINE_WOOD.get()
+                );
+
 //pneumatic ducting deprecated for the time being
 //        // Pneumatic endpoints that ducts should visually/connectively treat as “CONNECTED”
 //        this.tag(ModTags.Blocks.PNEUMATIC_CONNECTABLE)
